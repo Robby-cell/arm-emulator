@@ -1,0 +1,29 @@
+# Hide unnecessary symbols.
+
+[target.'cfg(not(windows))']
+rustflags = [
+  "-C",
+  "link-arg=-Wl,--exclude-libs,ALL",
+  "-C",
+  "link-arg=-fvisibility=hidden",
+]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-C",
+  "link-arg=-undefined",
+  "-C",
+  "link-arg=dynamic_lookup",
+  "-C",
+  "link-arg=-fvisibility=hidden",
+]
+
+[target.aarch64-apple-darwin]
+rustflags = [
+  "-C",
+  "link-arg=-undefined",
+  "-C",
+  "link-arg=dynamic_lookup",
+  "-C",
+  "link-arg=-fvisibility=hidden",
+]
