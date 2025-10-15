@@ -4,10 +4,10 @@ from arm_emulator import *
 class MyPeripheral:
     def __init__(self): ...
 
-    def read(self, addr):
+    def read32(self, addr: int) -> int:
         return 0
 
-    def write(self, addr, data): ...
+    def write32(self, addr: int, data: int) -> None: ...
 
 
 class PyGpioPort:
@@ -16,13 +16,13 @@ class PyGpioPort:
     def __init__(self, gpio: GpioPort):
         self.gpio = gpio
 
-    def read(self, addr: int):
-        res: int = self.gpio.read(addr)
+    def read32(self, addr: int) -> int:
+        res: int = self.gpio.read32(addr)
         print("PyGpioPort read")
         return res
 
-    def write(self, addr, data):
-        res = self.gpio.write(addr, data)
+    def write32(self, addr: int, data: int) -> None:
+        res: None = self.gpio.write32(addr, data)
         print("PyGpioPort write")
         return res
 

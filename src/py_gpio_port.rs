@@ -25,21 +25,27 @@ impl PyGpioPort {
         self.gpio.is_led_on()
     }
 
-    pub(crate) fn read(&self, offset: u32) -> PyResult<u32> {
-        Peripheral::read(self, offset).to_py_result()
+    #[pyo3(name = "read32")]
+    pub(crate) fn py_read32(&self, offset: u32) -> PyResult<u32> {
+        self.read32(offset).to_py_result()
     }
 
-    pub(crate) fn write(&self, offset: u32, value: u32) -> PyResult<()> {
-        Peripheral::write(self, offset, value).to_py_result()
+    #[pyo3(name = "write32")]
+    pub(crate) fn py_write32(
+        &self,
+        offset: u32,
+        value: u32,
+    ) -> PyResult<()> {
+        self.write32(offset, value).to_py_result()
     }
 }
 
 impl Peripheral for PyGpioPort {
-    fn read(&self, offset: u32) -> MemoryAccessResult<u32> {
-        self.gpio.read(offset)
+    fn read32(&self, offset: u32) -> MemoryAccessResult<u32> {
+        self.gpio.read32(offset)
     }
 
-    fn write(&self, offset: u32, value: u32) -> MemoryAccessResult<()> {
-        self.gpio.write(offset, value)
+    fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()> {
+        self.gpio.write32(offset, value)
     }
 }

@@ -213,12 +213,12 @@ pub trait Peripheral {
     /// Handles a read from the peripheral's memory-mapped region.
     /// `offset` is the address relative to the start of this peripheral's region.
     /// Does not handle endianness. Should be handled inside the [Bus].
-    fn read(&self, offset: u32) -> MemoryAccessResult<u32>;
+    fn read32(&self, offset: u32) -> MemoryAccessResult<u32>;
 
     /// Handles a write to the peripheral's memory-mapped region.
     /// `offset` is the address relative to the start of this peripheral's region.
     /// Does not handle endianness. Should be handled inside the [Bus].
-    fn write(&self, offset: u32, value: u32) -> MemoryAccessResult<()>;
+    fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()>;
 }
 
 pub struct MemoryMappedPeripheral {
@@ -296,6 +296,12 @@ impl Bus {
         addr: Word,
     ) -> MemoryAccessResult<u32> {
         tracing::trace!("Reading RAM at address: {addr:#X}");
+        if addr % 4 != 0 {
+            tracing::error!(
+                "Unaligned access attempt at address: {addr:#X}"
+            );
+            return Err(MemoryAccessError::UnalignedAccess);
+        }
 
         if addr + 4 < self.ram.len() as _ {
             Reader::read32(&self.ram, addr)
@@ -320,7 +326,7 @@ impl Bus {
                     "Reading peripheral mapped to {range:?} at offset: {offset:#X}",
                 );
 
-                return peripheral.read(offset);
+                return peripheral.read32(offset);
             }
         }
 
@@ -346,6 +352,13 @@ impl Bus {
         value: u32,
     ) -> MemoryAccessResult<()> {
         tracing::trace!("Writing {value:#X} to RAM at address: {addr:#X}");
+        // Right now: Unaligned access is not allowed
+        if addr % 4 != 0 {
+            tracing::error!(
+                "Unaligned write attempt at address: {addr:#X}"
+            );
+            return Err(MemoryAccessError::UnalignedAccess);
+        }
 
         if addr + 4 < self.ram.len() as _ {
             Writer::write32(&mut self.ram, addr, value)
@@ -374,7 +387,7 @@ impl Bus {
                     "Writing {value:#X} to peripheral mapped to {range:?} at offset: {offset:#}",
                 );
 
-                return peripheral.write(offset, value);
+                return peripheral.write32(offset, value);
             }
         }
 

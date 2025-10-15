@@ -37,7 +37,7 @@ impl GpioPort {
 }
 
 impl Peripheral for GpioPort {
-    fn read(&self, offset: Word) -> MemoryAccessResult<u32> {
+    fn read32(&self, offset: Word) -> MemoryAccessResult<u32> {
         let value = match offset {
             0x00 => self.state.moder.load(Ordering::Relaxed),
             0x14 => self.state.odr.load(Ordering::Relaxed),
@@ -54,7 +54,7 @@ impl Peripheral for GpioPort {
         Ok(value)
     }
 
-    fn write(&self, offset: Word, value: u32) -> MemoryAccessResult<()> {
+    fn write32(&self, offset: Word, value: u32) -> MemoryAccessResult<()> {
         match offset {
             0x00 => self.state.moder.store(value, Ordering::Relaxed),
             0x14 => self.state.odr.store(value, Ordering::Relaxed),
