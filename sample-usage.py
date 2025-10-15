@@ -10,19 +10,17 @@ class MyPeripheral:
     def write32(self, addr: int, data: int) -> None: ...
 
 
-class PyGpioPort:
-    gpio: GpioPort
-
-    def __init__(self, gpio: GpioPort):
-        self.gpio = gpio
+class PyGpioPort(GpioPort):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def read32(self, addr: int) -> int:
-        res: int = self.gpio.read32(addr)
+        res: int = super().read32(addr)
         print("PyGpioPort read")
         return res
 
     def write32(self, addr: int, data: int) -> None:
-        res: None = self.gpio.write32(addr, data)
+        res: None = super().write32(addr, data)
         print("PyGpioPort write")
         return res
 
@@ -30,7 +28,7 @@ class PyGpioPort:
 emulator = Emulator(20)
 emulator.add_peripheral(RangeInclusiveU32(4096, 4127), GpioPort())
 emulator.add_peripheral(RangeInclusiveU32(4128, 4159), MyPeripheral())
-emulator.add_peripheral(RangeInclusiveU32(4160, 4191), PyGpioPort(GpioPort()))
+emulator.add_peripheral(RangeInclusiveU32(4160, 4191), PyGpioPort())
 
 emulator.write32(4096, 0x33)
 emulator.write32(4160, 0x44)

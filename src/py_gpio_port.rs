@@ -7,7 +7,7 @@ use emulator::{
 
 use crate::error::ToPyResult;
 
-#[pyclass(name = "GpioPort")]
+#[pyclass(name = "GpioPort", subclass)]
 pub(crate) struct PyGpioPort {
     gpio: GpioPort,
 }
