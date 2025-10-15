@@ -15,7 +15,7 @@ pub(crate) struct PyGpioPort {
 #[pymethods]
 impl PyGpioPort {
     #[new]
-    pub(crate) fn __new__() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             gpio: GpioPort::new(),
         }

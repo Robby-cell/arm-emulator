@@ -78,7 +78,7 @@ impl PyPeripheral {
 #[pymethods]
 impl PyPeripheral {
     #[new]
-    pub(crate) fn __new__(obj: Bound<'_, PyAny>) -> PyResult<Self> {
+    pub(crate) fn new(obj: Bound<'_, PyAny>) -> PyResult<Self> {
         PyPeripheral::verify_valid_object(obj.clone())?;
 
         Ok(Self { obj: obj.into() })

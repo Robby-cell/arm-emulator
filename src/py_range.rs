@@ -21,7 +21,7 @@ impl PyRangeInclusiveU32 {
 #[pymethods]
 impl PyRangeInclusiveU32 {
     #[new]
-    pub(crate) fn __new__(start: u32, end: u32) -> Self {
+    pub(crate) fn new(start: u32, end: u32) -> Self {
         Self(start..=end)
     }
 }

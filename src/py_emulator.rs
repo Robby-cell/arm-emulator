@@ -24,7 +24,7 @@ impl fmt::Display for PyEmulator {
 #[pymethods]
 impl PyEmulator {
     #[new]
-    pub(crate) fn __new__(ram_size: u32) -> Self {
+    pub(crate) fn new(ram_size: u32) -> Self {
         Self {
             emulator: Emulator::with_ram_size(ram_size),
         }
@@ -61,7 +61,7 @@ impl PyEmulator {
     ) -> PyResult<()> {
         self.emulator.add_peripheral(MemoryMappedPeripheral {
             range: range.range(),
-            peripheral: Arc::new(PyPeripheral::__new__(
+            peripheral: Arc::new(PyPeripheral::new(
                 mapped_peripheral.into()
             ).expect("Failed to create peripheral. Exception thrown, missing required methods")),
         });
