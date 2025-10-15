@@ -25,7 +25,7 @@ impl PyEmulator {
     }
 
     pub(crate) fn read32(&self, addr: u32) -> PyResult<u32> {
-        self.emulator.memory_bus.read32_le(addr).to_py_result()
+        self.emulator.read32(addr).to_py_result()
     }
 
     pub(crate) fn write32(
@@ -33,10 +33,7 @@ impl PyEmulator {
         addr: u32,
         value: u32,
     ) -> PyResult<()> {
-        self.emulator
-            .memory_bus
-            .write32_le(addr, value)
-            .to_py_result()
+        self.emulator.write32(addr, value).to_py_result()
     }
 
     pub(crate) fn __str__(&self) -> String {

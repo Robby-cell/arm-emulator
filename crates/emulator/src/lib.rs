@@ -89,6 +89,17 @@ impl Emulator {
         }
     }
 
+    pub fn write32(
+        &mut self,
+        addr: Word,
+        value: u32,
+    ) -> MemoryAccessResult<()> {
+        match self.endian {
+            Endian::Big => self.memory_bus.write32_be(addr, value),
+            Endian::Little => self.memory_bus.write32_le(addr, value),
+        }
+    }
+
     /// Is the emulation finished execution?
     /// Has it returned from the main/_start function?
     pub fn is_done(&self) -> bool {
