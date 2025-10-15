@@ -2,7 +2,11 @@ use pyo3::prelude::*;
 
 use std::{fmt, sync::Arc};
 
-use emulator::{Emulator, memory::MemoryMappedPeripheral};
+use emulator::{
+    Emulator,
+    cpu::Cpu,
+    memory::{Bus, Endian, MemoryMappedPeripheral},
+};
 
 use crate::{
     error::ToPyResult, py_peripheral::PyPeripheral,
@@ -11,7 +15,7 @@ use crate::{
 
 /// A python wrapper around the `Emulator`
 #[pyclass(name = "Emulator", str)]
-pub(crate) struct PyEmulator {
+struct PyEmulator {
     emulator: Emulator,
 }
 
@@ -24,37 +28,33 @@ impl fmt::Display for PyEmulator {
 #[pymethods]
 impl PyEmulator {
     #[new]
-    pub(crate) fn new(ram_size: u32) -> Self {
+    fn new(ram_size: u32) -> Self {
         Self {
-            emulator: Emulator::with_ram_size(ram_size),
+            emulator: emulator_with_ram_size(ram_size),
         }
     }
 
-    pub(crate) fn read32(&self, addr: u32) -> PyResult<u32> {
+    fn read32(&self, addr: u32) -> PyResult<u32> {
         self.emulator.read32(addr).to_py_result()
     }
 
-    pub(crate) fn write32(
-        &mut self,
-        addr: u32,
-        value: u32,
-    ) -> PyResult<()> {
+    fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
         self.emulator.write32(addr, value).to_py_result()
     }
 
-    pub(crate) fn execute_until_breakpoint(&mut self) -> PyResult<()> {
+    fn execute_until_breakpoint(&mut self) -> PyResult<()> {
         Ok(())
     }
 
-    pub(crate) fn execute(&mut self) -> PyResult<()> {
+    fn execute(&mut self) -> PyResult<()> {
         Ok(())
     }
 
-    pub(crate) fn step(&mut self) -> PyResult<()> {
+    fn step(&mut self) -> PyResult<()> {
         Ok(())
     }
 
-    pub(crate) fn add_peripheral(
+    fn add_peripheral(
         &mut self,
         range: &PyRangeInclusiveU32,
         mapped_peripheral: Bound<'_, PyAny>,
@@ -75,9 +75,24 @@ impl fmt::Debug for PyEmulator {
     }
 }
 
-#[pyfunction()]
-pub(crate) fn emulator_with_ram_size(ram_size: u32) -> PyEmulator {
+fn emulator_with_ram_size(ram_size: u32) -> Emulator {
+    Emulator::new(Cpu::new(), Bus::new(ram_size), Endian::Little)
+}
+
+#[pyfunction(name = "emulator_with_ram_size")]
+fn py_emulator_with_ram_size(ram_size: u32) -> PyEmulator {
     PyEmulator {
-        emulator: Emulator::with_ram_size(ram_size),
+        emulator: emulator_with_ram_size(ram_size),
     }
+}
+
+#[pymodule]
+pub(crate) fn py_emulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Classes
+    m.add_class::<PyEmulator>()?;
+
+    // Functions
+    m.add_function(wrap_pyfunction!(py_emulator_with_ram_size, m)?)?;
+
+    Ok(())
 }

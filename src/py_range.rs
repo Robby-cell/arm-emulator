@@ -10,10 +10,10 @@ use std::ops::RangeInclusive;
 /// mapped_region = RangeInclusive32(0, 15) # maps 0 to 15 (inclusive)
 /// ```
 #[pyclass(name = "RangeInclusiveU32")]
-pub(crate) struct PyRangeInclusiveU32(RangeInclusive<u32>);
+pub struct PyRangeInclusiveU32(RangeInclusive<u32>);
 
 impl PyRangeInclusiveU32 {
-    pub(crate) fn range(&self) -> RangeInclusive<u32> {
+    pub fn range(&self) -> RangeInclusive<u32> {
         self.0.clone()
     }
 }
@@ -21,7 +21,13 @@ impl PyRangeInclusiveU32 {
 #[pymethods]
 impl PyRangeInclusiveU32 {
     #[new]
-    pub(crate) fn new(start: u32, end: u32) -> Self {
+    fn new(start: u32, end: u32) -> Self {
         Self(start..=end)
     }
+}
+
+#[pymodule]
+pub fn py_range(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<PyRangeInclusiveU32>()?;
+    Ok(())
 }

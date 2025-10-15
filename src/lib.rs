@@ -6,11 +6,6 @@ mod py_gpio_port;
 mod py_peripheral;
 mod py_range;
 
-use py_emulator::{PyEmulator, emulator_with_ram_size};
-use py_gpio_port::PyGpioPort;
-use py_peripheral::PyPeripheral;
-use py_range::PyRangeInclusiveU32;
-
 fn init_tracing() -> PyResult<()> {
     use std::fs::OpenOptions;
     use tracing::Level;
@@ -58,14 +53,22 @@ fn init_tracing() -> PyResult<()> {
 fn arm_emulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
     init_tracing()?;
 
-    // Functions
-    m.add_function(wrap_pyfunction!(emulator_with_ram_size, m)?)?;
+    {
+        let emulator_m = PyModule::new(m.py(), "emulator")?;
+        py_emulator::py_emulator(&emulator_m)?;
+        m.add_submodule(&emulator_m)?;
+    }
 
-    // Classes
-    m.add_class::<PyEmulator>()?;
-    m.add_class::<PyGpioPort>()?;
-    m.add_class::<PyPeripheral>()?;
-    m.add_class::<PyRangeInclusiveU32>()?;
+    {
+        let peripheral_m = PyModule::new(m.py(), "peripheral")?;
+        py_peripheral::py_peripheral(&peripheral_m)?;
+        py_gpio_port::py_gpio_port(&peripheral_m)?;
+        m.add_submodule(&peripheral_m)?;
+    }
+
+    {
+        py_range::py_range(m)?;
+    }
 
     Ok(())
 }

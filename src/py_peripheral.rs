@@ -4,8 +4,8 @@ use emulator::memory::{
     MemoryAccessError, MemoryAccessResult, Peripheral,
 };
 
-#[pyclass(name = "Peripheral")]
-pub(crate) struct PyPeripheral {
+#[pyclass(name = "Peripheral", subclass)]
+pub struct PyPeripheral {
     obj: Py<PyAny>,
 }
 
@@ -65,9 +65,7 @@ impl Peripheral for PyPeripheral {
 impl PyPeripheral {
     const PERIPHERAL_METHODS: &[&str] = &[Self::READ32, Self::WRITE32];
 
-    pub(crate) fn verify_valid_object(
-        obj: Bound<'_, PyAny>,
-    ) -> PyResult<()> {
+    fn verify_valid_object(obj: Bound<'_, PyAny>) -> PyResult<()> {
         for &attr in Self::PERIPHERAL_METHODS {
             _ = obj.getattr(attr)?;
         }
@@ -78,9 +76,15 @@ impl PyPeripheral {
 #[pymethods]
 impl PyPeripheral {
     #[new]
-    pub(crate) fn new(obj: Bound<'_, PyAny>) -> PyResult<Self> {
+    pub fn new(obj: Bound<'_, PyAny>) -> PyResult<Self> {
         PyPeripheral::verify_valid_object(obj.clone())?;
 
         Ok(Self { obj: obj.into() })
     }
+}
+
+#[pymodule]
+pub(crate) fn py_peripheral(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<PyPeripheral>()?;
+    Ok(())
 }
