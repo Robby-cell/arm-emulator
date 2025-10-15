@@ -48,22 +48,35 @@ fn init_tracing() -> PyResult<()> {
     Ok(())
 }
 
+fn add_submodule<'py>(
+    m: &Bound<'py, PyModule>,
+    submodule_name: &str,
+) -> PyResult<Bound<'py, PyModule>> {
+    let submodule = PyModule::new(m.py(), submodule_name)?;
+    m.add_submodule(&submodule)?;
+    let sys = m.py().import("sys")?;
+    let modules = sys.getattr("modules")?;
+    modules.set_item(
+        &format!("{}.{}", m.name()?, submodule_name),
+        &submodule,
+    )?;
+    Ok(submodule)
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 fn arm_emulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
     init_tracing()?;
 
     {
-        let emulator_m = PyModule::new(m.py(), "emulator")?;
+        let emulator_m = add_submodule(m, "emulator")?;
         py_emulator::py_emulator(&emulator_m)?;
-        m.add_submodule(&emulator_m)?;
     }
 
     {
-        let peripheral_m = PyModule::new(m.py(), "peripheral")?;
+        let peripheral_m = add_submodule(m, "peripheral")?;
         py_peripheral::py_peripheral(&peripheral_m)?;
         py_gpio_port::py_gpio_port(&peripheral_m)?;
-        m.add_submodule(&peripheral_m)?;
     }
 
     {
