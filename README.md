@@ -8,6 +8,6 @@ Existing projects do not currently cover the requirements that this project aims
 
 The project has two main components:
 
-- [CPU](docs/architecture/CPU.md)
+- [Emulator](docs/architecture/Emulator.md)
 
 - [GUI](docs/architecture/GUI.md)

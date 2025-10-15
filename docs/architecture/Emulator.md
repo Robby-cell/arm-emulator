@@ -1,6 +1,6 @@
-# CPU Architecture
+# Emulator Architecture
 
-The actual CPU part of the project can be broken into further parts.
+The actual emulator part of the project can be broken into further parts.
 
 ```rs
 struct Cpu {
