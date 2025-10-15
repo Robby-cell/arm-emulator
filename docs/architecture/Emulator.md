@@ -27,7 +27,7 @@ Bindings can be created using this part of the project, for whatever the desired
 # Requirements
 
 This side comprises the actual logic, it should be correct. Error handling is a priority - the application crashing randomly doesn't make much sense, and would greatly hinder the app, if it crashes because of something on this side of the app.
-Errors will be made easy with `thiserror`. This will allow error unions to easily be composed, and bubbled up as we move up the call stack.
+Errors will be made easy with [thiserror](https://github.com/dtolnay/thiserror). This will allow error unions to easily be composed, and bubbled up as we move up the call stack.
 
 ```rs
 use thiserror::Error;
