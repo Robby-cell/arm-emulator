@@ -10,9 +10,15 @@ use crate::{
 };
 
 /// A python wrapper around the `Emulator`
-#[pyclass(name = "Emulator")]
+#[pyclass(name = "Emulator", str)]
 pub(crate) struct PyEmulator {
     emulator: Emulator,
+}
+
+impl fmt::Display for PyEmulator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
 }
 
 #[pymethods]
@@ -34,10 +40,6 @@ impl PyEmulator {
         value: u32,
     ) -> PyResult<()> {
         self.emulator.write32(addr, value).to_py_result()
-    }
-
-    pub(crate) fn __str__(&self) -> String {
-        format!("{self:?}")
     }
 
     pub(crate) fn execute_until_breakpoint(&mut self) -> PyResult<()> {
