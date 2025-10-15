@@ -18,6 +18,7 @@ pub mod cpu;
 pub mod instructions;
 pub mod memory;
 pub mod peripherals;
+pub mod system;
 
 #[derive(Debug)]
 pub struct Emulator {

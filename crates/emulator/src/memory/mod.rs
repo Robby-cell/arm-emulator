@@ -526,3 +526,23 @@ impl Default for Bus {
         Self::new(DEFAULT_MEMORY_SIZE)
     }
 }
+
+pub const fn as_bytes<T>(value: &T) -> &Bytes {
+    let slice = std::slice::from_ref(value);
+    unsafe {
+        std::slice::from_raw_parts(
+            slice.as_ptr() as *const u8,
+            slice.len() * size_of::<T>(),
+        )
+    }
+}
+
+pub const fn as_bytes_mut<T>(value: &mut T) -> &mut Bytes {
+    let slice = std::slice::from_mut(value);
+    unsafe {
+        std::slice::from_raw_parts_mut(
+            slice.as_ptr() as *mut u8,
+            slice.len() * size_of::<T>(),
+        )
+    }
+}
