@@ -50,16 +50,6 @@ impl Emulator {
             endian,
         }
     }
-
-    /// Create an [Emulator] with a zeroed [Cpu] and the provided [Bus]
-    pub fn with_bus(memory_bus: Bus) -> Self {
-        Self::new(Cpu::new(), memory_bus, Endian::Little)
-    }
-
-    /// Create an [Emulator] with a zeroed [Cpu] and a [Bus] with the the provided `ram_size`
-    pub fn with_ram_size(ram_size: u32) -> Self {
-        Self::with_bus(Bus::new(ram_size))
-    }
 }
 
 // Getters
