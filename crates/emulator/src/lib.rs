@@ -2,6 +2,7 @@ use thiserror::Error;
 
 use crate::{
     cpu::{Cpu, registers},
+    execution::ExecutableInstruction,
     instructions::{
         BlockDataTransferInstruction, BranchInstruction,
         DataProcessingInstruction, Instruction,
@@ -15,6 +16,7 @@ use crate::{
 };
 
 pub mod cpu;
+mod execution;
 pub mod instructions;
 pub mod memory;
 pub mod peripherals;
@@ -132,7 +134,7 @@ impl Emulator {
         instr: DataProcessingInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Data processing instruction: {instr:?}");
-        Ok(())
+        instr.execute_with(self)
     }
 
     fn execute_memory_access_instruction(
