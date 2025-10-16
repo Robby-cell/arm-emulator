@@ -40,10 +40,10 @@ uv pip install maturin
 Build the python bindings and install it to the environment:
 
 ```bash
-uv run maturin develop
+uvx maturin develop
 # python3 -m maturin develop
 # For release:
-# uv run maturin develop --release
+# uvx maturin develop --release
 ```
 
 If rebuilding, the cache can be cleared, so it won't use the old build:
