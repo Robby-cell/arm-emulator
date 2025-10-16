@@ -65,7 +65,7 @@ fn add_submodule<'py>(
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn arm_emulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     init_tracing()?;
 
     {

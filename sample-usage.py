@@ -1,4 +1,4 @@
-from arm_emulator import emulator, peripheral, RangeInclusiveU32
+from arm_emulator_rs import emulator, peripheral, RangeInclusiveU32
 
 class MyPeripheral:
     def __init__(self): ...
