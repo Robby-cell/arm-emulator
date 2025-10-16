@@ -45,6 +45,23 @@ pub struct DataProcessingInstruction {
 
 assert_u32_sized!(DataProcessingInstruction);
 
+#[derive(Debug, Copy, Clone)]
+pub enum Operand2 {
+    ShiftedRegisterOffset(ShiftedRegisterOffset),
+    Immediate(u16),
+}
+
+impl DataProcessingInstruction {
+    pub fn op2(&self) -> Operand2 {
+        match self.immediate() {
+            ImmediateFlag::Imm => Operand2::Immediate(self.operand2()),
+            ImmediateFlag::Register => {
+                Operand2::ShiftedRegisterOffset(self.operand2().into())
+            }
+        }
+    }
+}
+
 /// Represents a Memory Access instruction in the ARM architecture.
 /// Fields are defined according to the ARM instruction set encoding.
 /// This covers Load and Store instructions (LDR, STR, etc.).
