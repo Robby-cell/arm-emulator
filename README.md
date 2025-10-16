@@ -59,3 +59,11 @@ Run a python script that is using the bindings, using the environment that has t
 uv run sample-usage.py
 # python3 sample-usage.py
 ```
+
+# Run the Tests
+
+To run the Rust tests:
+
+```rs
+cargo test --all
+```
