@@ -1,7 +1,10 @@
 use thiserror::Error;
 
 use crate::{
-    cpu::{Cpu, registers},
+    cpu::{
+        Cpu,
+        registers::{self, PC},
+    },
     execution::ExecutableInstruction,
     instructions::{
         BlockDataTransferInstruction, BranchInstruction,
@@ -30,6 +33,22 @@ pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
     pub endian: Endian,
+    pub state: ExecutionState,
+}
+
+#[derive(Debug)]
+pub enum ExecutionState {
+    /// Breakpoint reached at address (pc = `addr`)
+    Breakpoint { addr: Word },
+
+    /// The program is currently executing
+    Running,
+
+    /// Finished executing, and returned the exit code
+    FinishedExecution { exit_code: i32 },
+
+    /// Interupt handler
+    SupervisorCall { code: u32 },
 }
 
 #[derive(Debug, Error, Clone)]
@@ -54,6 +73,7 @@ impl Emulator {
             cpu,
             memory_bus,
             endian,
+            state: ExecutionState::Running,
         }
     }
 }
@@ -102,11 +122,42 @@ impl Emulator {
         true
     }
 
+    pub fn set_endian(&mut self, endian: Endian) {
+        self.endian = endian;
+    }
+
+    /// Fetch the instruction at the address of the current PC value
+    #[inline]
+    pub fn fetch(&self) -> MemoryAccessResult<u32> {
+        self.read32(self.cpu[registers::PC])
+    }
+
+    /// Decode the instruction representation given.
+    #[inline]
+    pub fn decode(
+        &self,
+        instr: u32,
+    ) -> Result<Instruction, InstructionConversionError> {
+        instr.try_into()
+    }
+
+    fn post_execution_update(&mut self) -> Result<(), ExecutionError> {
+        self.cpu[PC] += size_of::<Word>() as u32;
+        Ok(())
+    }
+
     /// Step over one ASM instruction, and then yield execution.
     pub fn step(&mut self) -> Result<(), ExecutionError> {
-        let instruction = self.read32(self.cpu[registers::PC])?;
+        // Fetch
+        let fetch = self.fetch()?;
 
-        self.execute_single_instruction(instruction.try_into()?)
+        // Decode
+        let decode = self.decode(fetch)?;
+
+        // Execute
+        self.execute_single_instruction(decode)?;
+
+        Ok(())
     }
 
     fn execute_single_instruction(
@@ -115,21 +166,23 @@ impl Emulator {
     ) -> Result<(), ExecutionError> {
         match instruction {
             Instruction::DataProcessing(instr) => {
-                self.execute_data_processing_instruction(instr)
+                self.execute_data_processing_instruction(instr)?;
             }
             Instruction::MemoryAccess(instr) => {
-                self.execute_memory_access_instruction(instr)
+                self.execute_memory_access_instruction(instr)?;
             }
             Instruction::BlockDataTransfer(instr) => {
-                self.execute_block_data_transfer_instruction(instr)
+                self.execute_block_data_transfer_instruction(instr)?;
             }
             Instruction::Branch(instr) => {
-                self.execute_branch_instruction(instr)
+                self.execute_branch_instruction(instr)?;
             }
             Instruction::SupervisorCall(instr) => {
-                self.execute_supervisor_call_instruction(instr)
+                self.execute_supervisor_call_instruction(instr)?;
             }
         }
+        self.post_execution_update()?;
+        Ok(())
     }
 
     fn execute_data_processing_instruction(
@@ -147,6 +200,7 @@ impl Emulator {
         tracing::trace!("Memory access instruction: {instr:?}");
         Ok(())
     }
+
     fn execute_block_data_transfer_instruction(
         &mut self,
         instr: BlockDataTransferInstruction,
@@ -154,13 +208,15 @@ impl Emulator {
         tracing::trace!("Block data transfer instruction: {instr:?}");
         Ok(())
     }
+
     fn execute_branch_instruction(
         &mut self,
         instr: BranchInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Branch instruction: {instr:?}");
-        Ok(())
+        instr.execute_with(self)
     }
+
     fn execute_supervisor_call_instruction(
         &mut self,
         instr: SupervisorCallInstruction,

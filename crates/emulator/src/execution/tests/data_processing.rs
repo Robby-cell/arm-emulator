@@ -1,16 +1,9 @@
-//! Note: <InstructionType>::from(u32) is not affected by endianness.
-
 use crate::{
-    Emulator,
-    cpu::Cpu,
+    execution::tests::ramless_emulator,
     instructions::{DataProcessingInstruction, fields::Register},
-    memory::{Bus, Endian},
+    memory::Endian,
     testing::big_endian_to_native,
 };
-
-fn ramless_emulator(endian: Endian) -> Emulator {
-    Emulator::new(Cpu::new(), Bus::new(0), endian)
-}
 
 #[test]
 fn simple_mov_test_with_immediate() {

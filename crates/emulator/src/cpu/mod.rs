@@ -467,4 +467,28 @@ impl Cpu {
     pub fn al(&self) -> bool {
         true
     }
+
+    pub fn pc(&self) -> u32 {
+        self.registers[registers::PC as usize]
+    }
+
+    pub fn lr(&self) -> u32 {
+        self.registers[registers::LR as usize]
+    }
+
+    pub fn sp(&self) -> u32 {
+        self.registers[registers::SP as usize]
+    }
+
+    pub fn set_pc(&mut self, value: u32) {
+        self.registers[registers::PC as usize] = value;
+    }
+
+    pub fn set_lr(&mut self, value: u32) {
+        self.registers[registers::LR as usize] = value;
+    }
+
+    pub fn set_sp(&mut self, value: u32) {
+        self.registers[registers::SP as usize] = value;
+    }
 }
