@@ -1,9 +1,11 @@
 use super::*;
 
+use crate::testing::little_endian_to_native;
+
 #[test]
 fn test_decode_data_processing_immediate() {
     // Assembly: MOV r1, #123   (Always condition)
-    let raw_inst = 0xE3A0107B;
+    let raw_inst = little_endian_to_native(0xE3A0107B);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::DataProcessing(inst) = decoded {
@@ -22,7 +24,7 @@ fn test_decode_data_processing_immediate() {
 #[test]
 fn test_decode_data_processing_register() {
     // Assembly: ADD r3, r2, r1   (Always condition)
-    let raw_inst = 0xE0823001;
+    let raw_inst = little_endian_to_native(0xE0823001);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::DataProcessing(inst) = decoded {
@@ -44,7 +46,7 @@ fn test_decode_data_processing_register() {
 #[test]
 fn test_decode_memory_access_immediate() {
     // Assembly: LDR r5, [r6, #-4]!   (pre-indexed, write-back)
-    let raw_inst = 0xE5365004;
+    let raw_inst = little_endian_to_native(0xE5365004);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::MemoryAccess(inst) = decoded {
@@ -66,7 +68,7 @@ fn test_decode_memory_access_immediate() {
 #[test]
 fn test_decode_branch() {
     // Assembly: BL 0x24   (Branch and Link 8 words/32 bytes forward from PC+8)
-    let raw_inst = 0xEB000008;
+    let raw_inst = little_endian_to_native(0xEB000008);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::Branch(inst) = decoded {
@@ -81,7 +83,7 @@ fn test_decode_branch() {
 #[test]
 fn test_decode_block_data_transfer() {
     // Assembly: STMDB sp!, {r4, r5, lr}  (Canonical PUSH)
-    let raw_inst = 0xE92D4030;
+    let raw_inst = little_endian_to_native(0xE92D4030);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::BlockDataTransfer(inst) = decoded {
@@ -106,7 +108,7 @@ fn test_decode_block_data_transfer() {
 #[test]
 fn test_decode_supervisor_call_conditional() {
     // Assembly: SVCEQ #0x1A   (Supervisor call, if Z flag is set)
-    let raw_inst = 0x0F00001A;
+    let raw_inst = little_endian_to_native(0x0F00001A);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::SupervisorCall(inst) = decoded {
@@ -121,7 +123,7 @@ fn test_decode_supervisor_call_conditional() {
 fn test_decode_data_processing_s_flag() {
     // Assembly: CMP r2, #100   (Always condition)
     // CMP is effectively SUBS with the result discarded. It always sets flags.
-    let raw_inst = 0xE3520064;
+    let raw_inst = little_endian_to_native(0xE3520064);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::DataProcessing(inst) = decoded {
@@ -141,7 +143,7 @@ fn test_decode_data_processing_s_flag() {
 #[test]
 fn test_decode_data_processing_register_shifted() {
     // Assembly: ADD r5, r4, r3, LSL #2
-    let raw_inst = 0xE0845103;
+    let raw_inst = little_endian_to_native(0xE0845103);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::DataProcessing(inst) = decoded {
@@ -172,7 +174,7 @@ fn test_decode_data_processing_register_shifted() {
 #[test]
 fn test_decode_memory_access_post_indexed() {
     // Assembly: STR r8, [r1], #-16   (post-indexed, write-back)
-    let raw_inst = 0xE4018010;
+    let raw_inst = little_endian_to_native(0xE4018010);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::MemoryAccess(inst) = decoded {
@@ -193,7 +195,7 @@ fn test_decode_memory_access_post_indexed() {
 #[test]
 fn test_decode_block_data_transfer_load() {
     // Assembly: LDM r8, {r0, r1, r2, r3}
-    let raw_inst = 0xE898000F;
+    let raw_inst = little_endian_to_native(0xE898000F);
     let decoded: Instruction = raw_inst.try_into().unwrap();
 
     if let Instruction::BlockDataTransfer(inst) = decoded {
@@ -216,7 +218,7 @@ fn test_decode_block_data_transfer_load() {
 fn test_decode_invalid_instruction_class() {
     // An instruction with bits [27:25] as `110` corresponds to coprocessor
     // instructions, which are not handled by our decoder.
-    let raw_inst = 0xEC000000;
+    let raw_inst = little_endian_to_native(0xEC000000);
     let result = Instruction::try_from(raw_inst);
     assert!(matches!(
         result,

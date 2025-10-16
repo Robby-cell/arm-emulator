@@ -5,6 +5,7 @@ use crate::{
     cpu::Cpu,
     instructions::{DataProcessingInstruction, fields::Register},
     memory::{Bus, Endian},
+    testing::big_endian_to_native,
 };
 
 fn ramless_emulator(endian: Endian) -> Emulator {
@@ -14,7 +15,8 @@ fn ramless_emulator(endian: Endian) -> Emulator {
 #[test]
 fn simple_mov_test_with_immediate() {
     // MOV R0, #45
-    let instr = DataProcessingInstruction::from(0xE3A0002D);
+    let instr =
+        DataProcessingInstruction::from(big_endian_to_native(0x2D00A0E3));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.execute_data_processing_instruction(instr).unwrap();
 
@@ -23,8 +25,9 @@ fn simple_mov_test_with_immediate() {
 
 #[test]
 fn simple_mov_test_with_shifted_register() {
-    // mov r0, r1, lsl #2
-    let instr = DataProcessingInstruction::from(0xE1A00101);
+    // MOV R0, R1, LSL #2
+    let instr =
+        DataProcessingInstruction::from(big_endian_to_native(0x0101A0E1));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu[Register::R1 as _] = 16;
