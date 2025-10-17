@@ -1,8 +1,6 @@
 use crate::{
-    execution::tests::ramless_emulator,
-    instructions::BranchInstruction,
-    memory::Endian,
-    testing::{big_endian_to_native, little_endian_to_native},
+    execution::tests::ramless_emulator, instructions::BranchInstruction,
+    memory::Endian, testing::little_endian_to_native,
 };
 
 #[test]

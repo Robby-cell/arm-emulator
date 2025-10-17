@@ -129,7 +129,7 @@ impl Emulator {
     /// Fetch the instruction at the address of the current PC value
     #[inline]
     pub fn fetch(&self) -> MemoryAccessResult<u32> {
-        self.read32(self.cpu[registers::PC])
+        self.read32(self.cpu.register(registers::PC))
     }
 
     /// Decode the instruction representation given.

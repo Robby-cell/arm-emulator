@@ -468,27 +468,43 @@ impl Cpu {
         true
     }
 
+    #[inline]
     pub fn pc(&self) -> u32 {
-        self.registers[registers::PC as usize]
+        self.register(registers::PC)
     }
 
+    #[inline]
     pub fn lr(&self) -> u32 {
-        self.registers[registers::LR as usize]
+        self.register(registers::LR)
     }
 
+    #[inline]
     pub fn sp(&self) -> u32 {
-        self.registers[registers::SP as usize]
+        self.register(registers::SP)
     }
 
+    #[inline]
+    pub fn register(&self, register: u8) -> u32 {
+        self.registers[register as usize]
+    }
+
+    #[inline]
     pub fn set_pc(&mut self, value: u32) {
-        self.registers[registers::PC as usize] = value;
+        self.set_register(registers::PC, value);
     }
 
+    #[inline]
     pub fn set_lr(&mut self, value: u32) {
-        self.registers[registers::LR as usize] = value;
+        self.set_register(registers::LR, value);
     }
 
+    #[inline]
     pub fn set_sp(&mut self, value: u32) {
-        self.registers[registers::SP as usize] = value;
+        self.set_register(registers::SP, value);
+    }
+
+    #[inline]
+    pub fn set_register(&mut self, register: u8, value: u32) {
+        self.registers[register as usize] = value;
     }
 }
