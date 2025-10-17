@@ -36,4 +36,7 @@ print(em.read32(4096))
 em.write32(4128, 0x2B)
 print(em.read32(4160))
 
+em.write32(0, 0x1234)
+em.write32(4, 0x5678)
+
 print(em)
