@@ -159,7 +159,8 @@ impl BasicWrite for LittleEndian {
         offset: Word,
         value: u32,
     ) -> MemoryAccessResult<()> {
-        bytes[offset as usize..].copy_from_slice(&value.to_le_bytes());
+        bytes[offset as usize..][0..4]
+            .copy_from_slice(&value.to_le_bytes());
         Ok(())
     }
 
