@@ -2,7 +2,7 @@ use crate::{
     execution::tests::ramless_emulator,
     instructions::{DataProcessingInstruction, fields::Register},
     memory::Endian,
-    testing::little_endian_to_native,
+    memory::little_endian_to_native,
 };
 
 #[test]

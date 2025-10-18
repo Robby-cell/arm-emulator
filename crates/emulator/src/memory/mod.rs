@@ -9,6 +9,8 @@ pub use unmanaged_chunk::{
     UnmanagedReadOnlyChunk, UnmanagedReadWriteChunk,
 };
 
+#[cfg(test)]
+mod tests;
 mod unmanaged_chunk;
 
 const KIBI: Word = 1 << 10;
@@ -220,6 +222,11 @@ pub trait Peripheral {
     /// `offset` is the address relative to the start of this peripheral's region.
     /// Does not handle endianness. Should be handled inside the [Bus].
     fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()>;
+
+    fn read_byte(&self, offset: u32) -> MemoryAccessResult<u8>;
+
+    fn write_byte(&self, offset: u32, value: u8)
+    -> MemoryAccessResult<()>;
 }
 
 pub struct MemoryMappedPeripheral {
@@ -446,8 +453,7 @@ impl Bus {
                     "Reading byte from peripheral mapped to {range:?} at offset: {offset:#X}",
                 );
 
-                // return peripheral.read(offset);
-                return Ok(0);
+                return peripheral.read_byte(offset);
             }
         }
 
@@ -497,8 +503,7 @@ impl Bus {
                     "Writing byte {value:#X} to peripheral mapped to {range:?} at offset: {offset:#}",
                 );
 
-                // return peripheral.write(offset, value);
-                return Ok(()); // The write is handled, so we are done
+                return peripheral.write_byte(offset, value);
             }
         }
 
@@ -547,3 +552,46 @@ pub const fn as_bytes_mut<T>(value: &mut T) -> &mut Bytes {
         )
     }
 }
+
+#[cfg(target_endian = "little")]
+mod native_memory {
+    pub const fn big_endian_to_native(instr: u32) -> u32 {
+        u32::from_be_bytes(instr.to_le_bytes())
+    }
+
+    pub const fn little_endian_to_native(instr: u32) -> u32 {
+        u32::from_le_bytes(instr.to_le_bytes())
+    }
+
+    pub const fn u32_to_native_bytes(value: u32) -> [u8; 4] {
+        value.to_le_bytes()
+    }
+
+    pub const fn u32_from_native_bytes(bytes: [u8; 4]) -> u32 {
+        u32::from_le_bytes(bytes)
+    }
+}
+
+#[cfg(target_endian = "big")]
+mod native_memory {
+    pub const fn big_endian_to_native(instr: u32) -> u32 {
+        u32::from_be_bytes(instr.to_be_bytes())
+    }
+
+    pub const fn little_endian_to_native(instr: u32) -> u32 {
+        u32::from_le_bytes(instr.to_be_bytes())
+    }
+
+    pub const fn u32_to_native_bytes(value: u32) -> [u8; 4] {
+        value.to_be_bytes()
+    }
+
+    pub const fn u32_from_native_bytes(bytes: [u8; 4]) -> u32 {
+        u32::from_be_bytes(bytes)
+    }
+}
+
+pub use native_memory::{
+    big_endian_to_native, little_endian_to_native, u32_from_native_bytes,
+    u32_to_native_bytes,
+};

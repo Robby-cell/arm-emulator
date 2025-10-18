@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::testing::little_endian_to_native;
+use crate::memory::little_endian_to_native;
 
 #[test]
 fn test_decode_data_processing_immediate() {

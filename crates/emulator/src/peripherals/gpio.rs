@@ -1,5 +1,6 @@
 use crate::memory::{
     MemoryAccessError, MemoryAccessResult, Peripheral, Word,
+    u32_from_native_bytes, u32_to_native_bytes,
 };
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -83,5 +84,29 @@ impl Peripheral for GpioPort {
             }
         }
         Ok(())
+    }
+
+    fn read_byte(&self, offset: u32) -> MemoryAccessResult<u8> {
+        let spare = offset % 4;
+        let offset = offset - spare;
+        let value = self.read32(offset)?;
+        let bytes = u32_to_native_bytes(value);
+
+        Ok(bytes[spare as usize])
+    }
+
+    fn write_byte(
+        &self,
+        offset: u32,
+        value: u8,
+    ) -> MemoryAccessResult<()> {
+        let spare = offset % 4;
+        let offset = offset - spare;
+        let v = self.read32(offset)?;
+        let mut v = u32_to_native_bytes(v);
+        v[spare as usize] = value;
+        let v = u32_from_native_bytes(v);
+
+        self.write32(offset, v)
     }
 }

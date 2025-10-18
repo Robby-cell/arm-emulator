@@ -34,6 +34,16 @@ impl PyGpioPort {
     fn py_write32(&self, offset: u32, value: u32) -> PyResult<()> {
         self.write32(offset, value).to_py_result()
     }
+
+    #[pyo3(name = "read_byte")]
+    fn py_read_byte(&self, offset: u32) -> PyResult<u8> {
+        self.read_byte(offset).to_py_result()
+    }
+
+    #[pyo3(name = "write_byte")]
+    fn py_write_byte(&self, offset: u32, value: u8) -> PyResult<()> {
+        self.write_byte(offset, value).to_py_result()
+    }
 }
 
 impl Peripheral for PyGpioPort {
@@ -43,6 +53,18 @@ impl Peripheral for PyGpioPort {
 
     fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()> {
         self.gpio.write32(offset, value)
+    }
+
+    fn read_byte(&self, offset: u32) -> MemoryAccessResult<u8> {
+        self.gpio.read_byte(offset)
+    }
+
+    fn write_byte(
+        &self,
+        offset: u32,
+        value: u8,
+    ) -> MemoryAccessResult<()> {
+        self.gpio.write_byte(offset, value)
     }
 }
 

@@ -6,7 +6,14 @@ class MyPeripheral:
     def read32(self, addr: int) -> int:
         return 0
 
-    def write32(self, addr: int, data: int) -> None: ...
+    def write32(self, addr: int, data: int) -> None:
+        ...
+
+    def read_byte(self, addr: int) -> int:
+        return 0
+
+    def write_byte(self, addr: int, data: int) -> None:
+        ...
 
 
 class PyGpioPort(peripheral.GpioPort):
@@ -15,12 +22,22 @@ class PyGpioPort(peripheral.GpioPort):
 
     def read32(self, addr: int) -> int:
         res: int = super().read32(addr)
-        print("PyGpioPort read")
+        print("PyGpioPort read32")
         return res
 
     def write32(self, addr: int, data: int) -> None:
-        res: None = super().write32(addr, data)
-        print("PyGpioPort write")
+        res: None = super().write_byte(addr, data)
+        print("PyGpioPort write32")
+        return res
+    
+    def read_byte(self, addr: int) -> int:
+        res: int = super().read32(addr)
+        print("PyGpioPort read_byte")
+        return res
+
+    def write_byte(self, addr: int, data: int) -> None:
+        res: None = super().write_byte(addr, data)
+        print("PyGpioPort write_byte")
         return res
 
 
