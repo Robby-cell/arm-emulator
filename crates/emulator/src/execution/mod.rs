@@ -1,8 +1,14 @@
 use std::ops::{Shl, Shr};
 
+use thiserror::Error;
+
 use crate::{
-    Emulator, ExecutionError,
-    instructions::{Operand2, fields::ShiftType},
+    Emulator,
+    instructions::{
+        InstructionConversionError, Operand2, fields::ShiftType,
+    },
+    memory::{MemoryAccessError, Word},
+    prelude::Instruction,
 };
 
 mod branch;
@@ -10,6 +16,35 @@ mod data_processing;
 
 #[cfg(test)]
 mod tests;
+
+#[derive(Debug)]
+pub enum ExecutionState {
+    /// Breakpoint reached at address (pc = `addr`)
+    Breakpoint { addr: Word },
+
+    /// The program is currently executing
+    Running,
+
+    /// Finished executing, and returned the exit code
+    FinishedExecution { exit_code: i32 },
+
+    /// Interupt handler
+    SupervisorCall { code: u32 },
+}
+
+#[derive(Debug, Error, Clone)]
+pub enum ExecutionError {
+    #[error(
+        "breakpoint reached at instruction {instruction:?} at address {addr:#X}"
+    )]
+    Breakpoint { addr: u32, instruction: Instruction },
+
+    #[error("memory access error: {0}")]
+    MemoryAccessError(#[from] MemoryAccessError),
+
+    #[error("illegal instruction, could not decode instruction: {0}")]
+    InstructionConversionError(#[from] InstructionConversionError),
+}
 
 pub trait ExecutableInstruction {
     fn execute_with(

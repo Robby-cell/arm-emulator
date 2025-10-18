@@ -1,6 +1,6 @@
 use crate::{
-    Emulator, ExecutionError,
-    execution::{ExecutableInstruction, N, Z},
+    Emulator,
+    execution::{ExecutableInstruction, ExecutionError, N, Z},
     instructions::{
         DataProcessingInstruction,
         fields::{Opcode, SetFlags},

@@ -1,5 +1,5 @@
 use crate::{
-    execution::ExecutableInstruction,
+    execution::{ExecutableInstruction, ExecutionError},
     instructions::{BranchInstruction, fields::LinkFlag},
 };
 
@@ -7,7 +7,7 @@ impl ExecutableInstruction for BranchInstruction {
     fn execute_with(
         &self,
         emulator: &mut crate::Emulator,
-    ) -> Result<(), crate::ExecutionError> {
+    ) -> Result<(), ExecutionError> {
         // Step 1: Handle the "Link" operation for BL instructions.
         if self.l() == LinkFlag::Yes {
             let return_address = emulator.cpu.pc().wrapping_add(4);

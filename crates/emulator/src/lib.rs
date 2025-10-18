@@ -1,11 +1,9 @@
-use thiserror::Error;
-
 use crate::{
     cpu::{
         Cpu,
         registers::{self, PC},
     },
-    execution::ExecutableInstruction,
+    execution::{ExecutableInstruction, ExecutionError, ExecutionState},
     instructions::{
         BlockDataTransferInstruction, BranchInstruction,
         DataProcessingInstruction, Instruction,
@@ -13,8 +11,8 @@ use crate::{
         SupervisorCallInstruction,
     },
     memory::{
-        Bus, Bytes, Endian, MemoryAccessError, MemoryAccessResult,
-        MemoryMappedPeripheral, Word,
+        Bus, Bytes, Endian, MemoryAccessResult, MemoryMappedPeripheral,
+        Word,
     },
 };
 
@@ -31,35 +29,6 @@ pub struct Emulator {
     pub memory_bus: Bus,
     pub endian: Endian,
     pub state: ExecutionState,
-}
-
-#[derive(Debug)]
-pub enum ExecutionState {
-    /// Breakpoint reached at address (pc = `addr`)
-    Breakpoint { addr: Word },
-
-    /// The program is currently executing
-    Running,
-
-    /// Finished executing, and returned the exit code
-    FinishedExecution { exit_code: i32 },
-
-    /// Interupt handler
-    SupervisorCall { code: u32 },
-}
-
-#[derive(Debug, Error, Clone)]
-pub enum ExecutionError {
-    #[error(
-        "breakpoint reached at instruction {instruction:?} at address {addr:#X}"
-    )]
-    Breakpoint { addr: u32, instruction: Instruction },
-
-    #[error("memory access error: {0}")]
-    MemoryAccessError(#[from] MemoryAccessError),
-
-    #[error("illegal instruction, could not decode instruction: {0}")]
-    InstructionConversionError(#[from] InstructionConversionError),
 }
 
 // Creation.
@@ -227,4 +196,16 @@ impl Emulator {
     pub fn execute(&mut self) -> Result<(), ExecutionError> {
         Ok(())
     }
+}
+
+pub mod prelude {
+    pub use crate::Emulator;
+    pub use crate::cpu::{Cpu, CpuError, registers};
+    pub use crate::execution::ExecutionError;
+    pub use crate::instructions::{
+        BlockDataTransferInstruction, BranchInstruction,
+        DataProcessingInstruction, Instruction, MemoryAccessInstruction,
+        SupervisorCallInstruction,
+    };
+    pub use crate::memory::{Bus, Endian, Peripheral};
 }
