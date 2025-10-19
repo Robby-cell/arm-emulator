@@ -13,3 +13,8 @@ classifiers = [
 dynamic = ["version"]
 [tool.maturin]
 features = ["pyo3/extension-module"]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.16.0",
+]

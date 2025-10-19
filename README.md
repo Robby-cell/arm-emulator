@@ -67,3 +67,12 @@ To run the Rust tests:
 ```rs
 cargo test --all
 ```
+
+# Packaging the GUI
+
+To build and package the python GUI:
+
+```bash
+# Build the project first. And then:
+pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
+```
