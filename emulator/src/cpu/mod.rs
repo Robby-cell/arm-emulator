@@ -1,7 +1,4 @@
-use std::{
-    error, fmt,
-    ops::{Index, IndexMut},
-};
+use std::ops::{Index, IndexMut};
 
 use thiserror::Error;
 
@@ -102,26 +99,11 @@ impl From<SupervisorCall> for ExecutionState {
 /// Error retrieving a [Mode] from bits.
 /// This should never happen in practice, the [CPU](Cpu) struct ensures
 /// this is interacted with correctly.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Debug, Error, Clone, Eq, PartialEq)]
 pub enum ModeError {
+    #[error("invalid mode bits")]
     InvalidModeBits,
 }
-
-impl fmt::Debug for ModeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ModeError::InvalidModeBits => write!(f, "Invalid mode bits"),
-        }
-    }
-}
-
-impl fmt::Display for ModeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-
-impl error::Error for ModeError {}
 
 impl TryFrom<u32> for Mode {
     type Error = ModeError;
