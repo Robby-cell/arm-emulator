@@ -74,5 +74,6 @@ To build and package the python GUI:
 
 ```bash
 # Build the project first. And then:
-pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
+uvx pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
+# python3 -m pyinstaller --additional-hooks-dir=hooks sample-usage.py
 ```
