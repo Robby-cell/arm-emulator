@@ -5,7 +5,7 @@ use std::{
 
 use thiserror::Error;
 
-use crate::memory::Word;
+use crate::execution::ExecutionError;
 
 mod display;
 #[cfg(test)]
@@ -37,22 +37,66 @@ pub enum Mode {
     System = 0b11111,
 }
 
+/// The program is ready to exit, with the given `exit_code`.
+#[derive(Debug, Clone)]
+pub struct ExitStatus {
+    /// The exit code of the program.
+    /// i.e. the equival of `return 0`
+    pub exit_code: i32,
+}
+
+/// An interupt is currently active. The processor must handle it first.
+#[derive(Debug, Clone)]
+pub struct SupervisorCall {
+    /// The code of the active supervisor call.
+    pub code: u32,
+}
+
+/// An exception. Includes traps/breakpoints. Does not include [SupervisorCall].
+#[derive(Debug, Clone)]
+pub struct Exception {
+    /// The exception that is currently active.
+    pub exception: ExecutionError,
+}
+
 /// Execution state of the CPU in the current program. Keeps track of what is happening within the CPU.
 /// Has a breakpoint been hit? Is it still running? Should it be exiting? Is it handling an interupt?
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub enum ExecutionState {
     /// The program is currently executing
     #[default]
     Running,
 
-    /// Breakpoint reached at address (pc = `addr`)
-    Breakpoint { addr: Word },
+    /// There is an active [Exception].
+    /// This includes breakpoints. Does not include supervisor calls though, even though
+    /// it probably should be considered as such.
+    Exception(Exception),
 
-    /// Finished executing, and returned the exit code
-    FinishedExecution { exit_code: i32 },
+    /// Finished executing, and returned the exit code.
+    /// Wraps [ExitStatus], which captures the exit state of the CPU, when finished
+    /// executing a program.
+    FinishedExecution(ExitStatus),
 
-    /// Interupt handler
-    SupervisorCall { code: u32 },
+    /// Interupt handler. Software interupts/[SupervisorCall]
+    SupervisorCall(SupervisorCall),
+}
+
+impl From<Exception> for ExecutionState {
+    fn from(value: Exception) -> Self {
+        Self::Exception(value)
+    }
+}
+
+impl From<ExitStatus> for ExecutionState {
+    fn from(value: ExitStatus) -> Self {
+        Self::FinishedExecution(value)
+    }
+}
+
+impl From<SupervisorCall> for ExecutionState {
+    fn from(value: SupervisorCall) -> Self {
+        Self::SupervisorCall(value)
+    }
 }
 
 /// Error retrieving a [Mode] from bits.
@@ -180,6 +224,22 @@ impl Cpu {
         let cpu = Default::default();
         tracing::trace!("Created new CPU: {cpu:?}");
         cpu
+    }
+
+    pub fn set_running(&mut self) {
+        self.state = ExecutionState::Running;
+    }
+
+    pub fn set_exception(&mut self, error: Exception) {
+        self.state = error.into();
+    }
+
+    pub fn set_exit(&mut self, status: ExitStatus) {
+        self.state = status.into();
+    }
+
+    pub fn set_supervisor_call(&mut self, svc: SupervisorCall) {
+        self.state = svc.into();
     }
 
     /// Gets the current processor mode.
