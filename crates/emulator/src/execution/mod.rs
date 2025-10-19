@@ -7,7 +7,7 @@ use crate::{
     instructions::{
         InstructionConversionError, Operand2, fields::ShiftType,
     },
-    memory::{MemoryAccessError, Word},
+    memory::MemoryAccessError,
     prelude::Instruction,
 };
 
@@ -16,21 +16,6 @@ mod data_processing;
 
 #[cfg(test)]
 mod tests;
-
-#[derive(Debug)]
-pub enum ExecutionState {
-    /// Breakpoint reached at address (pc = `addr`)
-    Breakpoint { addr: Word },
-
-    /// The program is currently executing
-    Running,
-
-    /// Finished executing, and returned the exit code
-    FinishedExecution { exit_code: i32 },
-
-    /// Interupt handler
-    SupervisorCall { code: u32 },
-}
 
 #[derive(Debug, Error, Clone)]
 pub enum ExecutionError {

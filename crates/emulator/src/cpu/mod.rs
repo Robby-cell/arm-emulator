@@ -5,6 +5,8 @@ use std::{
 
 use thiserror::Error;
 
+use crate::memory::Word;
+
 mod display;
 #[cfg(test)]
 mod tests;
@@ -33,6 +35,24 @@ pub enum Mode {
     Abort = 0b10111,
     Undefined = 0b11011,
     System = 0b11111,
+}
+
+/// Execution state of the CPU in the current program. Keeps track of what is happening within the CPU.
+/// Has a breakpoint been hit? Is it still running? Should it be exiting? Is it handling an interupt?
+#[derive(Debug, Default, Clone, Copy)]
+pub enum ExecutionState {
+    /// The program is currently executing
+    #[default]
+    Running,
+
+    /// Breakpoint reached at address (pc = `addr`)
+    Breakpoint { addr: Word },
+
+    /// Finished executing, and returned the exit code
+    FinishedExecution { exit_code: i32 },
+
+    /// Interupt handler
+    SupervisorCall { code: u32 },
 }
 
 /// Error retrieving a [Mode] from bits.
@@ -106,6 +126,8 @@ pub struct Cpu {
     pub spsr_und: u32,
     pub spsr_irq: u32,
     pub spsr_fiq: u32,
+
+    pub state: ExecutionState,
 }
 
 impl Index<u8> for Cpu {

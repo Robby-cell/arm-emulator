@@ -3,7 +3,7 @@ use crate::{
         Cpu,
         registers::{self, PC},
     },
-    execution::{ExecutableInstruction, ExecutionError, ExecutionState},
+    execution::{ExecutableInstruction, ExecutionError},
     instructions::{
         BlockDataTransferInstruction, BranchInstruction,
         DataProcessingInstruction, Instruction,
@@ -28,7 +28,6 @@ pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
     pub endian: Endian,
-    pub state: ExecutionState,
 }
 
 // Creation.
@@ -39,7 +38,6 @@ impl Emulator {
             cpu,
             memory_bus,
             endian,
-            state: ExecutionState::Running,
         }
     }
 }
