@@ -301,13 +301,13 @@ impl Cpu {
     }
 
     /// Returns a read-only reference to the SPSR for the current mode.
-    pub fn spsr(&self) -> Result<&u32, CpuError> {
+    pub fn spsr(&self) -> Result<u32, CpuError> {
         match self.mode() {
-            Mode::Supervisor => Ok(&self.spsr_svc),
-            Mode::Abort => Ok(&self.spsr_abt),
-            Mode::Undefined => Ok(&self.spsr_und),
-            Mode::Irq => Ok(&self.spsr_irq),
-            Mode::Fiq => Ok(&self.spsr_fiq),
+            Mode::Supervisor => Ok(self.spsr_svc),
+            Mode::Abort => Ok(self.spsr_abt),
+            Mode::Undefined => Ok(self.spsr_und),
+            Mode::Irq => Ok(self.spsr_irq),
+            Mode::Fiq => Ok(self.spsr_fiq),
             Mode::User | Mode::System => {
                 tracing::error!(
                     "Unprivileged access attempt. In user/system mode."
