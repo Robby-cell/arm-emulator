@@ -22,6 +22,8 @@ pub mod instructions;
 pub mod memory;
 pub mod peripherals;
 pub mod system;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 pub struct Emulator {
