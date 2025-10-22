@@ -36,6 +36,8 @@ pub type Bytes = [u8];
 /// System word type. On a 32-bit system, 32 bits
 pub type Word = u32;
 
+pub type Ram = Vec<u8>;
+
 #[derive(Debug, Error, Clone)]
 pub enum MemoryAccessError {
     #[error("invalid read permission ({addr:#X})")]
@@ -254,7 +256,7 @@ impl MemoryMappedPeripheral {
 #[derive(Debug)]
 pub struct Bus {
     /// Main system RAM, represented as a simple byte vector.
-    ram: Vec<u8>,
+    ram: Ram,
     /// A list of peripherals and the address ranges they occupy.
     peripherals: Vec<MemoryMappedPeripheral>,
 }
@@ -311,7 +313,7 @@ impl Bus {
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 < self.ram.len() as _ {
+        if addr + 4 <= self.ram.len() as _ {
             Reader::read32(&self.ram, addr)
         } else {
             Err(MemoryAccessError::InvalidReadPermission { addr })
@@ -368,7 +370,7 @@ impl Bus {
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 < self.ram.len() as _ {
+        if addr + 4 <= self.ram.len() as _ {
             Writer::write32(&mut self.ram, addr, value)
         } else {
             Err(MemoryAccessError::InvalidWritePermission { addr })
@@ -530,6 +532,22 @@ impl Bus {
 impl Default for Bus {
     fn default() -> Self {
         Self::new(DEFAULT_MEMORY_SIZE)
+    }
+}
+
+impl Bus {
+    pub fn with_ram_and_peripherals(
+        ram: Ram,
+        peripherals: Vec<MemoryMappedPeripheral>,
+    ) -> Self {
+        Self { ram, peripherals }
+    }
+
+    pub fn with_ram(ram: Ram) -> Self {
+        Self {
+            ram,
+            peripherals: Default::default(),
+        }
     }
 }
 
