@@ -27,3 +27,6 @@ rustflags = [
   "-C",
   "link-arg=-fvisibility=hidden",
 ]
+
+[alias]
+arm = "run -q --package xbin --"

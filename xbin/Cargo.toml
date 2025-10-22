@@ -1,0 +1,8 @@
+[package]
+name = "xbin"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+structopt = "0.3.26"
+anyhow = { version = "1.0.100" }
