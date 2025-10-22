@@ -217,6 +217,24 @@ fn test_subs_carry_flag_as_borrow() {
 }
 
 #[test]
+fn test_subs_with_overflow() {
+    // SUBS R0, R1, R2
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE0510002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    emulator.cpu.set_register(Register::R1 as _, 0x80000000);
+    emulator.cpu.set_register(Register::R2 as _, 1);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 0x7FFFFFFF);
+    assert!(emulator.cpu.c(), "C flag should be set");
+    assert!(emulator.cpu.v(), "V flag should be set");
+    assert!(!emulator.cpu.n(), "N flag should not be set");
+    assert!(!emulator.cpu.z(), "Z flag should not be set");
+}
+
+#[test]
 fn test_rsb_reverse_subtract() {
     // RSB R0, R1, #100   (Reverse Subtract: R0 = 100 - R1)
     let instr = DataProcessingInstruction::from(little_endian_to_native(
@@ -267,4 +285,198 @@ fn test_rsbs_reverse_subtract_with_flags() {
         "C flag should be 1 (no borrow) for 100-100"
     );
     assert!(!emulator.cpu.n(), "N flag should be clear");
+}
+
+#[test]
+fn test_mvn_move_not() {
+    // MVN R0, #0
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE3F00000,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+
+    // NOT 0 = 0xFFFFFFFF
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 0xFFFFFFFF);
+}
+
+#[test]
+fn test_mvns_flags_and_shifter_carry() {
+    // MVNS R0, R1, ROR #1
+    // The key is that the carry flag is set by the SHIFTER, not the NOT operation.
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE1F100E1,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Use a value where ROR #1 will definitely produce a carry of 1.
+    // The last bit shifted out from ROR #1 is bit 0.
+    emulator.cpu.set_register(Register::R1 as _, 0x00000001); // Bit 0 is 1
+    emulator.cpu.set_c(false); // Pre-clear carry
+    emulator.execute_data_processing_instruction(instr).unwrap();
+
+    // The shifter does: 0x00000001 ROR 1 -> 0x80000000, with carry_out = 1
+    let shifted_val = 0x80000000;
+    let final_result = !shifted_val; // 0x7FFFFFFF
+
+    assert_eq!(emulator.cpu.register(Register::R0 as _), final_result);
+    assert!(
+        emulator.cpu.c(),
+        "C flag should be set to 1 by the shifter's ROR carry-out"
+    );
+    assert!(
+        !emulator.cpu.n(),
+        "N flag should be clear for the positive result"
+    );
+    assert!(!emulator.cpu.z(), "Z flag should be clear");
+}
+
+#[test]
+fn test_cmp_compare_equal() {
+    // CMP R1, R2
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE1510002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Set R0 to a known value to ensure it's not written to.
+    emulator.cpu.set_register(Register::R0 as _, 999);
+    emulator.cpu.set_register(Register::R1 as _, 50);
+    emulator.cpu.set_register(Register::R2 as _, 50);
+
+    emulator.execute_data_processing_instruction(instr).unwrap();
+
+    assert_eq!(
+        emulator.cpu.register(Register::R0 as _),
+        999,
+        "CMP should not write to any GPR"
+    );
+    assert!(
+        emulator.cpu.z(),
+        "Z flag should be set for equal comparison"
+    );
+    assert!(
+        emulator.cpu.c(),
+        "C flag should be 1 (no borrow) for equal comparison"
+    );
+    assert!(!emulator.cpu.n(), "N flag should be clear");
+    assert!(!emulator.cpu.v(), "V flag should be clear");
+}
+
+#[test]
+fn test_cmn_compare_negative() {
+    // CMN R1, R2  (Compare Negative, effectively CMP R1, -R2 or TST R1+R2)
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE1710002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Test for a negative result: 50 + 1 = 51 (positive)
+    emulator.cpu.set_register(Register::R1 as _, 50);
+    emulator.cpu.set_register(Register::R2 as _, 1);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(!emulator.cpu.n(), "N flag should be clear for 50+1");
+
+    // Test for a negative result: 50 + (-60) = -10
+    emulator.cpu.set_register(Register::R1 as _, 50);
+    emulator.cpu.set_register(Register::R2 as _, -60i32 as u32);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(emulator.cpu.n(), "N flag should be set for 50+(-60)");
+}
+
+#[test]
+fn test_tst_test_bits() {
+    // TST R1, #0b1000   (Test if bit 3 of R1 is set)
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE3110008,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Test when bit is NOT set
+    emulator.cpu.set_register(Register::R1 as _, 0b0101);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(
+        emulator.cpu.z(),
+        "Z flag should be set when tested bits are clear"
+    );
+
+    // Test when bit IS set
+    emulator.cpu.set_register(Register::R1 as _, 0b1101);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(
+        !emulator.cpu.z(),
+        "Z flag should be clear when tested bits are set"
+    );
+}
+
+#[test]
+fn test_teq_test_equivalence() {
+    // TEQ R1, R2  (Test Equivalence is a non-writing EOR)
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE1310002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Test when R1 == R2 (EOR result is 0)
+    emulator.cpu.set_register(Register::R1 as _, 123);
+    emulator.cpu.set_register(Register::R2 as _, 123);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(
+        emulator.cpu.z(),
+        "Z flag should be set when operands are equal"
+    );
+
+    // Test when R1 != R2
+    emulator.cpu.set_register(Register::R1 as _, 123);
+    emulator.cpu.set_register(Register::R2 as _, 456);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert!(
+        !emulator.cpu.z(),
+        "Z flag should be clear when operands are not equal"
+    );
+}
+
+#[test]
+fn test_adc_add_with_carry() {
+    // ADC R0, R1, R2
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE0A10002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    emulator.cpu.set_register(Register::R1 as _, 10);
+    emulator.cpu.set_register(Register::R2 as _, 20);
+
+    // Test with C=0
+    emulator.cpu.set_c(false);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 30);
+
+    // Test with C=1
+    emulator.cpu.set_c(true);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 31);
+}
+
+#[test]
+fn test_sbc_subtract_with_carry() {
+    // SBCS R0, R1, R2
+    let instr = DataProcessingInstruction::from(little_endian_to_native(
+        0xE0D10002,
+    ));
+    let mut emulator = ramless_emulator(Endian::Little);
+
+    // Test 10 - 5 with C=1 (no borrow). Result should be 10 - 5 - (1-1) = 5
+    emulator.cpu.set_register(Register::R1 as _, 10);
+    emulator.cpu.set_register(Register::R2 as _, 5);
+    emulator.cpu.set_c(true);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 5);
+    assert!(emulator.cpu.c(), "C should be 1 (no borrow)");
+
+    // Test 10 - 5 with C=0 (borrow). Result should be 10 - 5 - (1-0) = 4
+    emulator.cpu.set_c(false);
+    emulator.execute_data_processing_instruction(instr).unwrap();
+    assert_eq!(emulator.cpu.register(Register::R0 as _), 4);
+    assert!(emulator.cpu.c(), "C should still be 1 (no borrow)");
 }

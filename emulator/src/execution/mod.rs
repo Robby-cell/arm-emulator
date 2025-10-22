@@ -1,5 +1,3 @@
-use std::ops::{Shl, Shr};
-
 use thiserror::Error;
 
 use crate::{
@@ -47,54 +45,73 @@ impl Operand2 {
         // An Option<bool> is perfect: Some(carry) for shifts, None for immediates.
         match op2 {
             Operand2::Immediate(imm) => {
-                // For immediate values, the C flag is unaffected.
+                // For an immediate, the carry flag is unaffected.
+                // Let's model this by returning the current C flag value.
                 (imm as u32, None)
             }
             Operand2::ShiftedRegisterOffset(sro) => {
-                let register_value = emulator.cpu.register(sro.rm() as _);
+                let rm_val = emulator.cpu[sro.rm() as _];
                 let shift_amount = sro.shift_amount();
 
-                // A shift amount of 0 is a special case where the carry is also unaffected,
-                // unless it's RRX (ROR by 0), which is handled separately in a full emulator.
-                if shift_amount == 0 {
-                    (register_value, None)
-                } else {
-                    match sro.shift_type() {
-                        ShiftType::LSL => {
-                            // Carry is the last bit shifted out, which was at position 32 - shift_amount
-                            let carry = (register_value
-                                >> (32 - shift_amount))
-                                & 1
-                                == 1;
-                            let result = register_value.shl(shift_amount);
-                            (result, Some(carry))
-                        }
-                        ShiftType::LSR => {
-                            // Carry is the last bit shifted out, which was at position shift_amount - 1
+                match sro.shift_type() {
+                    ShiftType::LSL => {
+                        if shift_amount == 0 {
+                            // LSL #0 does not change the value and does not affect the carry.
+                            (rm_val, None)
+                        } else {
                             let carry =
-                                (register_value >> (shift_amount - 1)) & 1
-                                    == 1;
-                            let result = register_value.shr(shift_amount);
-                            (result, Some(carry))
+                                (rm_val >> (32 - shift_amount)) & 1 == 1;
+                            (rm_val << shift_amount, Some(carry))
                         }
-                        ShiftType::ASR => {
-                            // Carry is calculated the same as LSR
+                    }
+                    ShiftType::LSR => {
+                        if shift_amount == 0 {
+                            // An LSR with immediate 0 is treated as LSR #32.
+                            // The result is 0, and the carry is bit 31 of the original value.
+                            let carry = (rm_val >> 31) & 1 == 1;
+                            (0, Some(carry))
+                        } else {
                             let carry =
-                                (register_value >> (shift_amount - 1)) & 1
-                                    == 1;
-                            let result = (register_value as i32)
-                                .shr(shift_amount)
-                                as u32;
-                            (result, Some(carry))
+                                (rm_val >> (shift_amount - 1)) & 1 == 1;
+                            (rm_val >> shift_amount, Some(carry))
                         }
-                        ShiftType::ROR => {
-                            // Carry is the last bit shifted out, which was at position shift_amount - 1
+                    }
+                    ShiftType::ASR => {
+                        if shift_amount == 0 {
+                            // An ASR with immediate 0 is treated as ASR #32.
+                            // The result is all copies of bit 31. Carry is bit 31.
+                            let carry = (rm_val >> 31) & 1 == 1;
+                            if carry {
+                                // if bit 31 was 1
+                                (0xFFFFFFFF, Some(carry))
+                            } else {
+                                (0, Some(carry))
+                            }
+                        } else {
                             let carry =
-                                (register_value >> (shift_amount - 1)) & 1
-                                    == 1;
-                            let result = register_value
-                                .rotate_right(shift_amount as _);
-                            (result, Some(carry))
+                                (rm_val >> (shift_amount - 1)) & 1 == 1;
+                            (
+                                ((rm_val as i32) >> shift_amount) as _,
+                                Some(carry),
+                            )
+                        }
+                    }
+                    ShiftType::ROR => {
+                        if shift_amount == 0 {
+                            // ROR #0 is actually RRX (Rotate Right with Extend).
+                            // The new C flag is bit 0 of the value.
+                            // The new value has the old C flag in bit 31.
+                            let carry_out = (rm_val & 1) == 1;
+                            let old_c_val =
+                                if emulator.cpu.c() { 1 << 31 } else { 0 };
+                            ((rm_val >> 1) | old_c_val, Some(carry_out))
+                        } else {
+                            let carry =
+                                (rm_val >> (shift_amount - 1)) & 1 == 1;
+                            (
+                                rm_val.rotate_right(shift_amount as _),
+                                Some(carry),
+                            )
                         }
                     }
                 }
