@@ -40,9 +40,11 @@ uv pip install maturin
 Build the python bindings and install it to the environment:
 
 ```bash
-uvx maturin develop
+cargo arm build
+# uvx maturin develop
 # python3 -m maturin develop
 # For release:
+# cargo arm build --release
 # uvx maturin develop --release
 ```
 
@@ -64,8 +66,9 @@ uv run sample-usage.py
 
 To run the Rust tests:
 
-```rs
-cargo test --all
+```bash
+cargo arm test
+# cargo test --all
 ```
 
 # Packaging the GUI
@@ -74,6 +77,7 @@ To build and package the python GUI:
 
 ```bash
 # Build the project first. And then:
-uvx pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
+cargo arm package --release --entry sample-usage.py
+# uvx pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
 # python3 -m pyinstaller --additional-hooks-dir=hooks sample-usage.py
 ```
