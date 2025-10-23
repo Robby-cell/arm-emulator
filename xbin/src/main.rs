@@ -1,4 +1,4 @@
-use std::process;
+use std::{fmt, process};
 
 use anyhow::Result;
 use structopt::StructOpt;
@@ -91,6 +91,17 @@ struct Command {
     show_output: bool,
 }
 
+#[derive(Debug)]
+struct RunError {}
+
+impl fmt::Display for RunError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("RunError")
+    }
+}
+
+impl std::error::Error for RunError {}
+
 impl Command {
     fn get_commands(&self) -> Vec<process::Command> {
         match &self.inner {
@@ -117,6 +128,9 @@ impl Command {
 
                 println!("{}", s(output.stdout));
                 eprintln!("{}", s(output.stderr));
+            }
+            if !output.status.success() {
+                return Err(RunError {}.into());
             }
         }
         Ok(())
