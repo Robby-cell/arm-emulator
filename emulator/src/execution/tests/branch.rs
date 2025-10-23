@@ -1,12 +1,13 @@
 use crate::{
     execution::tests::ramless_emulator, instructions::BranchInstruction,
-    memory::Endian, memory::little_endian_to_native,
+    memory::Endian,
 };
 
 #[test]
 fn test_branch_forward() {
-    let instr =
-        BranchInstruction::from(little_endian_to_native(0xEA000006));
+    let instr = BranchInstruction::from(u32::from_be_bytes([
+        0xEA, 0x00, 0x00, 0x06,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     assert_eq!(emulator.cpu.pc(), 0);
@@ -19,8 +20,9 @@ fn test_branch_forward() {
 
 #[test]
 fn test_branch_backward() {
-    let instr =
-        BranchInstruction::from(little_endian_to_native(0xEAFFFFBE));
+    let instr = BranchInstruction::from(u32::from_be_bytes([
+        0xEA, 0xFF, 0xFF, 0xBE,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.cpu.set_pc(0x1000);
 
@@ -34,8 +36,9 @@ fn test_branch_backward() {
 
 #[test]
 fn test_branch_with_link_forward() {
-    let instr =
-        BranchInstruction::from(little_endian_to_native(0xEB0003FE));
+    let instr = BranchInstruction::from(u32::from_be_bytes([
+        0xEB, 0x00, 0x03, 0xFE,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.cpu.set_pc(0x8000);
 
@@ -49,8 +52,9 @@ fn test_branch_with_link_forward() {
 
 #[test]
 fn test_branch_with_link_backward() {
-    let instr =
-        BranchInstruction::from(little_endian_to_native(0xEBFFFFFF));
+    let instr = BranchInstruction::from(u32::from_be_bytes([
+        0xEB, 0xFF, 0xFF, 0xFF,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.cpu.set_pc(0x1000);
 

@@ -2,15 +2,14 @@ use crate::{
     execution::tests::ramless_emulator,
     instructions::{DataProcessingInstruction, fields::Register},
     memory::Endian,
-    memory::little_endian_to_native,
 };
 
 #[test]
 fn simple_mov_test_with_immediate() {
     // MOV R0, #45
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE3A0002D,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE3, 0xA0, 0x00, 0x2D,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.execute_data_processing_instruction(instr).unwrap();
 
@@ -20,9 +19,9 @@ fn simple_mov_test_with_immediate() {
 #[test]
 fn simple_mov_test_with_shifted_register() {
     // MOV R0, R1, LSL #2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE1A00101,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE1, 0xA0, 0x01, 0x01,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R1 as _, 16);
@@ -37,9 +36,9 @@ fn simple_mov_test_with_shifted_register() {
 #[test]
 fn test_and_simple_register() {
     // AND R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0010002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x01, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R1 as _, 0b1100);
@@ -52,9 +51,9 @@ fn test_and_simple_register() {
 #[test]
 fn test_ands_flags_zero_and_negative() {
     // ANDS R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0110002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x11, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // --- Test for Zero Flag ---
@@ -80,9 +79,9 @@ fn test_ands_flags_zero_and_negative() {
 #[test]
 fn test_eors_carry_flag_from_shifter() {
     // EORS R0, R1, R2, LSR #1
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE03100A2,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x31, 0x00, 0xA2,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Set R2 to a value where bit 0 is 1. LSR #1 will cause a carry-out of 1.
@@ -108,9 +107,9 @@ fn test_eors_carry_flag_from_shifter() {
 #[test]
 fn test_add_with_immediate() {
     // ADD R3, R4, #50
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE2843032,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE2, 0x84, 0x30, 0x32,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R4 as _, 100);
@@ -122,9 +121,9 @@ fn test_add_with_immediate() {
 #[test]
 fn test_sub_does_not_alter_flags() {
     // SUB R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0410002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x41, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.cpu.set_register(Register::R1 as _, 20);
     emulator.cpu.set_register(Register::R2 as _, 5);
@@ -163,9 +162,9 @@ fn test_sub_does_not_alter_flags() {
 #[test]
 fn test_adds_flags_carry_and_overflow() {
     // ADDS R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0910002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x91, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // --- Test for C (unsigned carry) but not V (signed overflow) ---
@@ -195,9 +194,9 @@ fn test_adds_flags_carry_and_overflow() {
 #[test]
 fn test_subs_carry_flag_as_borrow() {
     // SUBS R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0510002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x51, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // --- Test for C=1 (no borrow) when Rn >= Rm ---
@@ -219,9 +218,9 @@ fn test_subs_carry_flag_as_borrow() {
 #[test]
 fn test_subs_with_overflow() {
     // SUBS R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0510002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0x51, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R1 as _, 0x80000000);
@@ -237,9 +236,9 @@ fn test_subs_with_overflow() {
 #[test]
 fn test_rsb_reverse_subtract() {
     // RSB R0, R1, #100   (Reverse Subtract: R0 = 100 - R1)
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE2610064,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE2, 0x61, 0x00, 0x64,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R1 as _, 40);
@@ -251,9 +250,9 @@ fn test_rsb_reverse_subtract() {
 #[test]
 fn test_rsbs_reverse_subtract_with_flags() {
     // RSBS R0, R1, #100   (R0 = 100 - R1, and set flags)
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE2710064,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE2, 0x71, 0x00, 0x64,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // --- Test for C=1 (no borrow) when #100 >= R1 ---
@@ -290,9 +289,9 @@ fn test_rsbs_reverse_subtract_with_flags() {
 #[test]
 fn test_mvn_move_not() {
     // MVN R0, #0
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE3F00000,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE3, 0xF0, 0x00, 0x00,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
     emulator.execute_data_processing_instruction(instr).unwrap();
 
@@ -304,9 +303,9 @@ fn test_mvn_move_not() {
 fn test_mvns_flags_and_shifter_carry() {
     // MVNS R0, R1, ROR #1
     // The key is that the carry flag is set by the SHIFTER, not the NOT operation.
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE1F100E1,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE1, 0xF1, 0x00, 0xE1,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Use a value where ROR #1 will definitely produce a carry of 1.
@@ -334,9 +333,9 @@ fn test_mvns_flags_and_shifter_carry() {
 #[test]
 fn test_cmp_compare_equal() {
     // CMP R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE1510002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE1, 0x51, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Set R0 to a known value to ensure it's not written to.
@@ -366,9 +365,9 @@ fn test_cmp_compare_equal() {
 #[test]
 fn test_cmn_compare_negative() {
     // CMN R1, R2  (Compare Negative, effectively CMP R1, -R2 or TST R1+R2)
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE1710002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE1, 0x71, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Test for a negative result: 50 + 1 = 51 (positive)
@@ -387,9 +386,9 @@ fn test_cmn_compare_negative() {
 #[test]
 fn test_tst_test_bits() {
     // TST R1, #0b1000   (Test if bit 3 of R1 is set)
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE3110008,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE3, 0x11, 0x00, 0x08,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Test when bit is NOT set
@@ -412,9 +411,9 @@ fn test_tst_test_bits() {
 #[test]
 fn test_teq_test_equivalence() {
     // TEQ R1, R2  (Test Equivalence is a non-writing EOR)
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE1310002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE1, 0x31, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Test when R1 == R2 (EOR result is 0)
@@ -439,9 +438,9 @@ fn test_teq_test_equivalence() {
 #[test]
 fn test_adc_add_with_carry() {
     // ADC R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0A10002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0xA1, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     emulator.cpu.set_register(Register::R1 as _, 10);
@@ -461,9 +460,9 @@ fn test_adc_add_with_carry() {
 #[test]
 fn test_sbc_subtract_with_carry() {
     // SBCS R0, R1, R2
-    let instr = DataProcessingInstruction::from(little_endian_to_native(
-        0xE0D10002,
-    ));
+    let instr = DataProcessingInstruction::from(u32::from_be_bytes([
+        0xE0, 0xD1, 0x00, 0x02,
+    ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
     // Test 10 - 5 with C=1 (no borrow). Result should be 10 - 5 - (1-1) = 5
