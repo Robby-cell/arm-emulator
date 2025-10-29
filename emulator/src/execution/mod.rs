@@ -3,14 +3,15 @@ use thiserror::Error;
 use crate::{
     Emulator,
     instructions::{
-        InstructionConversionError, Operand2, fields::ShiftType,
+        Instruction, InstructionConversionError, Operand2,
+        fields::ShiftType,
     },
     memory::MemoryAccessError,
-    prelude::Instruction,
 };
 
 mod branch;
 mod data_processing;
+mod memory_access;
 
 #[cfg(test)]
 mod tests;

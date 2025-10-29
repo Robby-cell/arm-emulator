@@ -164,7 +164,7 @@ impl Emulator {
         instr: MemoryAccessInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Memory access instruction: {instr:?}");
-        Ok(())
+        instr.execute_with(self)
     }
 
     fn execute_block_data_transfer_instruction(

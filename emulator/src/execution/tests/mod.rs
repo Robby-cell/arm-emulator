@@ -9,6 +9,7 @@ use crate::{
 
 mod branch;
 mod data_processing;
+mod memory_access;
 
 fn ramless_emulator(endian: Endian) -> Emulator {
     Emulator::new(Cpu::new(), Bus::new(0), endian)
