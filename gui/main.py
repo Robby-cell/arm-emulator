@@ -1,0 +1,15 @@
+from PyQt6.QtWidgets import QApplication
+from main_window import MainWindow
+from sys import argv
+
+
+def main():
+    app = QApplication(argv)
+    window = MainWindow()
+    window.showMaximized()
+    exit_code: int = app.exec()
+    exit(exit_code)
+
+
+if __name__ == '__main__':
+    main()
