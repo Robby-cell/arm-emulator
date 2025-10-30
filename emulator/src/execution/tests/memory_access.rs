@@ -13,6 +13,7 @@ fn setup_memory_test(
     let mut emulator = Emulator {
         cpu: Default::default(),
         memory_bus: Bus::with_ram(ram),
+        breakpoints: Default::default(),
         endian: Endian::Little,
     };
     for &(reg, val) in initial_regs {

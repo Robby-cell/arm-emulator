@@ -1,6 +1,8 @@
+use thiserror::Error;
+
 use crate::{
     cpu::{
-        Cpu,
+        Cpu, ExecutionState,
         registers::{self, PC},
     },
     execution::{ExecutableInstruction, ExecutionError},
@@ -25,10 +27,25 @@ pub mod system;
 #[cfg(test)]
 mod tests;
 
+pub type Breakpoints = std::collections::HashSet<Word>;
+
+#[derive(Debug, Error, Clone)]
+pub struct Breakpoint {
+    pub addr: Word,
+    pub instruction: Instruction,
+}
+
+impl std::fmt::Display for Breakpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 #[derive(Debug)]
 pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
+    pub breakpoints: Breakpoints,
     pub endian: Endian,
 }
 
@@ -39,9 +56,30 @@ impl Emulator {
         Self {
             cpu,
             memory_bus,
+            breakpoints: Default::default(),
             endian,
         }
     }
+}
+
+// Breakpoints
+impl Emulator {
+    /// Add a breakpoint to the address supplied.
+    pub fn set_breakpoint_at(&mut self, addr: Word) {
+        self.breakpoints.insert(addr);
+    }
+
+    /// Is a breakpoint set at the given address?
+    pub fn is_breakpoint_at(&self, addr: Word) -> bool {
+        self.breakpoints.contains(&addr)
+    }
+
+    /// Remove the breakpoint from the address.
+    pub fn remove_breakpoint(&mut self, addr: Word) {
+        _ = self.breakpoints.remove(&addr);
+    }
+
+    pub fn activate_trap() {}
 }
 
 // Getters
@@ -114,11 +152,40 @@ impl Emulator {
 
     /// Step over one ASM instruction, and then yield execution.
     pub fn step(&mut self) -> Result<(), ExecutionError> {
+        match &self.cpu.state {
+            ExecutionState::Running => {}
+            ExecutionState::Breakpoint(breakpoint) => {
+                return Err(ExecutionError::Breakpoint(
+                    breakpoint.clone(),
+                ));
+            }
+            ExecutionState::Exception(exception) => {
+                return Err(ExecutionError::Exception(exception.clone()));
+            }
+            ExecutionState::FinishedExecution(_) => {
+                return Ok(());
+            }
+            ExecutionState::SupervisorCall(_) => {}
+        }
+
         // Fetch
         let fetch = self.fetch()?;
 
         // Decode
         let decode = self.decode(fetch)?;
+
+        {
+            let addr = self.cpu[PC];
+            if self.is_breakpoint_at(self.cpu[PC]) {
+                self.remove_breakpoint(addr);
+                let breakpoint = Breakpoint {
+                    addr,
+                    instruction: decode,
+                };
+                self.cpu.set_breakpoint(breakpoint.clone());
+                return Err(ExecutionError::Breakpoint(breakpoint));
+            }
+        }
 
         // Execute
         self.execute_single_instruction(decode)?;

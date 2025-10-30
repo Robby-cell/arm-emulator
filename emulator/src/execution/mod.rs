@@ -1,10 +1,10 @@
 use thiserror::Error;
 
 use crate::{
-    Emulator,
+    Breakpoint, Emulator,
+    cpu::Exception,
     instructions::{
-        Instruction, InstructionConversionError, Operand2,
-        fields::ShiftType,
+        InstructionConversionError, Operand2, fields::ShiftType,
     },
     memory::MemoryAccessError,
 };
@@ -18,16 +18,17 @@ mod tests;
 
 #[derive(Debug, Error, Clone)]
 pub enum ExecutionError {
-    #[error(
-        "breakpoint reached at instruction {instruction:?} at address {addr:#X}"
-    )]
-    Breakpoint { addr: u32, instruction: Instruction },
+    #[error("breakpoint reached: {0}")]
+    Breakpoint(#[from] Breakpoint),
 
     #[error("memory access error: {0}")]
     MemoryAccessError(#[from] MemoryAccessError),
 
     #[error("illegal instruction, could not decode instruction: {0}")]
     InstructionConversionError(#[from] InstructionConversionError),
+
+    #[error("active exception: {0}")]
+    Exception(#[from] Exception),
 }
 
 pub trait ExecutableInstruction {

@@ -2,7 +2,9 @@ use std::ops::{Index, IndexMut};
 
 use thiserror::Error;
 
-use crate::execution::ExecutionError;
+use crate::{
+    Breakpoint, execution::ExecutionError, memory::MemoryAccessError,
+};
 
 mod display;
 #[cfg(test)]
@@ -50,10 +52,13 @@ pub struct SupervisorCall {
 }
 
 /// An exception. Includes traps/breakpoints. Does not include [SupervisorCall].
-#[derive(Debug, Clone)]
-pub struct Exception {
-    /// The exception that is currently active.
-    pub exception: ExecutionError,
+#[derive(Debug, Error, Clone)]
+pub enum Exception {
+    #[error("memory access violation: {0}")]
+    MemoryAccess(#[from] MemoryAccessError),
+
+    #[error("cpu error: {0}")]
+    CpuError(#[from] CpuError),
 }
 
 /// Execution state of the CPU in the current program. Keeps track of what is happening within the CPU.
@@ -64,8 +69,11 @@ pub enum ExecutionState {
     #[default]
     Running,
 
+    /// This is an active [Breakpoint].
+    Breakpoint(Breakpoint),
+
     /// There is an active [Exception].
-    /// This includes breakpoints. Does not include supervisor calls though, even though
+    /// Does not include supervisor calls though, even though
     /// it probably should be considered as such.
     Exception(Exception),
 
@@ -76,6 +84,12 @@ pub enum ExecutionState {
 
     /// Interupt handler. Software interupts/[SupervisorCall]
     SupervisorCall(SupervisorCall),
+}
+
+impl From<Breakpoint> for ExecutionState {
+    fn from(value: Breakpoint) -> Self {
+        Self::Breakpoint(value)
+    }
 }
 
 impl From<Exception> for ExecutionState {
@@ -210,6 +224,10 @@ impl Cpu {
 
     pub fn set_running(&mut self) {
         self.state = ExecutionState::Running;
+    }
+
+    pub fn set_breakpoint(&mut self, breakpoint: Breakpoint) {
+        self.state = breakpoint.into();
     }
 
     pub fn set_exception(&mut self, error: Exception) {
