@@ -2,9 +2,7 @@ use std::ops::{Index, IndexMut};
 
 use thiserror::Error;
 
-use crate::{
-    Breakpoint, execution::ExecutionError, memory::MemoryAccessError,
-};
+use crate::{Breakpoint, memory::MemoryAccessError};
 
 mod display;
 #[cfg(test)]
