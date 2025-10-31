@@ -16,7 +16,7 @@ fn test_basic_execution() {
     // ADDS R3, R0, R1
     ram.extend_from_slice(&[0xE0, 0x90, 0x30, 0x01]);
 
-    let memory_bus = Bus::with_ram(ram);
+    let memory_bus = Bus::with_ram(ram, vec![], vec![]);
     let mut emulator = Emulator::new(Cpu::new(), memory_bus, Endian::Big);
 
     for register in 0..16 {

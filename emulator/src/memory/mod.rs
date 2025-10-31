@@ -5,13 +5,9 @@
 use std::{fmt, ops::RangeInclusive, sync::Arc};
 
 use thiserror::Error;
-pub use unmanaged_chunk::{
-    UnmanagedReadOnlyChunk, UnmanagedReadWriteChunk,
-};
 
 #[cfg(test)]
 mod tests;
-mod unmanaged_chunk;
 
 const KIBI: Word = 1 << 10;
 
@@ -256,9 +252,34 @@ impl MemoryMappedPeripheral {
 #[derive(Debug)]
 pub struct Bus {
     /// Main system RAM, represented as a simple byte vector.
-    ram: Ram,
+    /// 0x00000000 - 0x1FFFFFFF
+    code: Vec<u8>,
+
+    /// .data, .bss, heap, stack.
+    /// 0x20000000 - 0x3FFFFFFF
+    sram: Vec<u8>,
+
     /// A list of peripherals and the address ranges they occupy.
+    /// 0x40000000 - 0x5FFFFFFF
     peripherals: Vec<MemoryMappedPeripheral>,
+
+    /// External memory and devices
+    /// 0x60000000 -
+    external: Vec<u8>,
+}
+
+impl Bus {
+    pub const CODE_BEGIN: u32 = 0x00000000;
+    pub const CODE_END: u32 = 0x1FFFFFFF;
+
+    pub const SRAM_BEGIN: u32 = 0x20000000;
+    pub const SRAM_END: u32 = 0x3FFFFFFF;
+
+    pub const PERIPHERAL_BEGIN: u32 = 0x40000000;
+    pub const PERIPHERAL_END: u32 = 0x5FFFFFFF;
+
+    pub const EXTERNAL_BEGIN: u32 = 0x60000000;
+    pub const EXTERNAL_END: u32 = u32::MAX;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -269,7 +290,19 @@ pub enum Endian {
 
 impl Bus {
     pub fn get_read_only_memory_view(&self) -> &Bytes {
-        &self.ram
+        &self.code
+    }
+
+    pub fn get_read_only_memory_view_mut(&mut self) -> &mut Bytes {
+        &mut self.code
+    }
+
+    pub fn get_read_write_memory_view(&self) -> &Bytes {
+        &self.sram
+    }
+
+    pub fn get_read_write_memory_view_mut(&mut self) -> &mut Bytes {
+        &mut self.sram
     }
 
     pub fn get_mapped_peripherals(&self) -> &[MemoryMappedPeripheral] {
@@ -280,10 +313,12 @@ impl Bus {
     /// The RAM is initialized to zero.
     /// No peripherals are connected initially.
     /// See [Bus::add_peripheral] to connect peripherals.
-    pub fn new(ram_size: Word) -> Self {
+    pub fn new(text_size: Word) -> Self {
         Self {
-            ram: vec![0; ram_size as _],
+            code: vec![0; text_size as _],
+            sram: Default::default(),
             peripherals: Vec::new(),
+            external: Default::default(),
         }
     }
 
@@ -302,7 +337,7 @@ impl Bus {
     /// Same as [Bus::read32_with_reader], except it does not check for mapped peripherals,
     /// just reads from the address.
     fn read32_ram_with_reader<Reader: BasicRead>(
-        &self,
+        pool: &Bytes,
         addr: Word,
     ) -> MemoryAccessResult<u32> {
         tracing::trace!("Reading RAM at address: {addr:#X}");
@@ -313,8 +348,8 @@ impl Bus {
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 <= self.ram.len() as _ {
-            Reader::read32(&self.ram, addr)
+        if addr + 4 <= pool.len() as _ {
+            Reader::read32(pool, addr)
         } else {
             Err(MemoryAccessError::InvalidReadPermission { addr })
         }
@@ -325,23 +360,36 @@ impl Bus {
         &self,
         addr: Word,
     ) -> MemoryAccessResult<u32> {
-        // Check if the address belongs to a peripheral
-        for MemoryMappedPeripheral { range, peripheral } in
-            self.peripherals.iter()
-        {
-            if range.contains(&addr) {
-                let offset = addr - range.start();
+        match addr {
+            Self::CODE_BEGIN..=Self::CODE_END => {
+                Self::read32_ram_with_reader::<Reader>(&self.code, addr)
+            }
+            Self::SRAM_BEGIN..=Self::SRAM_END => {
+                Self::read32_ram_with_reader::<Reader>(&self.sram, addr)
+            }
+            Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                for MemoryMappedPeripheral { range, peripheral } in
+                    self.peripherals.iter()
+                {
+                    if range.contains(&addr) {
+                        let offset = addr - range.start();
 
-                tracing::trace!(
-                    "Reading peripheral mapped to {range:?} at offset: {offset:#X}",
-                );
+                        tracing::trace!(
+                            "Reading peripheral mapped to {range:?} at offset: {offset:#X}",
+                        );
 
-                return peripheral.read32(offset);
+                        return peripheral.read32(offset);
+                    }
+                }
+                Err(MemoryAccessError::InvalidReadPermission { addr })
+            }
+            Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                Self::read32_ram_with_reader::<Reader>(
+                    &self.external,
+                    addr,
+                )
             }
         }
-
-        // If not a peripheral, assume it's RAM
-        self.read32_ram_with_reader::<Reader>(addr)
     }
 
     /// Read the bytes at the address specified, as it would be on a little-endian system.
@@ -357,11 +405,13 @@ impl Bus {
     /// Same as [Bus::write32_with_writer], except it does not check for mapped peripherals,
     /// just writes to the address.
     fn write32_ram_with_writer<Writer: BasicWrite>(
-        &mut self,
+        pool: &mut Bytes,
         addr: Word,
         value: u32,
     ) -> MemoryAccessResult<()> {
-        tracing::trace!("Writing {value:#X} to RAM at address: {addr:#X}");
+        tracing::trace!(
+            "Writing word {value:#X} to RAM at address: {addr:#X}"
+        );
         // Right now: Unaligned access is not allowed
         if addr % 4 != 0 {
             tracing::error!(
@@ -370,8 +420,8 @@ impl Bus {
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 <= self.ram.len() as _ {
-            Writer::write32(&mut self.ram, addr, value)
+        if addr + 4 <= pool.len() as _ {
+            Writer::write32(pool, addr, value)
         } else {
             Err(MemoryAccessError::InvalidWritePermission { addr })
         }
@@ -386,23 +436,45 @@ impl Bus {
         addr: Word,
         value: u32,
     ) -> MemoryAccessResult<()> {
-        // Check if the address belongs to a peripheral
-        for MemoryMappedPeripheral { range, peripheral } in
-            self.peripherals.iter()
-        {
-            if range.contains(&addr) {
-                let offset = addr - range.start();
+        match addr {
+            Self::CODE_BEGIN..=Self::CODE_END => {
+                Self::write32_ram_with_writer::<Writer>(
+                    &mut self.code,
+                    addr,
+                    value,
+                )
+            }
+            Self::SRAM_BEGIN..=Self::SRAM_END => {
+                Self::write32_ram_with_writer::<Writer>(
+                    &mut self.sram,
+                    addr,
+                    value,
+                )
+            }
+            Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                for MemoryMappedPeripheral { range, peripheral } in
+                    self.peripherals.iter()
+                {
+                    if range.contains(&addr) {
+                        let offset = addr - range.start();
 
-                tracing::trace!(
-                    "Writing {value:#X} to peripheral mapped to {range:?} at offset: {offset:#}",
-                );
+                        tracing::trace!(
+                            "Writing word {value:#X} to peripheral mapped to {range:?} at offset: {offset:#X}",
+                        );
 
-                return peripheral.write32(offset, value);
+                        return peripheral.write32(offset, value);
+                    }
+                }
+                Err(MemoryAccessError::InvalidWritePermission { addr })
+            }
+            Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                Self::write32_ram_with_writer::<Writer>(
+                    &mut self.external,
+                    addr,
+                    value,
+                )
             }
         }
-
-        // If not a peripheral, assume it's RAM
-        self.write32_ram_with_writer::<Writer>(addr, value)
     }
 
     /// Write the `value` to the address specified, as it would be on a little-endian system.
@@ -426,15 +498,12 @@ impl Bus {
     /// Read a single byte from the bus.
     /// This does not consider endianness, it is just a single byte.
     fn read_byte_ram_with_reader<Reader: BasicRead>(
-        &self,
+        pool: &Bytes,
         addr: Word,
     ) -> MemoryAccessResult<u8> {
-        if addr < self.ram.len() as _ {
+        if addr < pool.len() as _ {
             let offset = addr % 4;
-            Reader::read_byte(
-                &self.ram[(addr - offset) as usize..],
-                offset,
-            )
+            Reader::read_byte(&pool[(addr - offset) as usize..], offset)
         } else {
             Err(MemoryAccessError::InvalidReadPermission { addr })
         }
@@ -444,22 +513,36 @@ impl Bus {
         &self,
         addr: Word,
     ) -> MemoryAccessResult<u8> {
-        // Check if the address belongs to a peripheral
-        for MemoryMappedPeripheral { range, peripheral } in
-            self.peripherals.iter()
-        {
-            if range.contains(&addr) {
-                let offset = addr - range.start();
+        match addr {
+            Self::CODE_BEGIN..=Self::CODE_END => {
+                Self::read_byte_ram_with_reader::<Reader>(&self.code, addr)
+            }
+            Self::SRAM_BEGIN..=Self::SRAM_END => {
+                Self::read_byte_ram_with_reader::<Reader>(&self.sram, addr)
+            }
+            Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                for MemoryMappedPeripheral { range, peripheral } in
+                    self.peripherals.iter()
+                {
+                    if range.contains(&addr) {
+                        let offset = addr - range.start();
 
-                tracing::trace!(
-                    "Reading byte from peripheral mapped to {range:?} at offset: {offset:#X}",
-                );
+                        tracing::trace!(
+                            "Reading byte from peripheral mapped to {range:?} at offset: {offset:#X}",
+                        );
 
-                return peripheral.read_byte(offset);
+                        return peripheral.read_byte(offset);
+                    }
+                }
+                Err(MemoryAccessError::InvalidReadPermission { addr })
+            }
+            Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                Self::read_byte_ram_with_reader::<Reader>(
+                    &self.external,
+                    addr,
+                )
             }
         }
-
-        self.read_byte_ram_with_reader::<Reader>(addr)
     }
 
     pub fn read_byte_le(&self, addr: Word) -> MemoryAccessResult<u8> {
@@ -473,14 +556,14 @@ impl Bus {
     /// Write a single byte to the bus.
     /// This does not consider endianness, it is just a single byte.
     fn write_byte_ram_with_writer<Writer: BasicWrite>(
-        &mut self,
+        pool: &mut Bytes,
         addr: Word,
         value: u8,
     ) -> MemoryAccessResult<()> {
-        if addr < self.ram.len() as _ {
+        if addr < pool.len() as _ {
             let offset = addr % 4;
             Writer::write_byte(
-                &mut self.ram[(addr - offset) as usize..],
+                &mut pool[(addr - offset) as usize..],
                 offset,
                 value,
             )
@@ -494,22 +577,45 @@ impl Bus {
         addr: Word,
         value: u8,
     ) -> MemoryAccessResult<()> {
-        // Check if the address belongs to a peripheral
-        for MemoryMappedPeripheral { range, peripheral } in
-            self.peripherals.iter()
-        {
-            if range.contains(&addr) {
-                let offset = addr - range.start();
+        match addr {
+            Self::CODE_BEGIN..=Self::CODE_END => {
+                Self::write_byte_ram_with_writer::<Writer>(
+                    &mut self.code,
+                    addr,
+                    value,
+                )
+            }
+            Self::SRAM_BEGIN..=Self::SRAM_END => {
+                Self::write_byte_ram_with_writer::<Writer>(
+                    &mut self.sram,
+                    addr,
+                    value,
+                )
+            }
+            Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                for MemoryMappedPeripheral { range, peripheral } in
+                    self.peripherals.iter()
+                {
+                    if range.contains(&addr) {
+                        let offset = addr - range.start();
 
-                tracing::trace!(
-                    "Writing byte {value:#X} to peripheral mapped to {range:?} at offset: {offset:#}",
-                );
+                        tracing::trace!(
+                            "Writing byte {value:#X} to peripheral mapped to {range:?} at offset: {offset:#X}",
+                        );
 
-                return peripheral.write_byte(offset, value);
+                        return peripheral.write_byte(offset, value);
+                    }
+                }
+                Err(MemoryAccessError::InvalidWritePermission { addr })
+            }
+            Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                Self::write_byte_ram_with_writer::<Writer>(
+                    &mut self.external,
+                    addr,
+                    value,
+                )
             }
         }
-
-        self.write_byte_ram_with_writer::<Writer>(addr, value)
     }
 
     pub fn write_byte_le(
@@ -537,17 +643,30 @@ impl Default for Bus {
 
 impl Bus {
     pub fn with_ram_and_peripherals(
-        ram: Ram,
+        code: Vec<u8>,
+        sram: Vec<u8>,
         peripherals: Vec<MemoryMappedPeripheral>,
+        external: Vec<u8>,
     ) -> Self {
-        Self { ram, peripherals }
+        Self {
+            code,
+            sram,
+            peripherals,
+            external,
+        }
     }
 
-    pub fn with_ram(ram: Ram) -> Self {
-        Self {
-            ram,
-            peripherals: Default::default(),
-        }
+    pub fn with_ram(
+        code: Vec<u8>,
+        sram: Vec<u8>,
+        external: Vec<u8>,
+    ) -> Self {
+        Self::with_ram_and_peripherals(
+            code,
+            sram,
+            Default::default(),
+            external,
+        )
     }
 }
 
