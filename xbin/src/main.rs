@@ -43,43 +43,10 @@ impl RunnableCommand for BuildCommand {
 }
 
 #[derive(StructOpt)]
-struct PackageCommand {
-    // #[structopt(subcommand)]
-    #[structopt(flatten)]
-    build: BuildCommand,
-
-    #[structopt(long)]
-    entry: String,
-}
-
-impl RunnableCommand for PackageCommand {
-    fn command(&self) -> Vec<process::Command> {
-        let mut cmds = self.build.command();
-
-        let mut args: Vec<_> =
-            ["pyinstaller", "--additional-hooks-dir=hooks"]
-                .into_iter()
-                .map(String::from)
-                .collect();
-        args.push(self.entry.clone());
-
-        let mut p = process::Command::new("uvx");
-        p.args(&["pyinstaller", "--additional-hooks-dir", "hooks"]);
-        p.arg(&self.entry);
-
-        cmds.push(p);
-
-        cmds
-    }
-}
-
-#[derive(StructOpt)]
 enum CommandInner {
     Test(TestCommand),
 
     Build(BuildCommand),
-
-    Package(PackageCommand),
 }
 
 #[derive(StructOpt)]
@@ -107,7 +74,6 @@ impl Command {
         match &self.inner {
             CommandInner::Test(test) => test.command(),
             CommandInner::Build(build) => build.command(),
-            CommandInner::Package(package) => package.command(),
         }
     }
 

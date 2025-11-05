@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication
 from main_window import MainWindow
-from sys import argv
+from sys import argv, exit
 
 
 def main():
