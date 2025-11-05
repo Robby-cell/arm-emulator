@@ -1,0 +1,44 @@
+QUEEN'S UNIVERSITY OF BELFAST COMPUTER SCIENCE
+
+Minute of Project Supervision Meeting
+======================================
+
+Student Name:
+Robert Williamson
+
+Project Module Code:
+CSC3002
+
+Project Supervisor:
+Moira Watson
+
+Meeting Number:
+4
+
+Date of Meeting:
+29th October, 2025
+
+
+Progress since last meeting, and decisions arrived at during meeting:
+======================================
+User stories, personas. Some basic boilerplate for GUI also created. A basic design on figma created.
+
+Action Points:
+==============
+
+
+Date of next meeting:
+====================+
+13th November, 2025
+
+
+
+Agreed minute should be initialled by the supervisor.
+
+Supervisor's Initials:	_____________________________________________	Date: _________________
+
+
+
+Supervisor's Comments:
+=======================
+
