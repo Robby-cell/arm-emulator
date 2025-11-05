@@ -1,15 +1,13 @@
-from PyQt6.QtWidgets import QWidget, QLabel
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel
 from typing import Optional
 
 
-class Tab(QWidget):
+class Tab(QPushButton):
     label: QLabel
 
     def __init__(self, text: str, parent: Optional[QWidget]=None):
-        super().__init__(parent=parent)
-        self.label = QLabel(parent=self)
-        self.setupUI(text=text)
+        super().__init__(text=text, parent=parent)
+        self.setupUI()
 
-    def setupUI(self, text: str) -> None:
-        self.label.setText(text)
-
+    def setupUI(self) -> None:
+        ...
