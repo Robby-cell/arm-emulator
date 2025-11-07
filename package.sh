@@ -5,14 +5,14 @@ set -e
 function _source_venv() {
     # Since bash CAN be run on windows, and we will use it in CI/CD pipelines.
     # Windows, for whatever reason, puts it in `Scripts` instead of `bin`.
-    NORMAL_VENV=".venv/bin/activate"
-    WINDOWS_VENV=".venv/Scripts/activate"
+    local NORMAL_VENV=".venv/bin/activate"
+    local WINDOWS_VENV=".venv/Scripts/activate"
     if test -f $NORMAL_VENV; then
         echo "Using normal venv"
         source ./$NORMAL_VENV
     else
         echo "Using windows venv"
-        ./$WINDOWS_VENV
+        source ./$WINDOWS_VENV
     fi
 }
 
@@ -23,12 +23,24 @@ function _ensure_venv() {
 }
 
 function _ensure_pyinstaller() {
-    if ! command -v pyinstaller >/dev/null 2>&1; then
+    if [ ! -v pyinstaller >/dev/null 2>&1 ]; then
         _ensure_venv
         _source_venv
         echo "pip install pyinstaller PyQt6"
-        pip install pyinstaller PyQt6
     fi
+}
+
+# For some reason, windows needs the .exe suffix, when running from bash.
+# So this function is necessary to reduce deuplication
+function _invoke_with_args() {
+    if [ -v $1 >/dev/null 2>&1 ]; then
+        local EXE=$1
+    else
+        local EXE=$1.exe
+    fi
+    local ARGS=("${@:2}")
+    echo Running: $EXE "${ARGS[@]}"
+    $EXE "${ARGS[@]}"
 }
 
 function main() {
@@ -39,14 +51,15 @@ function main() {
     echo "Environment ready."
 
     echo "Creating spec file..."
-    pyi-makespec gui/main.py --name emulator
+    _invoke_with_args pyi-makespec gui/main.py --name emulator
 
     echo "Building executable..."
     # use pyinstaller to create a standalone binary.
     # --onefile: create a single executable file, no additional directories needed.
     # --name emulator: name the output executable "emulator"
     # --additional-hooks-dir hooks: include additional hooks from the "hooks" directory.
-    PYTHONOPTIMIZE=1 pyinstaller --onefile --name emulator --additional-hooks-dir hooks -y gui/main.py
+    export PYTHONOPTIMIZE=1
+    _invoke_with_args pyinstaller --onefile --name emulator --additional-hooks-dir hooks -y gui/main.py
 }
 
 main
