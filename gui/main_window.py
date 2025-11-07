@@ -36,10 +36,6 @@ class MainWindow(QMainWindow):
         self._memory_view = MemoryViewScreen(parent=self)
         self._disassembly = DisassemblyScreen(parent=self)
 
-        self._editor.show()
-        self._memory_view.hide()
-        self._disassembly.hide()
-
         self._editor_tab.clicked.connect(self._show_editor)
         self._memory_view_tab.clicked.connect(self._show_memory_view)
         self._disassembly_tab.clicked.connect(self._show_disassembly)
@@ -51,12 +47,12 @@ class MainWindow(QMainWindow):
         # self._base_layout.addStretch()
         internal_base.setLayout(self._base_layout)
 
-        tabs = QWidget(parent=internal_base)
+        tabs = QWidget()
         self._tabs_layout = QHBoxLayout(tabs)
         tabs.setLayout(self._tabs_layout)
         self._base_layout.addWidget(tabs)
 
-        main_content = QWidget(parent=internal_base)
+        main_content = QWidget()
         self._main_content_layout = QVBoxLayout(main_content)
         main_content.setLayout(self._main_content_layout)
         self._base_layout.addWidget(main_content)
@@ -72,8 +68,18 @@ class MainWindow(QMainWindow):
         for screen in (self._editor, self._memory_view, self._disassembly):
             self._main_content_layout.addWidget(screen)
 
+        self._show_editor()
+
+    def _show_and_hide_rest(self, to_show: QWidget, *to_hide: QWidget):
+        self._main_content_layout.addWidget(to_show)
+        to_show.show()
+        for w in to_hide:
+            self._main_content_layout.removeWidget(w)
+            w.hide()
+
     def _show_editor(self):
         self._editor.show(); self._memory_view.hide(); self._disassembly.hide()
+        # self._show_and_hide_rest(self._editor, self._memory_view, self._disassembly)
 
     def _show_memory_view(self):
         self._memory_view.show(); self._editor.hide(); self._disassembly.hide()
