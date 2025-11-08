@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export PYI_MAKESPEC=pyi-makespec
+export PYINSTALLER=pyinstaller
+
 set -e
 
 function _source_venv() {
@@ -30,19 +33,6 @@ function _ensure_pyinstaller() {
     fi
 }
 
-# For some reason, windows needs the .exe suffix, when running from bash.
-# So this function is necessary to reduce deuplication
-function _invoke_with_args() {
-    if [ -v $1 >/dev/null 2>&1 ]; then
-        local EXE=$1
-    else
-        local EXE=$1.exe
-    fi
-    local ARGS=("${@:2}")
-    echo Running: $EXE "${ARGS[@]}"
-    $EXE "${ARGS[@]}"
-}
-
 function main() {
     echo "Building standalone executable using PyInstaller."
 
@@ -51,15 +41,16 @@ function main() {
     echo "Environment ready."
 
     echo "Creating spec file..."
-    _invoke_with_args pyi-makespec gui/main.py --name emulator
+    $PYI_MAKESPEC gui/main.py --name emulator
 
     echo "Building executable..."
     # use pyinstaller to create a standalone binary.
     # --onefile: create a single executable file, no additional directories needed.
     # --name emulator: name the output executable "emulator"
     # --additional-hooks-dir hooks: include additional hooks from the "hooks" directory.
+    # --add-data "assets:assets": include the assets directory in the executable.
     export PYTHONOPTIMIZE=1
-    _invoke_with_args pyinstaller --onefile --name emulator --additional-hooks-dir hooks -y gui/main.py
+    $PYINSTALLER --onefile --name emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui/main.py
 }
 
 main
