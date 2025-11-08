@@ -1,105 +1,173 @@
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QToolBar,
-    QMenuBar,
-    QMenu,
-    QFileDialog,
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QMenuBar, QMenu,
+    QFileDialog, QStackedWidget, QToolBar # Import QToolBar
 )
-from PyQt6.QtGui import (
-    QAction,
+from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QMenuBar, QMenu,
+    QFileDialog, QToolBar, QTabWidget
 )
-from PyQt6.QtCore import Qt
-from typing import Optional
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtCore import Qt, QSize, QByteArray
 
-from widgets.tab import Tab
+from typing import Optional
 
 from screens.editor import EditorScreen
 from screens.memory_view import MemoryViewScreen
 from screens.disassembly import DisassemblyScreen
 
+RUN_ICON = "assets/icons/play.svg"
+DEBUG_ICON = "assets/icons/bug.svg"
+STOP_ICON = "assets/icons/square.svg"
+STEP_ICON = "assets/icons/skip-forward.svg"
+RESET_ICON = "assets/icons/refresh-cw.svg"
+
+def create_themed_icon(svg_path: str, color: str) -> QIcon:
+    """
+    Reads an SVG file, replaces its fill/stroke color, and returns a QIcon.
+    This allows programmatic, theme-aware coloring of icons.
+    """
+    with open(svg_path, 'r') as f:
+        svg_data = f.read()
+    
+    # Replace the placeholder 'currentColor' with the desired hex color
+    themed_svg_data = svg_data.replace('currentColor', color)
+    
+    # Create a QPixmap from the modified SVG data
+    pixmap = QPixmap()
+    pixmap.loadFromData(QByteArray(themed_svg_data.encode('utf-8')))
+    
+    return QIcon(pixmap)
+
 class MainWindow(QMainWindow):
-    def __init__(self, parent: Optional[QWidget]=None, flags: Qt.WindowType=Qt.WindowType.Window):
+    def __init__(self, parent: Optional[QWidget] = None, flags: Qt.WindowType = Qt.WindowType.Window):
         super().__init__(parent=parent, flags=flags)
+        self.setWindowTitle("ARM Emulator")
+        
+        self._init_widgets()
+        self._init_menu()
+        self._init_toolbar()
+        self._init_layout()
+        
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #2b2b2b;
+            }
+            QToolBar {
+                background-color: #3c3f41;
+                border: none;
+                padding: 5px;
+            }
+            QToolButton {
+                padding: 8px;
+                border-radius: 4px;
+                background-color: #3c3f41;
+                color: #dddddd; /* This now controls BOTH text and icon color */
+            }
+            QToolButton:hover {
+                background-color: #4b5052;
+            }
+            QToolButton:pressed {
+                background-color: #525659;
+            }
 
-        self._menu_bar = QMenuBar(parent=self)
-        self.setMenuBar(self._menu_bar)
-        self._build_menu_bar()
+            QTabWidget::pane {
+                border: none;
+            }
+            QTabBar::tab {
+                background: #3c3f41;
+                color: #bbbbbb;
+                padding: 10px 20px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+            QTabBar::tab:hover {
+                background: #4b5052;
+            }
+            QTabBar::tab:selected {
+                background: #444444; /* Match the background of the content area */
+                color: white;
+            }
+        """)
 
-        self._editor_tab = Tab(text="Editor", parent=self)
-        self._memory_view_tab = Tab(text="Memory View", parent=self)
-        self._disassembly_tab = Tab(text="Disassembly", parent=self)
+    def _init_widgets(self):
+        # 1. Create the QTabWidget
+        self.tabs = QTabWidget()
+        
+        # 2. Create the screens (the content for each tab)
+        self._editor = EditorScreen()
+        self._memory_view = MemoryViewScreen()
+        self._disassembly = DisassemblyScreen()
 
-        self._editor = EditorScreen(parent=self)
-        self._memory_view = MemoryViewScreen(parent=self)
-        self._disassembly = DisassemblyScreen(parent=self)
+        # 3. Add the screens as tabs to the widget
+        self.tabs.addTab(self._editor, "Editor")
+        self.tabs.addTab(self._memory_view, "Memory View")
+        self.tabs.addTab(self._disassembly, "Disassembly")
 
-        self._editor_tab.clicked.connect(self._show_editor)
-        self._memory_view_tab.clicked.connect(self._show_memory_view)
-        self._disassembly_tab.clicked.connect(self._show_disassembly)
+    def _init_layout(self):
+        self.setCentralWidget(self.tabs)
 
-        internal_base = QWidget(parent=self)
-        self.setCentralWidget(internal_base)
-        self._base_layout = QVBoxLayout(internal_base)
-        self._base_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self._base_layout.addStretch()
-        internal_base.setLayout(self._base_layout)
+    def _init_toolbar(self):
+        self.toolbar = QToolBar("Main Toolbar")
+        self.toolbar.setIconSize(QSize(20, 20)) # Slightly smaller icon for balance with text
+        self.toolbar.setMovable(False)
+        self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
 
-        tabs = QWidget()
-        self._tabs_layout = QHBoxLayout(tabs)
-        tabs.setLayout(self._tabs_layout)
-        self._base_layout.addWidget(tabs)
+        run_icon = create_themed_icon(RUN_ICON, "#4CAF50")      # Green
+        debug_icon = create_themed_icon(DEBUG_ICON, "#FFC107")       # Amber/Yellow
+        stop_icon = create_themed_icon(STOP_ICON, "#F44336")     # Red
+        step_icon = create_themed_icon(STEP_ICON, "#2196F3") # Blue
+        reset_icon = create_themed_icon(RESET_ICON, "#9E9E9E") # Gray
 
-        main_content = QWidget()
-        self._main_content_layout = QVBoxLayout(main_content)
-        main_content.setLayout(self._main_content_layout)
-        self._base_layout.addWidget(main_content)
+        self.run_action = QAction(run_icon, "Run", self)
+        self.debug_action = QAction(debug_icon, "Debug", self)
+        self.stop_action = QAction(stop_icon, "Stop", self)
+        self.step_action = QAction(step_icon, "Step", self)
+        self.reset_action = QAction(reset_icon, "Reset", self)
+        
+        self.toolbar.addAction(self.run_action)
+        self.toolbar.addAction(self.debug_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.stop_action)
+        self.toolbar.addAction(self.step_action)
+        self.toolbar.addAction(self.reset_action)
+        
+        # Connect the toolbar actions
+        self.run_action.triggered.connect(self._on_run)
+        self.debug_action.triggered.connect(self._on_debug)
+        self.stop_action.triggered.connect(self._on_stop)
+        self.step_action.triggered.connect(self._on_step)
+        self.reset_action.triggered.connect(self._on_reset)
+        
+    # Slots
+    def _on_run(self):
+        code = self._editor.get_code()
+        print(f"--- Running Code ---\n{code}\n--------------------")
 
-        self.setupUI()
+    def _on_debug(self):
+        code = self._editor.get_code()
+        print(f"--- Launching Debugger ---\n{code}\n--------------------")
 
-    def setupUI(self):
-        self.setWindowTitle("ARM Simulator")
+    def _on_stop(self):
+        print("Execution stopped.")
 
-        for tab in (self._editor_tab, self._memory_view_tab, self._disassembly_tab):
-            self._tabs_layout.addWidget(tab)
+    def _on_step(self):
+        print("Stepping to next instruction.")
+        
+    def _on_reset(self):
+        print("Simulator reset.")
 
-        for screen in (self._editor, self._memory_view, self._disassembly):
-            self._main_content_layout.addWidget(screen)
-
-        self._show_editor()
-
-    def _show_and_hide_rest(self, to_show: QWidget, *to_hide: QWidget):
-        self._main_content_layout.addWidget(to_show)
-        to_show.show()
-        for w in to_hide:
-            self._main_content_layout.removeWidget(w)
-            w.hide()
-
-    def _show_editor(self):
-        self._editor.show(); self._memory_view.hide(); self._disassembly.hide()
-        # self._show_and_hide_rest(self._editor, self._memory_view, self._disassembly)
-
-    def _show_memory_view(self):
-        self._memory_view.show(); self._editor.hide(); self._disassembly.hide()
-
-    def _show_disassembly(self):
-        self._disassembly.show(); self._editor.hide(); self._memory_view.hide()
-
-    # Menu Bar:
-    def _build_menu_bar(self):
-        # Linter sees this can be None. We know better.
-        file_menu: QMenu = self._menu_bar.addMenu("&File")  # type: ignore
-
-        self._build_file_menu(file_menu)
+    # Menu
+    def _init_menu(self):
+        menu_bar = self.menuBar()
+        self._build_file_menu(menu_bar.addMenu("&File"))  # type: ignore
 
     def _build_file_menu(self, file_menu: QMenu):
         load_file_action = QAction("Load File", self)
         load_file_action.triggered.connect(self._load_file_selected)
         file_menu.addAction(load_file_action)
 
-    # Actions:
     def _load_file_selected(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
@@ -108,4 +176,4 @@ class MainWindow(QMainWindow):
             self._load_file(file_path)
 
     def _load_file(self, file_path: str):
-        print(file_path)
+        print(f"Loading file: {file_path}")
