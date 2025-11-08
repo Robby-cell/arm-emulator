@@ -13,7 +13,7 @@ function _source_venv() {
     if test -f $NORMAL_VENV; then
         echo "Using normal venv"
         source ./$NORMAL_VENV
-    else
+    elif test -f $WINDOWS_VENV; then
         echo "Using windows venv"
         source ./$WINDOWS_VENV
     fi
@@ -25,20 +25,8 @@ function _ensure_venv() {
     fi
 }
 
-function _ensure_pyinstaller() {
-    if [ ! -v pyinstaller >/dev/null 2>&1 ]; then
-        _ensure_venv
-        _source_venv
-        echo "pip install pyinstaller PyQt6"
-    fi
-}
-
 function main() {
     echo "Building standalone executable using PyInstaller."
-
-    echo "Ensuring environment is ready..."
-    _ensure_pyinstaller
-    echo "Environment ready."
 
     echo "Creating spec file..."
     $PYI_MAKESPEC gui/main.py --name emulator
