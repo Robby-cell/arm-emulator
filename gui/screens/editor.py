@@ -6,6 +6,19 @@ from widgets.peripherals_panel import PeripheralsPanel
 
 from typing import Optional
 
+DEFAULT_ASM = r""".global _start
+_start:
+    mov r0, #23
+    mov r1, #17
+    adds r0, r0, r1
+    bne label0
+label0:
+    mov r7, #1  @ Setup system call to exit
+    mov r0, #0  @ 0 = no error
+    svc 0
+
+"""
+
 
 class EditorScreen(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
@@ -32,7 +45,7 @@ class EditorScreen(QWidget):
         # Add the fully configured splitter to the main layout
         self._layout.addWidget(self._splitter)
 
-        self._editor.setPlainText("# Write your code here")
+        self._editor.setPlainText(DEFAULT_ASM)
 
     def get_code(self) -> str:
         """A method to allow the MainWindow to retrieve the code."""
