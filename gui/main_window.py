@@ -1,13 +1,12 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QMenuBar, QMenu,
-    QFileDialog, QStackedWidget, QToolBar # Import QToolBar
+    QMainWindow,
+    QWidget,
+    QMenu,
+    QFileDialog,
+    QToolBar,  # Import QToolBar
 )
 from PyQt6.QtGui import QAction, QIcon, QPixmap
-from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QMenuBar, QMenu,
-    QFileDialog, QToolBar, QTabWidget
-)
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QTabWidget
 from PyQt6.QtCore import Qt, QSize, QByteArray
 
 from typing import Optional
@@ -22,33 +21,39 @@ STOP_ICON = "assets/icons/square.svg"
 STEP_ICON = "assets/icons/skip-forward.svg"
 RESET_ICON = "assets/icons/refresh-cw.svg"
 
+
 def create_themed_icon(svg_path: str, color: str) -> QIcon:
     """
     Reads an SVG file, replaces its fill/stroke color, and returns a QIcon.
     This allows programmatic, theme-aware coloring of icons.
     """
-    with open(svg_path, 'r') as f:
+    with open(svg_path, "r") as f:
         svg_data = f.read()
-    
+
     # Replace the placeholder 'currentColor' with the desired hex color
-    themed_svg_data = svg_data.replace('currentColor', color)
-    
+    themed_svg_data = svg_data.replace("currentColor", color)
+
     # Create a QPixmap from the modified SVG data
     pixmap = QPixmap()
-    pixmap.loadFromData(QByteArray(themed_svg_data.encode('utf-8')))
-    
+    pixmap.loadFromData(QByteArray(themed_svg_data.encode("utf-8")))
+
     return QIcon(pixmap)
 
+
 class MainWindow(QMainWindow):
-    def __init__(self, parent: Optional[QWidget] = None, flags: Qt.WindowType = Qt.WindowType.Window):
+    def __init__(
+        self,
+        parent: Optional[QWidget] = None,
+        flags: Qt.WindowType = Qt.WindowType.Window,
+    ):
         super().__init__(parent=parent, flags=flags)
         self.setWindowTitle("ARM Emulator")
-        
+
         self._init_widgets()
         self._init_menu()
         self._init_toolbar()
         self._init_layout()
-        
+
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2b2b2b;
@@ -93,7 +98,7 @@ class MainWindow(QMainWindow):
     def _init_widgets(self):
         # 1. Create the QTabWidget
         self.tabs = QTabWidget()
-        
+
         # 2. Create the screens (the content for each tab)
         self._editor = EditorScreen()
         self._memory_view = MemoryViewScreen()
@@ -109,37 +114,39 @@ class MainWindow(QMainWindow):
 
     def _init_toolbar(self):
         self.toolbar = QToolBar("Main Toolbar")
-        self.toolbar.setIconSize(QSize(20, 20)) # Slightly smaller icon for balance with text
+        self.toolbar.setIconSize(
+            QSize(20, 20)
+        )  # Slightly smaller icon for balance with text
         self.toolbar.setMovable(False)
         self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
 
-        run_icon = create_themed_icon(RUN_ICON, "#4CAF50")      # Green
-        debug_icon = create_themed_icon(DEBUG_ICON, "#FFC107")       # Amber/Yellow
-        stop_icon = create_themed_icon(STOP_ICON, "#F44336")     # Red
-        step_icon = create_themed_icon(STEP_ICON, "#2196F3") # Blue
-        reset_icon = create_themed_icon(RESET_ICON, "#9E9E9E") # Gray
+        run_icon = create_themed_icon(RUN_ICON, "#4CAF50")  # Green
+        debug_icon = create_themed_icon(DEBUG_ICON, "#FFC107")  # Amber/Yellow
+        stop_icon = create_themed_icon(STOP_ICON, "#F44336")  # Red
+        step_icon = create_themed_icon(STEP_ICON, "#2196F3")  # Blue
+        reset_icon = create_themed_icon(RESET_ICON, "#9E9E9E")  # Gray
 
         self.run_action = QAction(run_icon, "Run", self)
         self.debug_action = QAction(debug_icon, "Debug", self)
         self.stop_action = QAction(stop_icon, "Stop", self)
         self.step_action = QAction(step_icon, "Step", self)
         self.reset_action = QAction(reset_icon, "Reset", self)
-        
+
         self.toolbar.addAction(self.run_action)
         self.toolbar.addAction(self.debug_action)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.stop_action)
         self.toolbar.addAction(self.step_action)
         self.toolbar.addAction(self.reset_action)
-        
+
         # Connect the toolbar actions
         self.run_action.triggered.connect(self._on_run)
         self.debug_action.triggered.connect(self._on_debug)
         self.stop_action.triggered.connect(self._on_stop)
         self.step_action.triggered.connect(self._on_step)
         self.reset_action.triggered.connect(self._on_reset)
-        
+
     # Slots
     def _on_run(self):
         code = self._editor.get_code()
@@ -154,7 +161,7 @@ class MainWindow(QMainWindow):
 
     def _on_step(self):
         print("Stepping to next instruction.")
-        
+
     def _on_reset(self):
         print("Simulator reset.")
 

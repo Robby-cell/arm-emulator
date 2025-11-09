@@ -6,6 +6,7 @@ from widgets.peripherals_panel import PeripheralsPanel
 
 from typing import Optional
 
+
 class EditorScreen(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -26,7 +27,7 @@ class EditorScreen(QWidget):
 
         # This gives the peripherals panel 40% and the editor 70% of the space initially.
         self._splitter.setSizes([300, 700])
-        self._splitter.setStretchFactor(1, 1) # Allows the editor to expand more
+        self._splitter.setStretchFactor(1, 1)  # Allows the editor to expand more
 
         # Add the fully configured splitter to the main layout
         self._layout.addWidget(self._splitter)

@@ -1,16 +1,36 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QComboBox, QPushButton, QTableWidget,
-    QTableWidgetItem, QLineEdit, QFormLayout, QHeaderView, QMessageBox
+    QWidget,
+    QVBoxLayout,
+    QComboBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QLineEdit,
+    QFormLayout,
+    QHeaderView,
+    QMessageBox,
 )
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 from typing import Optional, Dict, Type, List, Tuple
 
+
 # --- The Peripheral "Factory" section ---
-class LEDBank: pass
-class SevenSegmentDisplay: pass
-class Timer: pass
-class PushButtons: pass
+class LEDBank:
+    pass
+
+
+class SevenSegmentDisplay:
+    pass
+
+
+class Timer:
+    pass
+
+
+class PushButtons:
+    pass
+
 
 PERIPHERAL_REGISTRY: Dict[str, Type] = {
     "LED Bank": LEDBank,
@@ -23,17 +43,19 @@ PERIPHERAL_REGISTRY: Dict[str, Type] = {
 VALID_MEMORY_START = 0x00000000
 VALID_MEMORY_END = 0xFFFFFFFF
 
+
 class PeripheralsPanel(QWidget):
     """
     A widget panel for creating and configuring simulated peripherals
     with memory validation.
     """
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        
+
         # --- Data model to track configured memory ranges ---
         self._configured_ranges: List[Tuple[int, int]] = []
-        
+
         # --- Widget initialization ---
         self._layout = QVBoxLayout(self)
         self.setLayout(self._layout)
@@ -48,11 +70,13 @@ class PeripheralsPanel(QWidget):
         self._peripheral_table = QTableWidget()
 
         self.setupUI()
-        
+
         # --- Connections ---
         self._add_button.clicked.connect(self._on_add_peripheral)
         self._delete_button.clicked.connect(self._on_delete_peripheral)
-        self._peripheral_table.itemSelectionChanged.connect(self._update_delete_button_state)
+        self._peripheral_table.itemSelectionChanged.connect(
+            self._update_delete_button_state
+        )
 
     def setupUI(self):
         self._form_layout.addRow("Type:", self._type_combo)
@@ -67,14 +91,20 @@ class PeripheralsPanel(QWidget):
         self._start_addr_input.setPlaceholderText("e.g., 0xFF200000 or 1000")
         self._end_addr_input.setPlaceholderText("e.g., 0xFF20000F or 1015")
         self._peripheral_table.setColumnCount(3)
-        self._peripheral_table.setHorizontalHeaderLabels(["Type", "Name", "Memory Range"])
+        self._peripheral_table.setHorizontalHeaderLabels(
+            ["Type", "Name", "Memory Range"]
+        )
         header = self._peripheral_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # type: ignore
         self._peripheral_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self._peripheral_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self._peripheral_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._peripheral_table.setSelectionBehavior(
+            QTableWidget.SelectionBehavior.SelectRows
+        )
+        self._peripheral_table.setSelectionMode(
+            QTableWidget.SelectionMode.SingleSelection
+        )
         self._layout.addWidget(self._form_widget)
         self._layout.addWidget(self._add_button)
         self._layout.addWidget(self._delete_button)
@@ -83,12 +113,16 @@ class PeripheralsPanel(QWidget):
 
     def _parse_address(self, addr_str: str) -> Optional[int]:
         addr_str = addr_str.strip().lower()
-        if not addr_str: return None
+        if not addr_str:
+            return None
         try:
-            if addr_str.startswith('0x'): return int(addr_str, 16)
-            if any(c in 'abcdef' for c in addr_str): return int(addr_str, 16)
+            if addr_str.startswith("0x"):
+                return int(addr_str, 16)
+            if any(c in "abcdef" for c in addr_str):
+                return int(addr_str, 16)
             return int(addr_str, 10)
-        except ValueError: return None
+        except ValueError:
+            return None
 
     def _on_add_peripheral(self):
         """Validates input against global and existing ranges, then adds."""
@@ -99,26 +133,38 @@ class PeripheralsPanel(QWidget):
 
         # --- Basic Validation ---
         if not p_name or start_addr is None or end_addr is None:
-            QMessageBox.warning(self, "Input Error", "All fields must be filled with valid values.")
+            QMessageBox.warning(
+                self, "Input Error", "All fields must be filled with valid values."
+            )
             return
         if start_addr > end_addr:
-            QMessageBox.warning(self, "Input Error", "Start address must not be greater than end address.")
+            QMessageBox.warning(
+                self,
+                "Input Error",
+                "Start address must not be greater than end address.",
+            )
             return
 
         # --- Enforce Global Memory Range ---
-        if not (VALID_MEMORY_START <= start_addr <= VALID_MEMORY_END and
-                VALID_MEMORY_START <= end_addr <= VALID_MEMORY_END):
-            msg = f"Memory addresses must be within the valid range:\n" \
-                  f"{hex(VALID_MEMORY_START)} - {hex(VALID_MEMORY_END)}"
+        if not (
+            VALID_MEMORY_START <= start_addr <= VALID_MEMORY_END
+            and VALID_MEMORY_START <= end_addr <= VALID_MEMORY_END
+        ):
+            msg = (
+                f"Memory addresses must be within the valid range:\n"
+                f"{hex(VALID_MEMORY_START)} - {hex(VALID_MEMORY_END)}"
+            )
             QMessageBox.warning(self, "Address Out of Range", msg)
             return
 
         for exist_start, exist_end in self._configured_ranges:
             # Classic interval overlap check
             if start_addr <= exist_end and end_addr >= exist_start:
-                msg = f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) " \
-                      f"overlaps with an existing peripheral's range " \
-                      f"({hex(exist_start)} - {hex(exist_end)})."
+                msg = (
+                    f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
+                    f"overlaps with an existing peripheral's range "
+                    f"({hex(exist_start)} - {hex(exist_end)})."
+                )
                 QMessageBox.warning(self, "Memory Overlap", msg)
                 return
 
@@ -128,9 +174,12 @@ class PeripheralsPanel(QWidget):
 
         memory_range_str = f"{hex(start_addr)} - {hex(end_addr)}"
 
-        type_item = QTableWidgetItem(p_type); type_item.setToolTip(p_type)
-        name_item = QTableWidgetItem(p_name); name_item.setToolTip(p_name)
-        range_item = QTableWidgetItem(memory_range_str); range_item.setToolTip(memory_range_str)
+        type_item = QTableWidgetItem(p_type)
+        type_item.setToolTip(p_type)
+        name_item = QTableWidgetItem(p_name)
+        name_item.setToolTip(p_name)
+        range_item = QTableWidgetItem(memory_range_str)
+        range_item.setToolTip(memory_range_str)
 
         self._peripheral_table.setItem(row_count, 0, type_item)
         self._peripheral_table.setItem(row_count, 1, name_item)
