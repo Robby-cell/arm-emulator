@@ -14,6 +14,8 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 from typing import Optional, Dict, Type, List, Tuple
 
+from arm_emulator_rs import memory  # type: ignore
+
 
 # --- The Peripheral "Factory" section ---
 class LEDBank:
@@ -39,9 +41,8 @@ PERIPHERAL_REGISTRY: Dict[str, Type] = {
     "Push Buttons": PushButtons,
 }
 
-# TODO: These values should be the ACTUAL range for peripherals
-VALID_MEMORY_START = 0x00000000
-VALID_MEMORY_END = 0xFFFFFFFF
+VALID_MEMORY_BEGIN: int = int(memory.MemoryRegion.PERIPHERAL_BEGIN)
+VALID_MEMORY_END: int = int(memory.MemoryRegion.PERIPHERAL_END)
 
 
 class PeripheralsPanel(QWidget):
@@ -63,7 +64,7 @@ class PeripheralsPanel(QWidget):
         self._form_layout = QFormLayout(self._form_widget)
         self._type_combo = QComboBox()
         self._name_input = QLineEdit()
-        self._start_addr_input = QLineEdit()
+        self._begin_addr_input = QLineEdit()
         self._end_addr_input = QLineEdit()
         self._add_button = QPushButton("Add Peripheral")
         self._delete_button = QPushButton("Delete Selected")
@@ -81,15 +82,21 @@ class PeripheralsPanel(QWidget):
     def setupUI(self):
         self._form_layout.addRow("Type:", self._type_combo)
         self._form_layout.addRow("Instance Name:", self._name_input)
-        self._form_layout.addRow("Start Address:", self._start_addr_input)
+        self._form_layout.addRow("Begin Address:", self._begin_addr_input)
         self._form_layout.addRow("End Address:", self._end_addr_input)
         self._type_combo.addItems(PERIPHERAL_REGISTRY.keys())
+
+        addr_tooltip_text = f"Valid address between {hex(VALID_MEMORY_BEGIN)} ({VALID_MEMORY_BEGIN}) and {hex(VALID_MEMORY_END)} ({VALID_MEMORY_END})"
         hex_regex = QRegularExpression("^(0x)?[0-9a-fA-F]+$")
         hex_validator = QRegularExpressionValidator(hex_regex)
-        self._start_addr_input.setValidator(hex_validator)
+        self._begin_addr_input.setValidator(hex_validator)
         self._end_addr_input.setValidator(hex_validator)
-        self._start_addr_input.setPlaceholderText("e.g., 0xFF200000 or 1000")
-        self._end_addr_input.setPlaceholderText("e.g., 0xFF20000F or 1015")
+        self._begin_addr_input.setPlaceholderText("Hex or Decimal")
+        self._end_addr_input.setPlaceholderText("Hex or Decimal")
+
+        self._begin_addr_input.setToolTip(addr_tooltip_text)
+        self._end_addr_input.setToolTip(addr_tooltip_text)
+
         self._peripheral_table.setColumnCount(3)
         self._peripheral_table.setHorizontalHeaderLabels(
             ["Type", "Name", "Memory Range"]
@@ -128,7 +135,7 @@ class PeripheralsPanel(QWidget):
         """Validates input against global and existing ranges, then adds."""
         p_type = self._type_combo.currentText()
         p_name = self._name_input.text().strip()
-        start_addr = self._parse_address(self._start_addr_input.text())
+        start_addr = self._parse_address(self._begin_addr_input.text())
         end_addr = self._parse_address(self._end_addr_input.text())
 
         # --- Basic Validation ---
@@ -147,12 +154,12 @@ class PeripheralsPanel(QWidget):
 
         # --- Enforce Global Memory Range ---
         if not (
-            VALID_MEMORY_START <= start_addr <= VALID_MEMORY_END
-            and VALID_MEMORY_START <= end_addr <= VALID_MEMORY_END
+            VALID_MEMORY_BEGIN <= start_addr <= VALID_MEMORY_END
+            and VALID_MEMORY_BEGIN <= end_addr <= VALID_MEMORY_END
         ):
             msg = (
                 f"Memory addresses must be within the valid range:\n"
-                f"{hex(VALID_MEMORY_START)} - {hex(VALID_MEMORY_END)}"
+                f"{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}"
             )
             QMessageBox.warning(self, "Address Out of Range", msg)
             return
@@ -188,7 +195,7 @@ class PeripheralsPanel(QWidget):
         self._configured_ranges.append((start_addr, end_addr))
 
         self._name_input.clear()
-        self._start_addr_input.clear()
+        self._begin_addr_input.clear()
         self._end_addr_input.clear()
 
     def _on_delete_peripheral(self):
