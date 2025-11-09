@@ -14,31 +14,37 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtCore import QRegularExpression
 from typing import Optional, Dict, Type, List, Tuple
 
-from arm_emulator_rs import memory  # type: ignore
+from arm_emulator_rs import memory, peripheral  # type: ignore
 
 
 # --- The Peripheral "Factory" section ---
-class LEDBank:
-    pass
+class PyGpioPort(peripheral.GpioPort):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+    def read32(self, addr: int) -> int:
+        res: int = super().read32(addr)
+        print("PyGpioPort read32")
+        return res
 
-class SevenSegmentDisplay:
-    pass
+    def write32(self, addr: int, data: int) -> None:
+        res: None = super().write_byte(addr, data)
+        print("PyGpioPort write32")
+        return res
+    
+    def read_byte(self, addr: int) -> int:
+        res: int = super().read32(addr)
+        print("PyGpioPort read_byte")
+        return res
 
-
-class Timer:
-    pass
-
-
-class PushButtons:
-    pass
+    def write_byte(self, addr: int, data: int) -> None:
+        res: None = super().write_byte(addr, data)
+        print("PyGpioPort write_byte")
+        return res
 
 
 PERIPHERAL_REGISTRY: Dict[str, Type] = {
-    "LED Bank": LEDBank,
-    "7-Segment Display": SevenSegmentDisplay,
-    "Timer": Timer,
-    "Push Buttons": PushButtons,
+    "GPIO Port": PyGpioPort,
 }
 
 VALID_MEMORY_BEGIN: int = int(memory.MemoryRegion.PERIPHERAL_BEGIN)
