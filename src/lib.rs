@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 mod error;
 mod py_emulator;
 mod py_gpio_port;
+mod py_memory;
 mod py_peripheral;
 mod py_range;
 
@@ -87,6 +88,11 @@ fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     {
         let emulator_m = add_submodule(m, "emulator")?;
         py_emulator::py_emulator(&emulator_m)?;
+    }
+
+    {
+        let memory_m = add_submodule(m, "memory")?;
+        py_memory::py_memory(&memory_m)?;
     }
 
     {
