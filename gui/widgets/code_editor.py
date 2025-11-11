@@ -9,7 +9,7 @@ from PyQt6.QtGui import (
     QTextCharFormat,
 )
 from PyQt6.QtWidgets import QWidget, QPlainTextEdit, QToolTip
-from typing import Optional
+from typing import Optional, List
 
 
 CONDITIONAL_REGEX = "EQ|NE|CS|HS|CC|LO|MI|PL|VS|VC|HI|LS|GE|LT|GT|LE|AL|NV"
@@ -342,7 +342,7 @@ class CodeEditor(QPlainTextEdit):
         self,
         line_number_area: Optional[LineNumberArea] = None,
         parent: Optional[QWidget] = None,
-    ):
+    ) -> None:
         super().__init__(parent)
         self._line_number_area = (
             line_number_area if line_number_area is not None else LineNumberArea(self)
@@ -350,6 +350,7 @@ class CodeEditor(QPlainTextEdit):
 
         self.setFont(QFont("monospace", 12))
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self._update_tab_stop_width()
 
         self.setViewportMargins(self.GUTTER_FIXED_WIDTH, 0, 0, 0)
 
@@ -363,17 +364,34 @@ class CodeEditor(QPlainTextEdit):
         # it is set on the last line. Do this to avoid that.
         self.setPlainText("\n")
 
-        # --- Feature 1: Syntax Highlighting ---
+        # --- Syntax Highlighting ---
         self._highlighter = ARMHighlighter(self.document())
 
-        # --- Feature 2: Track Labels ---
+        # --- Track Labels ---
         self._labels = set()
         self.textChanged.connect(self._update_labels)
 
         self.setFont(QFont("monospace", 12))
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
-    def _update_labels(self):
+        self._setup_shortcuts()
+
+    def _setup_shortcuts(self):
+        """Initializes all editor-specific keyboard shortcuts."""
+        ...
+
+    def _update_tab_stop_width(self) -> None:
+        """Sets the tab stop distance to be equivalent to 4 space characters."""
+        font_metrics = self.fontMetrics()
+        space_width = font_metrics.horizontalAdvance(" ")
+        self.setTabStopDistance(4 * space_width)
+
+    def setFont(self, a0: QFont) -> None:
+        """Overrides the base setFont method to also update the tab width."""
+        super().setFont(a0)
+        self._update_tab_stop_width()
+
+    def _update_labels(self) -> None:
         """Parse the entire document to find label definitions."""
         new_labels = set()
         block = self.document().firstBlock()  # type: ignore
@@ -388,42 +406,68 @@ class CodeEditor(QPlainTextEdit):
             self._labels = new_labels
             self._highlighter.update_labels(self._labels)
 
-    def keyPressEvent(self, e):
+    def keyPressEvent(self, e) -> None:
         """Handle key presses for autocompletion and auto-indent."""
         if e is None:
             return
 
-        # --- Feature 4: Auto-Indentation ---
-        if e.key() == Qt.Key.Key_Return or e.key() == Qt.Key.Key_Enter:
-            tc = self.textCursor()
-            block = tc.block()
-            prev_line_text = block.text()
+        # --- First, check for the Ctrl+Enter shortcut ---
+        if (
+            e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
+            and e.modifiers() == Qt.KeyboardModifier.ControlModifier
+        ):
+            cursor = self.textCursor()
+            current_line_text = cursor.block().text()
 
-            indentation = ""
-            match = QRegularExpression(r"^(\s+).*").match(prev_line_text)
+            # Find the indentation of the current line
+            indentation: str = str()
+            match = QRegularExpression(r"^(\s*).*").match(current_line_text)
             if match.hasMatch():
                 indentation = match.captured(1)
 
-            # If the previous line was an instruction (indented), keep the indent
-            # but if it was a label (not indented), don't add an indent.
-            if QRegularExpression(r"^\s+[a-zA-Z]").match(prev_line_text).hasMatch():
-                indentation = "\t"  # Or "    "
-            elif (
+            if (
                 QRegularExpression(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):")
-                .match(prev_line_text)
+                .match(current_line_text)
                 .hasMatch()
             ):
-                indentation = "\t"  # Indent after a label
-            else:
-                indentation = ""
+                indentation += "\t"
 
+            # Manually insert a newline character at the end of the line, followed by the indent
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfLine)
+            cursor.insertText("\n" + indentation)
+            self.setTextCursor(cursor)
+
+            # We have handled the event. Do not process it further.
+            return
+
+        # --- Second, check for a regular Enter press for auto-indentation ---
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            cursor = self.textCursor()
+            current_line_text = cursor.block().text()
+
+            indentation = ""
+            match = QRegularExpression(r"^(\s*).*").match(current_line_text)
+            if match.hasMatch():
+                indentation = match.captured(1)
+
+            # If the current line was a label, add one more level of indent for the next line
+            if (
+                QRegularExpression(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):")
+                .match(current_line_text)
+                .hasMatch()
+            ):
+                indentation += "\t"
+
+            # Let the default Enter action happen first
             super().keyPressEvent(e)
+            # Then insert our calculated indentation
             self.insertPlainText(indentation)
             return
 
+        # --- For all other keys, use the default behavior ---
         super().keyPressEvent(e)
 
-    # --- Feature 5: Tooltips on Hover ---
+    # --- Tooltips on Hover ---
     def event(self, e) -> bool:
         """Show tooltips when hovering over instructions."""
         if e is None:
@@ -449,7 +493,7 @@ class CodeEditor(QPlainTextEdit):
                 0, rect.y(), self._line_number_area.width(), rect.height()
             )
 
-    def _enforce_guard_line(self):
+    def _enforce_guard_line(self) -> None:
         """Ensures there is always one, and only one, empty line at the end."""
         self.blockSignals(True)
         doc = self.document()
@@ -463,7 +507,7 @@ class CodeEditor(QPlainTextEdit):
             cursor.insertBlock()
         self.blockSignals(False)
 
-    def _prevent_cursor_on_last_line(self):
+    def _prevent_cursor_on_last_line(self) -> None:
         """Stops the user from selecting or writing on the guard line."""
         cursor = self.textCursor()
         if cursor.blockNumber() == self.blockCount() - 1:
@@ -473,14 +517,14 @@ class CodeEditor(QPlainTextEdit):
             self.setTextCursor(cursor)
             self.blockSignals(False)
 
-    def resizeEvent(self, e):
+    def resizeEvent(self, e) -> None:
         super().resizeEvent(e)
         cr = self.contentsRect()
         self._line_number_area.setGeometry(
             QRect(cr.left(), cr.top(), self.GUTTER_FIXED_WIDTH, cr.height())
         )
 
-    def toggle_breakpoint(self, line_number: int):
+    def toggle_breakpoint(self, line_number: int) -> None:
         if line_number >= self.blockCount() - 1:
             return
 
@@ -510,7 +554,7 @@ class CodeEditor(QPlainTextEdit):
                 return data.is_breakpoint
         return False
 
-    def get_breakpoints(self) -> list[int]:
+    def get_breakpoints(self) -> List[int]:
         breakpoints = []
         for i in range(self.blockCount() - 1):
             if self.is_breakpoint(i):
