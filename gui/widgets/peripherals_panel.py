@@ -57,7 +57,7 @@ class PeripheralsPanel(QWidget):
     with memory validation.
     """
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         # --- Data model to track configured memory ranges ---
@@ -85,7 +85,7 @@ class PeripheralsPanel(QWidget):
             self._update_delete_button_state
         )
 
-    def setupUI(self):
+    def setupUI(self) -> None:
         self._form_layout.addRow("Type:", self._type_combo)
         self._form_layout.addRow("Instance Name:", self._name_input)
         self._form_layout.addRow("Begin Address:", self._begin_addr_input)
@@ -137,7 +137,7 @@ class PeripheralsPanel(QWidget):
         except ValueError:
             return None
 
-    def _on_add_peripheral(self):
+    def _on_add_peripheral(self) -> None:
         """Validates input against global and existing ranges, then adds."""
         p_type = self._type_combo.currentText()
         p_name = self._name_input.text().strip()
@@ -204,7 +204,7 @@ class PeripheralsPanel(QWidget):
         self._begin_addr_input.clear()
         self._end_addr_input.clear()
 
-    def _on_delete_peripheral(self):
+    def _on_delete_peripheral(self) -> None:
         """Deletes the selected row from the table and the data model."""
         current_row = self._peripheral_table.currentRow()
         if current_row > -1:
@@ -213,5 +213,5 @@ class PeripheralsPanel(QWidget):
             # Then remove the row from the view
             self._peripheral_table.removeRow(current_row)
 
-    def _update_delete_button_state(self):
+    def _update_delete_button_state(self) -> None:
         self._delete_button.setEnabled(len(self._peripheral_table.selectedItems()) > 0)

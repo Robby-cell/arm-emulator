@@ -21,7 +21,7 @@ label0:
 
 
 class EditorScreen(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self._layout = QHBoxLayout(self)
@@ -34,7 +34,7 @@ class EditorScreen(QWidget):
 
         self.setupUI()
 
-    def setupUI(self):
+    def setupUI(self) -> None:
         self._splitter.addWidget(self._peripherals)
         self._splitter.addWidget(self._editor)
 

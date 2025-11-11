@@ -88,7 +88,7 @@ class ARMHighlighter(QSyntaxHighlighter):
     Handles syntax highlighting for ARM assembly.
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self._highlighting_rules = []
         self._labels = set()
@@ -177,12 +177,12 @@ class ARMHighlighter(QSyntaxHighlighter):
         self.label_def_format.setForeground(QColor("#C586C0"))  # Purple
         self.label_def_format.setFontWeight(QFont.Weight.Bold)
 
-    def update_labels(self, labels: set):
+    def update_labels(self, labels: set) -> None:
         """Updates the set of known labels to highlight them as well."""
         self._labels = labels
         self.rehighlight()
 
-    def highlightBlock(self, text: Optional[str]):
+    def highlightBlock(self, text: Optional[str]) -> None:
         match_iterator = QRegularExpression(
             r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):"
         ).globalMatch(text)
@@ -213,7 +213,7 @@ class ARMHighlighter(QSyntaxHighlighter):
 class BreakpointUserData(QTextBlockUserData):
     """Holds the breakpoint state for a QTextBlock."""
 
-    def __init__(self, is_breakpoint: bool = False):
+    def __init__(self, is_breakpoint: bool = False) -> None:
         super().__init__()
         self.is_breakpoint = is_breakpoint
 
@@ -225,7 +225,7 @@ class LineNumberArea(QWidget):
     _text_color: QColor
     _breakpoint_color: QColor
 
-    def __init__(self, editor: "CodeEditor"):
+    def __init__(self, editor: "CodeEditor") -> None:
         super().__init__(editor)
         self._editor = editor
         self._font = QFont("monospace", 10)
@@ -239,7 +239,7 @@ class LineNumberArea(QWidget):
         return self._background_color
 
     @background_color.setter
-    def background_color(self, color: QColor):
+    def background_color(self, color: QColor) -> None:
         if color is None:
             return
         self._background_color = color
@@ -250,7 +250,7 @@ class LineNumberArea(QWidget):
         return self._text_color
 
     @text_color.setter
-    def text_color(self, color: QColor):
+    def text_color(self, color: QColor) -> None:
         self._text_color = color
         self.update()
 
@@ -259,11 +259,11 @@ class LineNumberArea(QWidget):
         return self._breakpoint_color
 
     @breakpoint_color.setter
-    def breakpoint_color(self, color: QColor):
+    def breakpoint_color(self, color: QColor) -> None:
         self._breakpoint_color = color
         self.update()
 
-    def paintEvent(self, a0):
+    def paintEvent(self, a0) -> None:
         if a0 is None:
             return
 
@@ -313,7 +313,7 @@ class LineNumberArea(QWidget):
                     .top()
                 )
 
-    def mousePressEvent(self, a0):
+    def mousePressEvent(self, a0) -> None:
         if a0 is not None and a0.button() == Qt.MouseButton.LeftButton:
             clicked_y = a0.pos().y()
             block = self._editor.firstVisibleBlock()

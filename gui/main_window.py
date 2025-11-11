@@ -48,17 +48,17 @@ class MainWindow(QMainWindow):
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self._leave()
 
-    def _leave(self):
+    def _leave(self) -> None:
         self._save_config()
 
-    def _save_config(self): ...
+    def _save_config(self) -> None: ...
 
     # Actual class:
     def __init__(
         self,
         parent: Optional[QWidget] = None,
         flags: Qt.WindowType = Qt.WindowType.Window,
-    ):
+    ) -> None:
         super().__init__(parent=parent, flags=flags)
         self.setWindowTitle("ARM Emulator")
 
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
             }
         """)
 
-    def _init_widgets(self):
+    def _init_widgets(self) -> None:
         # 1. Create the QTabWidget
         self.tabs = QTabWidget()
 
@@ -122,10 +122,10 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self._memory_view, "Memory View")
         self.tabs.addTab(self._disassembly, "Disassembly")
 
-    def _init_layout(self):
+    def _init_layout(self) -> None:
         self.setCentralWidget(self.tabs)
 
-    def _init_toolbar(self):
+    def _init_toolbar(self) -> None:
         self.toolbar = QToolBar("Main Toolbar")
         self.toolbar.setIconSize(
             QSize(20, 20)
@@ -161,39 +161,39 @@ class MainWindow(QMainWindow):
         self.reset_action.triggered.connect(self._on_reset)
 
     # Slots
-    def _on_run(self):
+    def _on_run(self) -> None:
         code = self._editor.get_code()
         print(f"--- Running Code ---\n{code}\n--------------------")
 
-    def _on_debug(self):
+    def _on_debug(self) -> None:
         code = self._editor.get_code()
         print(f"--- Launching Debugger ---\n{code}\n--------------------")
 
-    def _on_stop(self):
+    def _on_stop(self) -> None:
         print("Execution stopped.")
 
-    def _on_step(self):
+    def _on_step(self) -> None:
         print("Stepping to next instruction.")
 
-    def _on_reset(self):
+    def _on_reset(self) -> None:
         print("Simulator reset.")
 
     # Menu
-    def _init_menu(self):
+    def _init_menu(self) -> None:
         menu_bar = self.menuBar()
         self._build_file_menu(menu_bar.addMenu("&File"))  # type: ignore
 
-    def _build_file_menu(self, file_menu: QMenu):
+    def _build_file_menu(self, file_menu: QMenu) -> None:
         load_file_action = QAction("Load File", self)
         load_file_action.triggered.connect(self._load_file_selected)
         file_menu.addAction(load_file_action)
 
-    def _load_file_selected(self):
+    def _load_file_selected(self) -> None:
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         if dialog.exec():
             file_path = dialog.selectedFiles()[0]
             self._load_file(file_path)
 
-    def _load_file(self, file_path: str):
+    def _load_file(self, file_path: str) -> None:
         print(f"Loading file: {file_path}")
