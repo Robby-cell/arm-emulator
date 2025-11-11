@@ -41,6 +41,19 @@ def create_themed_icon(svg_path: str, color: str) -> QIcon:
 
 
 class MainWindow(QMainWindow):
+    # Context manager for guaranteed exit code:
+    def __enter__(self) -> "MainWindow":
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        self._leave()
+
+    def _leave(self):
+        self._save_config()
+
+    def _save_config(self): ...
+
+    # Actual class:
     def __init__(
         self,
         parent: Optional[QWidget] = None,

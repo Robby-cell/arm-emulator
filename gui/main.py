@@ -5,10 +5,10 @@ from sys import argv, exit
 
 def main():
     app = QApplication(argv)
-    window = MainWindow()
-    window.showMaximized()
-    exit_code: int = app.exec()
-    exit(exit_code)
+    with MainWindow() as window:
+        window.showMaximized()
+        exit_code: int = app.exec()
+        exit(exit_code)
 
 
 if __name__ == "__main__":

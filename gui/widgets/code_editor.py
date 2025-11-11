@@ -1,45 +1,85 @@
-from PyQt6.QtCore import Qt, QRect, QRegularExpression, QStringListModel
+from PyQt6.QtCore import Qt, QRect, QRegularExpression
 from PyQt6.QtGui import (
-    QPainter, QColor, QFont, QTextBlockUserData,
-    QTextCursor, QSyntaxHighlighter, QTextCharFormat
+    QPainter,
+    QColor,
+    QFont,
+    QTextBlockUserData,
+    QTextCursor,
+    QSyntaxHighlighter,
+    QTextCharFormat,
 )
 from PyQt6.QtWidgets import QWidget, QPlainTextEdit, QToolTip
 from typing import Optional
-from itertools import chain
 
 
-CONDITIONAL_REGEX = 'EQ|NE|CS|HS|CC|LO|MI|PL|VS|VC|HI|LS|GE|LT|GT|LE|AL|NV'
+CONDITIONAL_REGEX = "EQ|NE|CS|HS|CC|LO|MI|PL|VS|VC|HI|LS|GE|LT|GT|LE|AL|NV"
 
 ARMITHMETIC_INSTRUCTIONS = [
-    'ADD', 'SUB', 'RSB', 'ADC', 'SBC', 'RSC', 'AND', 'ORR', 'EOR',
-    'BIC', 'MOV', 'MVN', 'ORN', 'ASR', 'LSL', 'LSR', 'ROR', 'RRX', 'MUL', 'MLA'
+    "ADD",
+    "SUB",
+    "RSB",
+    "ADC",
+    "SBC",
+    "RSC",
+    "AND",
+    "ORR",
+    "EOR",
+    "BIC",
+    "MOV",
+    "MVN",
+    "ORN",
+    "ASR",
+    "LSL",
+    "LSR",
+    "ROR",
+    "RRX",
+    "MUL",
+    "MLA",
 ]
 
 FLAG_INSTRUCTIONS = [
-    'CMP', 'CMN', 'TST', 'TEQ',
+    "CMP",
+    "CMN",
+    "TST",
+    "TEQ",
 ]
 
-NON_UPDATING_INSTRUCTIONS = [
-    'LDR', 'STR', 'B', 'BL', 'PUSH', 'POP', 'SVC'
-]
+NON_UPDATING_INSTRUCTIONS = ["LDR", "STR", "B", "BL", "PUSH", "POP", "SVC"]
 
 ARM_REGISTERS = [
-    'R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10',
-    'R11', 'R12', 'SP', 'LR', 'PC', 'R13', 'R14', 'R15',
+    "R0",
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10",
+    "R11",
+    "R12",
+    "SP",
+    "LR",
+    "PC",
+    "R13",
+    "R14",
+    "R15",
 ]
 
 # Simple tooltips for common instructions
 INSTRUCTION_TOOLTIPS = {
-    'ADD': 'ADD <dest>, <op1>, <op2>\n\nAdds two operands and stores the result in a register.',
-    'SUB': 'SUB <dest>, <op1>, <op2>\n\nSubtracts two operands and stores the result.',
-    'MOV': 'MOV <dest>, <op>\n\nMoves a value into a register.',
-    'LDR': 'LDR <reg>, [<address>]\n\nLoads a value from memory into a register.',
-    'STR': 'STR <reg>, [<address>]\n\nStores a value from a register into memory.',
-    'B': 'B <label>\n\nUnconditional branch to a label.',
-    'BL': 'BL <label>\n\nBranch with Link. Branches to a label and stores the return address in LR.',
-    'CMP': 'CMP <op1>, <op2>\n\nCompares two operands and sets condition flags.',
-    'BEQ': 'BEQ <label>\n\nBranch if Equal (Z flag is set).',
-    'BNE': 'BNE <label>\n\nBranch if Not Equal (Z flag is clear).'
+    "ADD": "ADD <dest>, <op1>, <op2>\n\nAdds two operands and stores the result in a register.",
+    "SUB": "SUB <dest>, <op1>, <op2>\n\nSubtracts two operands and stores the result.",
+    "MOV": "MOV <dest>, <op>\n\nMoves a value into a register.",
+    "LDR": "LDR <reg>, [<address>]\n\nLoads a value from memory into a register.",
+    "STR": "STR <reg>, [<address>]\n\nStores a value from a register into memory.",
+    "B": "B <label>\n\nUnconditional branch to a label.",
+    "BL": "BL <label>\n\nBranch with Link. Branches to a label and stores the return address in LR.",
+    "CMP": "CMP <op1>, <op2>\n\nCompares two operands and sets condition flags.",
+    "BEQ": "BEQ <label>\n\nBranch if Equal (Z flag is set).",
+    "BNE": "BNE <label>\n\nBranch if Not Equal (Z flag is clear).",
 }
 
 
@@ -47,45 +87,53 @@ class ARMHighlighter(QSyntaxHighlighter):
     """
     Handles syntax highlighting for ARM assembly.
     """
+
     def __init__(self, parent):
         super().__init__(parent)
         self._highlighting_rules = []
         self._labels = set()
 
-         # Arithmetic/Logic format
+        # Arithmetic/Logic format
         arithmetic_format = QTextCharFormat()
-        arithmetic_format.setForeground(QColor("#569CD6")) # Blue
+        arithmetic_format.setForeground(QColor("#569CD6"))  # Blue
         arithmetic_format.setFontWeight(QFont.Weight.Bold)
 
         # Flag-setting instruction format (e.g., CMP, TST)
         flag_format = QTextCharFormat()
-        flag_format.setForeground(QColor("#DCDCAA")) # Gold/Yellow
+        flag_format.setForeground(QColor("#DCDCAA"))  # Gold/Yellow
         flag_format.setFontWeight(QFont.Weight.Bold)
-        
+
         # Control flow / Memory instruction format (e.g., LDR, B, STR, BEQ)
         control_mem_format = QTextCharFormat()
-        control_mem_format.setForeground(QColor("#C586C0")) # Magenta/Light Purple
+        control_mem_format.setForeground(QColor("#C586C0"))  # Magenta/Light Purple
         control_mem_format.setFontWeight(QFont.Weight.Bold)
-
 
         conditional_part = f"({CONDITIONAL_REGEX})?"
 
         # Pattern for arithmetic instructions (handles optional 'S' and conditional)
         arithmetic_pattern = QRegularExpression(
-            r'\b((' + '|'.join(ARMITHMETIC_INSTRUCTIONS) + r')' + conditional_part + r'S?)\b',
-            QRegularExpression.PatternOption.CaseInsensitiveOption
+            r"\b(("
+            + "|".join(ARMITHMETIC_INSTRUCTIONS)
+            + r")"
+            + conditional_part
+            + r"S?)\b",
+            QRegularExpression.PatternOption.CaseInsensitiveOption,
         )
-        
+
         # Pattern for flag-setting instructions (handles optional conditional)
         flag_pattern = QRegularExpression(
-            r'\b((' + '|'.join(FLAG_INSTRUCTIONS) + r')' + conditional_part + r')\b',
-            QRegularExpression.PatternOption.CaseInsensitiveOption
+            r"\b((" + "|".join(FLAG_INSTRUCTIONS) + r")" + conditional_part + r")\b",
+            QRegularExpression.PatternOption.CaseInsensitiveOption,
         )
-        
+
         # Pattern for control/memory instructions (handles optional conditional)
         control_mem_pattern = QRegularExpression(
-            r'\b((' + '|'.join(NON_UPDATING_INSTRUCTIONS) + r')' + conditional_part + r')\b',
-            QRegularExpression.PatternOption.CaseInsensitiveOption
+            r"\b(("
+            + "|".join(NON_UPDATING_INSTRUCTIONS)
+            + r")"
+            + conditional_part
+            + r")\b",
+            QRegularExpression.PatternOption.CaseInsensitiveOption,
         )
         self._highlighting_rules.append((arithmetic_pattern, arithmetic_format))
         self._highlighting_rules.append((flag_pattern, flag_format))
@@ -93,40 +141,56 @@ class ARMHighlighter(QSyntaxHighlighter):
 
         # Register format
         register_format = QTextCharFormat()
-        register_format.setForeground(QColor("#4EC9B0")) # Teal
-        self._highlighting_rules.append((QRegularExpression(r'\b(' + '|'.join(ARM_REGISTERS) + r')\b', QRegularExpression.PatternOption.CaseInsensitiveOption), register_format))
+        register_format.setForeground(QColor("#4EC9B0"))  # Teal
+        self._highlighting_rules.append(
+            (
+                QRegularExpression(
+                    r"\b(" + "|".join(ARM_REGISTERS) + r")\b",
+                    QRegularExpression.PatternOption.CaseInsensitiveOption,
+                ),
+                register_format,
+            )
+        )
 
         # Number format (hex, decimal)
         number_format = QTextCharFormat()
-        number_format.setForeground(QColor("#B5CEA8")) # Greenish
-        self._highlighting_rules.append((QRegularExpression(r'\b#?0x[0-9a-fA-F]+\b|\b#?[0-9]+\b'), number_format))
+        number_format.setForeground(QColor("#B5CEA8"))  # Greenish
+        self._highlighting_rules.append(
+            (QRegularExpression(r"\b#?0x[0-9a-fA-F]+\b|\b#?[0-9]+\b"), number_format)
+        )
 
         # Comment format
         comment_format = QTextCharFormat()
-        comment_format.setForeground(QColor("#6A9955")) # Dark Green
+        comment_format.setForeground(QColor("#6A9955"))  # Dark Green
         comment_format.setFontItalic(True)
-        self._highlighting_rules.append((QRegularExpression(r';.*$|@.*$'), comment_format))
+        self._highlighting_rules.append(
+            (QRegularExpression(r";.*$|@.*$"), comment_format)
+        )
 
         # String format
         string_format = QTextCharFormat()
-        string_format.setForeground(QColor("#CE9178")) # Orange
+        string_format.setForeground(QColor("#CE9178"))  # Orange
         self._highlighting_rules.append((QRegularExpression(r'"[^"]*"'), string_format))
 
         # Label definition format
         self.label_def_format = QTextCharFormat()
-        self.label_def_format.setForeground(QColor("#C586C0")) # Purple
+        self.label_def_format.setForeground(QColor("#C586C0"))  # Purple
         self.label_def_format.setFontWeight(QFont.Weight.Bold)
-        
+
     def update_labels(self, labels: set):
         """Updates the set of known labels to highlight them as well."""
         self._labels = labels
         self.rehighlight()
 
     def highlightBlock(self, text: Optional[str]):
-        match_iterator = QRegularExpression(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):').globalMatch(text)
+        match_iterator = QRegularExpression(
+            r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):"
+        ).globalMatch(text)
         while match_iterator.hasNext():
             match = match_iterator.next()
-            self.setFormat(match.capturedStart(1), match.capturedLength(1), self.label_def_format)
+            self.setFormat(
+                match.capturedStart(1), match.capturedLength(1), self.label_def_format
+            )
 
         for pattern, format in self._highlighting_rules:
             match_iterator = pattern.globalMatch(text)
@@ -136,12 +200,14 @@ class ARMHighlighter(QSyntaxHighlighter):
 
         if self._labels:
             label_usage_format = QTextCharFormat()
-            label_usage_format.setForeground(QColor("#C586C0")) # Purple
-            label_pattern = QRegularExpression(r'\b(' + '|'.join(self._labels) + r')\b')
+            label_usage_format.setForeground(QColor("#C586C0"))  # Purple
+            label_pattern = QRegularExpression(r"\b(" + "|".join(self._labels) + r")\b")
             match_iterator = label_pattern.globalMatch(text)
             while match_iterator.hasNext():
                 match = match_iterator.next()
-                self.setFormat(match.capturedStart(), match.capturedLength(), label_usage_format)
+                self.setFormat(
+                    match.capturedStart(), match.capturedLength(), label_usage_format
+                )
 
 
 class BreakpointUserData(QTextBlockUserData):
@@ -303,7 +369,7 @@ class CodeEditor(QPlainTextEdit):
         # --- Feature 2: Track Labels ---
         self._labels = set()
         self.textChanged.connect(self._update_labels)
-        
+
         self.setFont(QFont("monospace", 12))
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
@@ -313,11 +379,11 @@ class CodeEditor(QPlainTextEdit):
         block = self.document().firstBlock()  # type: ignore
         while block.isValid():
             text = block.text()
-            match = QRegularExpression(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):').match(text)
+            match = QRegularExpression(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):").match(text)
             if match.hasMatch():
                 new_labels.add(match.captured(1))
             block = block.next()
-        
+
         if self._labels != new_labels:
             self._labels = new_labels
             self._highlighter.update_labels(self._labels)
@@ -332,20 +398,24 @@ class CodeEditor(QPlainTextEdit):
             tc = self.textCursor()
             block = tc.block()
             prev_line_text = block.text()
-            
+
             indentation = ""
-            match = QRegularExpression(r'^(\s+).*').match(prev_line_text)
+            match = QRegularExpression(r"^(\s+).*").match(prev_line_text)
             if match.hasMatch():
                 indentation = match.captured(1)
-            
+
             # If the previous line was an instruction (indented), keep the indent
             # but if it was a label (not indented), don't add an indent.
-            if QRegularExpression(r'^\s+[a-zA-Z]').match(prev_line_text).hasMatch():
-                indentation = "\t" # Or "    "
-            elif QRegularExpression(r'^\s*([a-zA-Z_][a-zA-Z0-9_]*):').match(prev_line_text).hasMatch():
-                 indentation = "\t" # Indent after a label
+            if QRegularExpression(r"^\s+[a-zA-Z]").match(prev_line_text).hasMatch():
+                indentation = "\t"  # Or "    "
+            elif (
+                QRegularExpression(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):")
+                .match(prev_line_text)
+                .hasMatch()
+            ):
+                indentation = "\t"  # Indent after a label
             else:
-                 indentation = ""
+                indentation = ""
 
             super().keyPressEvent(e)
             self.insertPlainText(indentation)
@@ -364,7 +434,7 @@ class CodeEditor(QPlainTextEdit):
             cursor = self.cursorForPosition(pos)
             cursor.select(QTextCursor.SelectionType.WordUnderCursor)
             word = cursor.selectedText().upper()
-            
+
             if word in INSTRUCTION_TOOLTIPS:
                 tooltip_text = INSTRUCTION_TOOLTIPS[word]
                 QToolTip.showText(self.mapToGlobal(pos), tooltip_text, self)
