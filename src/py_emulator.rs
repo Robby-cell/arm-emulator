@@ -9,7 +9,7 @@ use emulator::{
 };
 
 use crate::{
-    error::ToPyResult, py_peripheral::PyPeripheral,
+    error::ToPyResult, py_memory::RamSize, py_peripheral::PyPeripheral,
     py_range::PyRangeInclusiveU32,
 };
 
@@ -28,9 +28,10 @@ impl fmt::Display for PyEmulator {
 #[pymethods]
 impl PyEmulator {
     #[new]
-    fn new(ram_size: u32) -> Self {
+    #[pyo3(signature = (ram_size = RamSize(0)))]
+    fn new(ram_size: RamSize) -> Self {
         Self {
-            emulator: emulator_with_ram_size(ram_size),
+            emulator: emulator_with_ram_size(ram_size.0),
         }
     }
 
@@ -82,8 +83,8 @@ impl PyEmulator {
         self.emulator.add_peripheral(MemoryMappedPeripheral {
             range: range.range(),
             peripheral: Arc::new(PyPeripheral::new(
-                mapped_peripheral.into()
-            ).expect("Failed to create peripheral. Exception thrown, missing required methods")),
+                mapped_peripheral.into(),
+            )?),
         });
         Ok(())
     }

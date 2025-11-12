@@ -2,6 +2,18 @@ use pyo3::prelude::*;
 
 use emulator::memory::Bus;
 
+#[pyclass]
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct RamSize(pub u32);
+
+#[pymethods]
+impl RamSize {
+    #[new]
+    fn new(size: u32) -> Self {
+        Self(size)
+    }
+}
+
 /// Python representation of memory regions.
 /// Can't export constants directly, so use an enum.
 #[allow(non_camel_case_types)] // For the enum variant names
@@ -24,5 +36,7 @@ pub enum PyMemoryRegion {
 #[pymodule]
 pub(crate) fn py_memory(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyMemoryRegion>()?;
+    m.add_class::<RamSize>()?;
+
     Ok(())
 }
