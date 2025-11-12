@@ -120,14 +120,28 @@ impl Emulator {
         }
     }
 
+    pub fn read_byte(&self, addr: Word) -> MemoryAccessResult<u8> {
+        match self.endian {
+            Endian::Big => self.memory_bus.read_byte_be(addr),
+            Endian::Little => self.memory_bus.read_byte_le(addr),
+        }
+    }
+
+    pub fn write_byte(
+        &mut self,
+        addr: Word,
+        value: u8,
+    ) -> MemoryAccessResult<()> {
+        match self.endian {
+            Endian::Big => self.memory_bus.write_byte_be(addr, value),
+            Endian::Little => self.memory_bus.write_byte_le(addr, value),
+        }
+    }
+
     /// Is the emulation finished execution?
     /// Has it returned from the main/_start function?
     pub fn is_done(&self) -> bool {
         true
-    }
-
-    pub fn set_endian(&mut self, endian: Endian) {
-        self.endian = endian;
     }
 
     /// Fetch the instruction at the address of the current PC value
@@ -262,6 +276,24 @@ impl Emulator {
     /// If there is an error (illegal instruction, trap, etc.) then stop.
     pub fn execute(&mut self) -> Result<(), ExecutionError> {
         Ok(())
+    }
+}
+
+impl Emulator {
+    pub fn set_endian(&mut self, endian: Endian) {
+        self.endian = endian;
+    }
+
+    pub fn use_little_endian(&mut self) {
+        self.set_endian(Endian::Little);
+    }
+
+    pub fn use_big_endian(&mut self) {
+        self.set_endian(Endian::Big);
+    }
+
+    pub fn max_address(&self) -> u32 {
+        u32::MAX
     }
 }
 

@@ -42,6 +42,26 @@ impl PyEmulator {
         self.emulator.write32(addr, value).to_py_result()
     }
 
+    fn read_byte(&self, addr: u32) -> PyResult<u8> {
+        self.emulator.read_byte(addr).to_py_result()
+    }
+
+    fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
+        self.emulator.write_byte(addr, value).to_py_result()
+    }
+
+    fn use_little_endian(&mut self) {
+        self.emulator.use_little_endian()
+    }
+
+    fn use_big_endian(&mut self) {
+        self.emulator.use_big_endian()
+    }
+
+    fn max_address(&self) -> u32 {
+        self.emulator.max_address()
+    }
+
     fn execute_until_breakpoint(&mut self) -> PyResult<()> {
         Ok(())
     }

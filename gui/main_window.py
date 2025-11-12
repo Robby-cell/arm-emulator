@@ -15,6 +15,8 @@ from screens.editor import EditorScreen
 from screens.memory_view import MemoryViewScreen
 from screens.disassembly import DisassemblyScreen
 
+from arm_emulator_rs import emulator  # type: ignore : import exists
+
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
 STOP_ICON = "assets/icons/square.svg"
@@ -56,11 +58,14 @@ class MainWindow(QMainWindow):
     # Actual class:
     def __init__(
         self,
+        emulator: emulator.Emulator,
         parent: Optional[QWidget] = None,
         flags: Qt.WindowType = Qt.WindowType.Window,
     ) -> None:
         super().__init__(parent=parent, flags=flags)
         self.setWindowTitle("ARM Emulator")
+
+        self._emulator = emulator
 
         self._init_widgets()
         self._init_menu()
@@ -114,7 +119,7 @@ class MainWindow(QMainWindow):
 
         # 2. Create the screens (the content for each tab)
         self._editor = EditorScreen()
-        self._memory_view = MemoryViewScreen()
+        self._memory_view = MemoryViewScreen(emulator=self._emulator)
         self._disassembly = DisassemblyScreen()
 
         # 3. Add the screens as tabs to the widget
