@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import QTabWidget
-from PyQt6.QtCore import Qt, QSize, QByteArray
+from PyQt6.QtCore import Qt, QSize, QByteArray, QTranslator, QCoreApplication
 
 from typing import Optional
 
@@ -65,12 +65,10 @@ class MainWindow(QMainWindow):
         super().__init__(parent=parent, flags=flags)
         self.setWindowTitle("ARM Emulator")
 
-        self._emulator = emulator
+        self._translator = QTranslator()
+        QCoreApplication.instance().installTranslator(self._translator)  # type: ignore : not None
 
-        self._init_widgets()
-        self._init_menu()
-        self._init_toolbar()
-        self._init_layout()
+        self._emulator = emulator
 
         self.setStyleSheet("""
             QMainWindow {
@@ -113,6 +111,13 @@ class MainWindow(QMainWindow):
             }
         """)
 
+        self._init_widgets()
+        self._init_menu()
+        self._init_toolbar()
+        self._init_layout()
+
+        self.retranslateUI()
+
     def _init_widgets(self) -> None:
         # 1. Create the QTabWidget
         self.tabs = QTabWidget()
@@ -123,15 +128,15 @@ class MainWindow(QMainWindow):
         self._disassembly = DisassemblyScreen()
 
         # 3. Add the screens as tabs to the widget
-        self.tabs.addTab(self._editor, "Editor")
-        self.tabs.addTab(self._memory_view, "Memory View")
-        self.tabs.addTab(self._disassembly, "Disassembly")
+        self.tabs.addTab(self._editor, None)
+        self.tabs.addTab(self._memory_view, None)
+        self.tabs.addTab(self._disassembly, None)
 
     def _init_layout(self) -> None:
         self.setCentralWidget(self.tabs)
 
     def _init_toolbar(self) -> None:
-        self.toolbar = QToolBar("Main Toolbar")
+        self.toolbar = QToolBar(self.tr("Main Toolbar"))
         self.toolbar.setIconSize(
             QSize(20, 20)
         )  # Slightly smaller icon for balance with text
@@ -145,11 +150,11 @@ class MainWindow(QMainWindow):
         step_icon = create_themed_icon(STEP_ICON, "#2196F3")  # Blue
         reset_icon = create_themed_icon(RESET_ICON, "#9E9E9E")  # Gray
 
-        self.run_action = QAction(run_icon, "Run", self)
-        self.debug_action = QAction(debug_icon, "Debug", self)
-        self.stop_action = QAction(stop_icon, "Stop", self)
-        self.step_action = QAction(step_icon, "Step", self)
-        self.reset_action = QAction(reset_icon, "Reset", self)
+        self.run_action = QAction(run_icon, self.tr("Run"), self)
+        self.debug_action = QAction(debug_icon, self.tr("Debug"), self)
+        self.stop_action = QAction(stop_icon, self.tr("Stop"), self)
+        self.step_action = QAction(step_icon, self.tr("Step"), self)
+        self.reset_action = QAction(reset_icon, self.tr("Reset"), self)
 
         self.toolbar.addAction(self.run_action)
         self.toolbar.addAction(self.debug_action)
@@ -186,12 +191,77 @@ class MainWindow(QMainWindow):
     # Menu
     def _init_menu(self) -> None:
         menu_bar = self.menuBar()
-        self._build_file_menu(menu_bar.addMenu("&File"))  # type: ignore
+        if menu_bar is None:
+            return
 
-    def _build_file_menu(self, file_menu: QMenu) -> None:
-        load_file_action = QAction("Load File", self)
-        load_file_action.triggered.connect(self._load_file_selected)
-        file_menu.addAction(load_file_action)
+        self._file_menu = menu_bar.addMenu(self.tr("&File"))  # type: ignore : not None
+        self._build_file_menu()
+        
+        self._language_menu = menu_bar.addMenu(self.tr("&Language"))
+        self._build_language_menu()
+
+    def _build_file_menu(self) -> None:
+        self._load_file_action = QAction(self)
+        self._load_file_action.triggered.connect(self._load_file_selected)
+        self._file_menu.addAction(self._load_file_action)  # type: ignore : not None
+
+    def _build_language_menu(self):
+        # English Action
+        english_action = QAction(self.tr("English"), self)
+        english_action.triggered.connect(lambda: self.load_language("en"))
+        self._language_menu.addAction(english_action)
+
+        # Russian Action
+        russian_action = QAction(self.tr("Русский"), self)
+        russian_action.triggered.connect(lambda: self.load_language("ru"))
+        self._language_menu.addAction(russian_action)
+
+        # Polish Action
+        polish_action = QAction(self.tr("Polski"), self)
+        polish_action.triggered.connect(lambda: self.load_language("pl"))
+        self._language_menu.addAction(polish_action)
+
+        # Spanish Action
+        spanish_action = QAction(self.tr("Español"), self)
+        spanish_action.triggered.connect(lambda: self.load_language("es"))
+        self._language_menu.addAction(spanish_action)
+
+    def load_language(self, lang_code: str):
+        app = QCoreApplication.instance()
+        if app is None:
+            return
+
+        app.removeTranslator(self._translator)  # type: ignore : not None
+
+        self._translator = QTranslator()
+        # Load the new .qm file
+        if self._translator.load(f"assets/translations/app_{lang_code}.qm"):
+            app.installTranslator(self._translator)
+
+        self.retranslateUI()
+
+    def retranslateUI(self):
+        """Updates all user-visible text in the application."""
+        # Main Window
+        self.setWindowTitle(self.tr("ARM Simulator"))
+        
+        # Menu Bar
+        self._file_menu.setTitle(self.tr("&File"))
+        self._language_menu.setTitle(self.tr("&Language"))
+        self._load_file_action.setText(self.tr("Load File"))
+
+        # Toolbar
+        self.toolbar.setWindowTitle(self.tr("Main Toolbar"))
+        self.run_action.setText(self.tr("Run"))
+        self.debug_action.setText(self.tr("Debug"))
+        self.stop_action.setText(self.tr("Stop"))
+        self.step_action.setText(self.tr("Step"))
+        self.reset_action.setText(self.tr("Reset"))
+
+        # Tabs
+        self.tabs.setTabText(0, self.tr("Editor"))
+        self.tabs.setTabText(1, self.tr("Memory View"))
+        self.tabs.setTabText(2, self.tr("Disassembly"))
 
     def _load_file_selected(self) -> None:
         dialog = QFileDialog(self)

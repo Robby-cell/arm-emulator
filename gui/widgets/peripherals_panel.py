@@ -72,8 +72,8 @@ class PeripheralsPanel(QWidget):
         self._name_input = QLineEdit()
         self._begin_addr_input = QLineEdit()
         self._end_addr_input = QLineEdit()
-        self._add_button = QPushButton("Add Peripheral")
-        self._delete_button = QPushButton("Delete Selected")
+        self._add_button = QPushButton()
+        self._delete_button = QPushButton()
         self._peripheral_table = QTableWidget()
 
         self.setupUI()
@@ -86,11 +86,14 @@ class PeripheralsPanel(QWidget):
         )
 
     def setupUI(self) -> None:
-        self._form_layout.addRow("Type:", self._type_combo)
-        self._form_layout.addRow("Instance Name:", self._name_input)
-        self._form_layout.addRow("Begin Address:", self._begin_addr_input)
-        self._form_layout.addRow("End Address:", self._end_addr_input)
+        self._form_layout.addRow(self.tr("Type:"), self._type_combo)
+        self._form_layout.addRow(self.tr("Instance Name:"), self._name_input)
+        self._form_layout.addRow(self.tr("Begin Address:"), self._begin_addr_input)
+        self._form_layout.addRow(self.tr("End Address:"), self._end_addr_input)
         self._type_combo.addItems(PERIPHERAL_REGISTRY.keys())
+
+        self._add_button.setText(self.tr('Add Peripheral'))
+        self._delete_button.setText(self.tr('Delete Selected'))
 
         addr_tooltip_text = f"Valid address between {hex(VALID_MEMORY_BEGIN)} ({VALID_MEMORY_BEGIN}) and {hex(VALID_MEMORY_END)} ({VALID_MEMORY_END})"
         hex_regex = QRegularExpression("^(0x)?[0-9a-fA-F]+$")
@@ -105,7 +108,7 @@ class PeripheralsPanel(QWidget):
 
         self._peripheral_table.setColumnCount(3)
         self._peripheral_table.setHorizontalHeaderLabels(
-            ["Type", "Name", "Memory Range"]
+            [self.tr("Type"), self.tr("Name"), self.tr("Memory Range")]
         )
         header = self._peripheral_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
@@ -147,14 +150,14 @@ class PeripheralsPanel(QWidget):
         # --- Basic Validation ---
         if not p_name or start_addr is None or end_addr is None:
             QMessageBox.warning(
-                self, "Input Error", "All fields must be filled with valid values."
+                self, self.tr("Input Error"), self.tr("All fields must be filled with valid values.")
             )
             return
         if start_addr > end_addr:
             QMessageBox.warning(
                 self,
-                "Input Error",
-                "Start address must not be greater than end address.",
+                self.tr("Input Error"),
+                self.tr("Start address must not be greater than end address."),
             )
             return
 
@@ -164,21 +167,20 @@ class PeripheralsPanel(QWidget):
             and VALID_MEMORY_BEGIN <= end_addr <= VALID_MEMORY_END
         ):
             msg = (
-                f"Memory addresses must be within the valid range:\n"
-                f"{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}"
+               self.tr( f"Memory addresses must be within the valid range:\n{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}")
             )
-            QMessageBox.warning(self, "Address Out of Range", msg)
+            QMessageBox.warning(self, self.tr("Address Out of Range"), msg)
             return
 
         for exist_start, exist_end in self._configured_ranges:
             # Classic interval overlap check
             if start_addr <= exist_end and end_addr >= exist_start:
                 msg = (
-                    f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
+                    self.tr(f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
                     f"overlaps with an existing peripheral's range "
-                    f"({hex(exist_start)} - {hex(exist_end)})."
+                    f"({hex(exist_start)} - {hex(exist_end)}).")
                 )
-                QMessageBox.warning(self, "Memory Overlap", msg)
+                QMessageBox.warning(self, self.tr("Memory Overlap"), msg)
                 return
 
         # --- All checks passed, add to table AND data model ---
