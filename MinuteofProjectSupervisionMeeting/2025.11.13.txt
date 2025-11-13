@@ -13,15 +13,16 @@ Project Supervisor:
 Moira Watson
 
 Meeting Number:
-4
+5
 
 Date of Meeting:
-5th November, 2025
+13th November, 2025
 
 
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
-User stories, personas. Some basic boilerplate for GUI also created. A basic design on figma created.
+GUI text editor with syntax highlighting.
+Next week: Requirements, Acceptance Criteria.
 
 Action Points:
 ==============
@@ -29,7 +30,7 @@ Action Points:
 
 Date of next meeting:
 ====================+
-13th November, 2025
+19th November, 2025
 
 
 
