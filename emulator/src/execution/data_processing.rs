@@ -1,6 +1,8 @@
 use crate::{
     Emulator,
-    execution::{ExecutableInstruction, ExecutionError, N, Z},
+    execution::{
+        ExecutableInstruction, ExecutionError, N, Z, private::Sealed,
+    },
     instructions::{
         DataProcessingInstruction,
         fields::{Opcode, SetFlags},
@@ -288,3 +290,5 @@ impl ExecutableInstruction for DataProcessingInstruction {
         }
     }
 }
+
+impl Sealed for DataProcessingInstruction {}

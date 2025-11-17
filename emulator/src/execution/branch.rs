@@ -1,5 +1,5 @@
 use crate::{
-    execution::{ExecutableInstruction, ExecutionError},
+    execution::{ExecutableInstruction, ExecutionError, private::Sealed},
     instructions::{BranchInstruction, fields::LinkFlag},
 };
 
@@ -55,3 +55,5 @@ impl ExecutableInstruction for BranchInstruction {
         Ok(())
     }
 }
+
+impl Sealed for BranchInstruction {}

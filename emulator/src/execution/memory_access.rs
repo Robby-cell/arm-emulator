@@ -1,6 +1,6 @@
 use crate::{
     Emulator, ExecutionError,
-    execution::ExecutableInstruction,
+    execution::{ExecutableInstruction, private::Sealed},
     instructions::{
         MemoryAccessInstruction, ShiftedRegisterOffset,
         fields::{
@@ -125,3 +125,5 @@ impl ExecutableInstruction for MemoryAccessInstruction {
         Ok(())
     }
 }
+
+impl Sealed for MemoryAccessInstruction {}

@@ -31,7 +31,11 @@ pub enum ExecutionError {
     Exception(#[from] Exception),
 }
 
-pub trait ExecutableInstruction {
+mod private {
+    pub trait Sealed {}
+}
+
+pub trait ExecutableInstruction: private::Sealed {
     fn execute_with(
         &self,
         emulator: &mut Emulator,
