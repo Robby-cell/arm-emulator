@@ -1,36 +1,65 @@
-use std::{fmt, process};
+use std::{
+    fmt,
+    process::{self, Stdio},
+};
 
 use anyhow::Result;
-use structopt::StructOpt;
+use clap::Parser;
 
 trait RunnableCommand {
-    fn command(&self) -> Vec<process::Command>;
+    fn run(&self) -> Result<()>;
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct TestCommand {
     nargs: Vec<String>,
+
+    #[arg(long)]
+    hide_output: bool,
+
+    #[arg(short, long)]
+    all: bool,
 }
 
 impl RunnableCommand for TestCommand {
-    fn command(&self) -> Vec<process::Command> {
+    fn run(&self) -> Result<()> {
         let mut p = process::Command::new("cargo");
-        p.args(&["test", "--all"]);
+        p.arg("test");
+        if self.all {
+            p.arg("--all");
+        }
         p.args(&self.nargs);
-        vec![p]
+
+        if self.hide_output {
+            p.stdout(Stdio::null());
+            p.stderr(Stdio::null());
+        } else {
+            p.stdout(Stdio::inherit());
+            p.stderr(Stdio::inherit());
+        }
+
+        let status = p.status()?;
+
+        if !status.success() {
+            return Err(RunError.into());
+        }
+        Ok(())
     }
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 struct BuildCommand {
-    #[structopt(short, long)]
+    #[arg(short, long)]
     release: bool,
 
     nargs: Vec<String>,
+
+    #[arg(long)]
+    hide_output: bool,
 }
 
 impl RunnableCommand for BuildCommand {
-    fn command(&self) -> Vec<process::Command> {
+    fn run(&self) -> Result<()> {
         let mut p = process::Command::new("uvx");
         p.args(&["maturin", "develop"]);
         if self.release {
@@ -38,73 +67,100 @@ impl RunnableCommand for BuildCommand {
         }
         p.args(&self.nargs);
 
-        vec![p]
+        if self.hide_output {
+            p.stdout(Stdio::null());
+            p.stderr(Stdio::null());
+        } else {
+            p.stdout(Stdio::inherit());
+            p.stderr(Stdio::inherit());
+        }
+
+        let status = p.status()?;
+
+        if !status.success() {
+            return Err(RunError.into());
+        }
+        Ok(())
     }
 }
 
-#[derive(StructOpt)]
-enum CommandInner {
-    Test(TestCommand),
+#[derive(Parser)]
+struct RefreshEnvironmentCommand {
+    #[arg(short, long)]
+    release: bool,
 
-    Build(BuildCommand),
+    #[arg(long)]
+    hide_output: bool,
 }
 
-#[derive(StructOpt)]
-struct Command {
-    #[structopt(flatten)]
-    inner: CommandInner,
+impl RunnableCommand for RefreshEnvironmentCommand {
+    fn run(&self) -> Result<()> {
+        let cmd_runner = |program, args| -> Result<()> {
+            let mut p = process::Command::new(program);
+            p.args(args);
 
-    #[structopt(long)]
-    show_output: bool,
+            if self.hide_output {
+                p.stdout(Stdio::null());
+                p.stderr(Stdio::null());
+            } else {
+                p.stdout(Stdio::inherit());
+                p.stderr(Stdio::inherit());
+            }
+
+            let status = p.status()?;
+
+            if !status.success() {
+                return Err(RunError.into());
+            }
+            Ok(())
+        };
+
+        let args = {
+            let mut v: Vec<String> =
+                vec!["maturin".into(), "develop".into()];
+            if self.release {
+                v.push("--release".into());
+            }
+            v
+        };
+        cmd_runner("uvx", args.as_slice())?;
+
+        cmd_runner("uv", &["cache".into(), "clean".into()])?;
+
+        Ok(())
+    }
+}
+
+#[derive(Parser)]
+enum Command {
+    Test(TestCommand),
+    Build(BuildCommand),
+    Refresh(RefreshEnvironmentCommand),
 }
 
 #[derive(Debug)]
-struct RunError {}
+struct RunError;
 
 impl fmt::Display for RunError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("RunError")
+        f.write_str("Command failed to execute successfully.")
     }
 }
 
 impl std::error::Error for RunError {}
 
 impl Command {
-    fn get_commands(&self) -> Vec<process::Command> {
-        match &self.inner {
-            CommandInner::Test(test) => test.command(),
-            CommandInner::Build(build) => build.command(),
-        }
-    }
-
     fn run(self) -> Result<()> {
-        let cmds = self.get_commands();
-        for mut cmd in cmds.into_iter() {
-            let output = cmd.output()?;
-            if self.show_output {
-                let s = |v: Vec<u8>| {
-                    let len = v.len();
-                    let cap = v.capacity();
-                    let ptr = v.leak();
-
-                    unsafe {
-                        String::from_raw_parts(ptr.as_mut_ptr(), len, cap)
-                    }
-                };
-
-                println!("{}", s(output.stdout));
-                eprintln!("{}", s(output.stderr));
-            }
-            if !output.status.success() {
-                return Err(RunError {}.into());
-            }
+        match self {
+            Command::Test(cmd) => cmd.run(),
+            Command::Build(cmd) => cmd.run(),
+            Command::Refresh(cmd) => cmd.run(),
         }
-        Ok(())
     }
 }
 
 fn main() -> Result<()> {
-    let args = Command::from_args();
+    let args = Command::parse();
     args.run()?;
 
     Ok(())
