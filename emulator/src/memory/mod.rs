@@ -672,6 +672,17 @@ impl Bus {
 
 pub const fn as_bytes<T>(value: &T) -> &Bytes {
     let slice = std::slice::from_ref(value);
+    // SAFETY:
+    // - `slice.as_ptr()` is derived from a valid reference `value`, so it is non-null,
+    //   properly aligned, and points to initialized memory.
+    // - The returned byte slice will have the same lifetime as `value`, ensuring that
+    //   the memory does not get invalidated while the byte slice is in use.
+    // - Casting `*const T` to `*const u8` is safe because we're only reinterpreting
+    //   the raw memory as bytes without changing its provenance.
+    // - `slice.len() * size_of::<T>()` correctly computes the size in bytes.
+    //
+    // NOTE: This function does not guarantee that the resulting byte slice has any
+    // particular endianness or representation stability across compilers or platforms.
     unsafe {
         std::slice::from_raw_parts(
             slice.as_ptr() as *const u8,
@@ -682,9 +693,27 @@ pub const fn as_bytes<T>(value: &T) -> &Bytes {
 
 pub const fn as_bytes_mut<T>(value: &mut T) -> &mut Bytes {
     let slice = std::slice::from_mut(value);
+
+    // SAFETY:
+    // - `slice.as_mut_ptr()` comes from a valid, uniquely-owned `&mut T`, so the pointer is:
+    //     - non-null,
+    //     - properly aligned,
+    //     - pointing to initialized memory.
+    // - Because we have `&mut T`, we are guaranteed unique access to `value` for the duration
+    //   of the returned `&mut [u8]`. No other references (mutable or immutable) to `value`
+    //   may exist at the same time.
+    // - Reinterpreting the memory of `T` as `u8` does not create aliasing violations, because
+    //   raw bytes are allowed to alias any type.
+    // - The computed length `slice.len() * size_of::<T>()` is correct for a slice of exactly
+    //   one `T`.
+    // - The returned `&mut [u8]` has the same lifetime as the input `&mut T`, ensuring the
+    //   underlying memory stays valid while it is in use.
+    //
+    // NOTE: Mutating the returned byte slice may violate invariants of `T`. The caller must
+    // ensure that any modifications leave `T` in a valid state.
     unsafe {
         std::slice::from_raw_parts_mut(
-            slice.as_ptr() as *mut u8,
+            slice.as_mut_ptr() as *mut u8,
             slice.len() * size_of::<T>(),
         )
     }
