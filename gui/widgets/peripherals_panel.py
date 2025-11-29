@@ -92,8 +92,8 @@ class PeripheralsPanel(QWidget):
         self._form_layout.addRow(self.tr("End Address:"), self._end_addr_input)
         self._type_combo.addItems(PERIPHERAL_REGISTRY.keys())
 
-        self._add_button.setText(self.tr('Add Peripheral'))
-        self._delete_button.setText(self.tr('Delete Selected'))
+        self._add_button.setText(self.tr("Add Peripheral"))
+        self._delete_button.setText(self.tr("Delete Selected"))
 
         addr_tooltip_text = f"Valid address between {hex(VALID_MEMORY_BEGIN)} ({VALID_MEMORY_BEGIN}) and {hex(VALID_MEMORY_END)} ({VALID_MEMORY_END})"
         hex_regex = QRegularExpression("^(0x)?[0-9a-fA-F]+$")
@@ -150,7 +150,9 @@ class PeripheralsPanel(QWidget):
         # --- Basic Validation ---
         if not p_name or start_addr is None or end_addr is None:
             QMessageBox.warning(
-                self, self.tr("Input Error"), self.tr("All fields must be filled with valid values.")
+                self,
+                self.tr("Input Error"),
+                self.tr("All fields must be filled with valid values."),
             )
             return
         if start_addr > end_addr:
@@ -166,8 +168,8 @@ class PeripheralsPanel(QWidget):
             VALID_MEMORY_BEGIN <= start_addr <= VALID_MEMORY_END
             and VALID_MEMORY_BEGIN <= end_addr <= VALID_MEMORY_END
         ):
-            msg = (
-               self.tr( f"Memory addresses must be within the valid range:\n{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}")
+            msg = self.tr(
+                f"Memory addresses must be within the valid range:\n{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}"
             )
             QMessageBox.warning(self, self.tr("Address Out of Range"), msg)
             return
@@ -175,10 +177,10 @@ class PeripheralsPanel(QWidget):
         for exist_start, exist_end in self._configured_ranges:
             # Classic interval overlap check
             if start_addr <= exist_end and end_addr >= exist_start:
-                msg = (
-                    self.tr(f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
+                msg = self.tr(
+                    f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
                     f"overlaps with an existing peripheral's range "
-                    f"({hex(exist_start)} - {hex(exist_end)}).")
+                    f"({hex(exist_start)} - {hex(exist_end)})."
                 )
                 QMessageBox.warning(self, self.tr("Memory Overlap"), msg)
                 return

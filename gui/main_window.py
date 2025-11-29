@@ -1,9 +1,8 @@
 from PyQt6.QtWidgets import (
     QMainWindow,
     QWidget,
-    QMenu,
     QFileDialog,
-    QToolBar,  # Import QToolBar
+    QToolBar,
 )
 from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import QTabWidget
@@ -11,11 +10,13 @@ from PyQt6.QtCore import Qt, QSize, QByteArray, QTranslator, QCoreApplication
 
 from typing import Optional
 
-from screens.editor import EditorScreen
-from screens.memory_view import MemoryViewScreen
-from screens.disassembly import DisassemblyScreen
+from .screens.editor import EditorScreen
+from .screens.memory_view import MemoryViewScreen
+from .screens.disassembly import DisassemblyScreen
 
 from arm_emulator_rs import emulator  # type: ignore : import exists
+
+from assembler import Assembler, AssembledOutput
 
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
@@ -59,6 +60,7 @@ class MainWindow(QMainWindow):
     def __init__(
         self,
         emulator: emulator.Emulator,
+        assembler: Assembler,
         parent: Optional[QWidget] = None,
         flags: Qt.WindowType = Qt.WindowType.Window,
     ) -> None:
@@ -69,6 +71,7 @@ class MainWindow(QMainWindow):
         QCoreApplication.instance().installTranslator(self._translator)  # type: ignore : not None
 
         self._emulator = emulator
+        self._assembler = assembler
 
         self.setStyleSheet("""
             QMainWindow {
@@ -174,6 +177,9 @@ class MainWindow(QMainWindow):
     def _on_run(self) -> None:
         code = self._editor.get_code()
         print(f"--- Running Code ---\n{code}\n--------------------")
+        print("Assembling...")
+        assembled = self._assembler.assemble(code)
+        print(f"Assembled:\n{assembled}")
 
     def _on_debug(self) -> None:
         code = self._editor.get_code()
@@ -196,7 +202,7 @@ class MainWindow(QMainWindow):
 
         self._file_menu = menu_bar.addMenu(self.tr("&File"))  # type: ignore : not None
         self._build_file_menu()
-        
+
         self._language_menu = menu_bar.addMenu(self.tr("&Language"))
         self._build_language_menu()
 
@@ -244,7 +250,7 @@ class MainWindow(QMainWindow):
         """Updates all user-visible text in the application."""
         # Main Window
         self.setWindowTitle(self.tr("ARM Simulator"))
-        
+
         # Menu Bar
         self._file_menu.setTitle(self.tr("&File"))
         self._language_menu.setTitle(self.tr("&Language"))

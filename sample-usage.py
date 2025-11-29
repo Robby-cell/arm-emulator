@@ -1,19 +1,18 @@
 from arm_emulator_rs import emulator, peripheral, RangeInclusiveU32
 
+
 class MyPeripheral:
     def __init__(self): ...
 
     def read32(self, addr: int) -> int:
         return 0
 
-    def write32(self, addr: int, data: int) -> None:
-        ...
+    def write32(self, addr: int, data: int) -> None: ...
 
     def read_byte(self, addr: int) -> int:
         return 0
 
-    def write_byte(self, addr: int, data: int) -> None:
-        ...
+    def write_byte(self, addr: int, data: int) -> None: ...
 
 
 class PyGpioPort(peripheral.GpioPort):
@@ -29,7 +28,7 @@ class PyGpioPort(peripheral.GpioPort):
         res: None = super().write_byte(addr, data)
         print("PyGpioPort write32")
         return res
-    
+
     def read_byte(self, addr: int) -> int:
         res: int = super().read32(addr)
         print("PyGpioPort read_byte")

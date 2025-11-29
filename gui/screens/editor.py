@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSplitter
 from PyQt6.QtCore import Qt
 
-from widgets.code_editor import CodeEditor
-from widgets.peripherals_panel import PeripheralsPanel
+from ..widgets.code_editor import CodeEditor
+from ..widgets.peripherals_panel import PeripheralsPanel
 
 from typing import Optional
 

@@ -29,7 +29,7 @@ function main() {
     echo "Building standalone executable using PyInstaller."
 
     echo "Creating spec file..."
-    $PYI_MAKESPEC gui/main.py --name emulator
+    $PYI_MAKESPEC gui_main.py --name arm_emulator
 
     echo "Building executable..."
     # use pyinstaller to create a standalone binary.
@@ -38,7 +38,7 @@ function main() {
     # --additional-hooks-dir hooks: include additional hooks from the "hooks" directory.
     # --add-data "assets:assets": include the assets directory in the executable.
     export PYTHONOPTIMIZE=1
-    $PYINSTALLER --onefile --name emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui/main.py
+    $PYINSTALLER --onefile --name arm_emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui_main.py
 }
 
 main
