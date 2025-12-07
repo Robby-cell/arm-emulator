@@ -27,7 +27,7 @@ pub mod system;
 #[cfg(test)]
 mod tests;
 
-pub type Breakpoints = std::collections::HashSet<Word>;
+const BREAKPOINT_BE_BYTES: [u8; 4] = [0xE1, 0x20, 0x00, 0x70];
 
 #[derive(Debug, Error, Clone)]
 pub struct Breakpoint {
@@ -45,7 +45,6 @@ impl std::fmt::Display for Breakpoint {
 pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
-    pub breakpoints: Breakpoints,
     pub endian: Endian,
 }
 
@@ -56,7 +55,6 @@ impl Emulator {
         Self {
             cpu,
             memory_bus,
-            breakpoints: Default::default(),
             endian,
         }
     }
@@ -65,21 +63,23 @@ impl Emulator {
 // Breakpoints
 impl Emulator {
     /// Add a breakpoint to the address supplied.
-    pub fn set_breakpoint_at(&mut self, addr: Word) {
-        self.breakpoints.insert(addr);
+    pub fn patch_breakpoint_at(
+        &mut self,
+        addr: Word,
+    ) -> MemoryAccessResult<u32> {
+        let instr = self.read32(addr)?;
+        self.write32(addr, u32::from_be_bytes(BREAKPOINT_BE_BYTES))?;
+        Ok(instr)
     }
 
-    /// Is a breakpoint set at the given address?
-    pub fn is_breakpoint_at(&self, addr: Word) -> bool {
-        self.breakpoints.contains(&addr)
+    pub fn patch_instruction_at(
+        &mut self,
+        addr: Word,
+        instr: u32,
+    ) -> MemoryAccessResult<()> {
+        self.write32(addr, instr)?;
+        Ok(())
     }
-
-    /// Remove the breakpoint from the address.
-    pub fn remove_breakpoint(&mut self, addr: Word) {
-        _ = self.breakpoints.remove(&addr);
-    }
-
-    pub fn activate_trap() {}
 }
 
 // Getters
@@ -187,19 +187,6 @@ impl Emulator {
 
         // Decode
         let decode = self.decode(fetch)?;
-
-        {
-            let addr = self.cpu[PC];
-            if self.is_breakpoint_at(self.cpu[PC]) {
-                self.remove_breakpoint(addr);
-                let breakpoint = Breakpoint {
-                    addr,
-                    instruction: decode,
-                };
-                self.cpu.set_breakpoint(breakpoint.clone());
-                return Err(ExecutionError::Breakpoint(breakpoint));
-            }
-        }
 
         // Execute
         self.execute_single_instruction(decode)?;
