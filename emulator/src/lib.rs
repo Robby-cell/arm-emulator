@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use thiserror::Error;
 
 use crate::{
@@ -41,11 +43,14 @@ impl std::fmt::Display for Breakpoint {
     }
 }
 
+pub type BreakpointMappings = HashMap<Word, u32>;
+
 #[derive(Debug)]
 pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
     pub endian: Endian,
+    pub breakpoint_destructive: BreakpointMappings,
 }
 
 // Creation.
@@ -56,6 +61,7 @@ impl Emulator {
             cpu,
             memory_bus,
             endian,
+            breakpoint_destructive: Default::default(),
         }
     }
 }
@@ -79,6 +85,37 @@ impl Emulator {
     ) -> MemoryAccessResult<()> {
         self.write32(addr, instr)?;
         Ok(())
+    }
+
+    pub fn save_breakpoint_at(&mut self, addr: Word, instr: u32) {
+        self.breakpoint_destructive.insert(addr, instr);
+    }
+
+    pub fn add_breakpoint_at(
+        &mut self,
+        addr: Word,
+    ) -> MemoryAccessResult<()> {
+        self.save_breakpoint_at(addr, self.read32(addr)?);
+        self.patch_breakpoint_at(addr)?;
+
+        Ok(())
+    }
+
+    pub fn restore_instruction_at(
+        &mut self,
+        addr: Word,
+    ) -> MemoryAccessResult<()> {
+        match self.breakpoint_destructive.remove(&addr) {
+            Some(instr) => {
+                self.patch_instruction_at(addr, instr)?;
+                Ok(())
+            }
+            None => {
+                Err(memory::MemoryAccessError::InvalidReadPermission {
+                    addr,
+                })
+            }
+        }
     }
 }
 

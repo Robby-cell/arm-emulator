@@ -14,6 +14,7 @@ fn setup_memory_test(
         cpu: Default::default(),
         memory_bus: Bus::with_ram(ram, vec![], vec![]),
         endian: Endian::Little,
+        breakpoint_destructive: Default::default(),
     };
     for &(reg, val) in initial_regs {
         emulator.cpu.set_register(reg as _, val);
