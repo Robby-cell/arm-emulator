@@ -1,10 +1,10 @@
-from PyQt6.QtWidgets import QApplication
-from gui.main_window import MainWindow
 from sys import argv, exit
 
-from arm_emulator_rs import emulator, memory  # type: ignore : import exists
-from assembler.assembler import arm_little_endian_assembler
+from arm_emulator_rs import emulator  # type: ignore : import exists
+from PyQt6.QtWidgets import QApplication
 
+from assembler.assembler import arm_little_endian_assembler
+from gui.main_window import MainWindow
 
 DEFAULT_RAM_SIZE: int = 0x20000
 
@@ -12,7 +12,11 @@ DEFAULT_RAM_SIZE: int = 0x20000
 def main():
     app = QApplication(argv)
     with MainWindow(
-        emulator=emulator.Emulator(memory.RamSize(DEFAULT_RAM_SIZE)),
+        emulator=emulator.Emulator(
+            code_size=0,
+            sram_size=DEFAULT_RAM_SIZE,
+            external_size=0,
+        ),
         assembler=arm_little_endian_assembler(),
     ) as window:
         window.showMaximized()

@@ -1,20 +1,20 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QMessageBox,
-)
-from PyQt6.QtGui import QFont, QColor, QRegularExpressionValidator
-from PyQt6.QtCore import Qt, QRegularExpression
 from typing import Optional
 
 from arm_emulator_rs import emulator  # type: ignore
+from PyQt6.QtCore import QRegularExpression, Qt
+from PyQt6.QtGui import QColor, QFont, QRegularExpressionValidator
+from PyQt6.QtWidgets import (
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class MemoryViewScreen(QWidget):
@@ -32,11 +32,11 @@ class MemoryViewScreen(QWidget):
         if emulator is None:
             raise ValueError("MemoryViewScreen requires a valid Emulator instance.")
 
-        # --- Data Model is the Rust Emulator's Bus ---
+        # Data Model is the Rust Emulator's Bus
         self.emulator = emulator
         self._current_address = 0
 
-        # --- UI Widgets ---
+        # UI Widgets
         self._layout = QVBoxLayout(self)
         self._controls_widget = QWidget()
         self._controls_layout = QHBoxLayout(self._controls_widget)
@@ -108,6 +108,11 @@ class MemoryViewScreen(QWidget):
         """
         Populates the table by reading data directly from the Rust Emulator's bus.
         """
+        # Can't call this yet. Currently broken. Working on it later
+        # self._do_update_view()
+        pass
+
+    def _do_update_view(self):
         self._table.setRowCount(0)
         self._table.setRowCount(self.ROWS_TO_DISPLAY)
 

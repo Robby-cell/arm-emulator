@@ -16,6 +16,7 @@ crate-type = ["cdylib"]
 emulator = { workspace = true }
 
 pyo3 = { workspace = true }
+thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 

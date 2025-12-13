@@ -1,22 +1,25 @@
-from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QFileDialog,
-    QToolBar,
-)
-from PyQt6.QtGui import QAction, QIcon, QPixmap
-from PyQt6.QtWidgets import QTabWidget
-from PyQt6.QtCore import Qt, QSize, QByteArray, QTranslator, QCoreApplication
-
 from typing import Optional
 
+from arm_emulator_rs import emulator  # type: ignore : import exists
+from keystone.keystone import KsError
+from PyQt6.QtCore import QByteArray, QCoreApplication, QSize, Qt, QTranslator
+from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QFileDialog,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QTabWidget,
+    QToolBar,
+    QWidget,
+)
+
+from assembler import AssembledOutput, Assembler
+
+from .controllers.debugger_controller import DebuggerController
+from .screens.disassembly import DisassemblyScreen
 from .screens.editor import EditorScreen
 from .screens.memory_view import MemoryViewScreen
-from .screens.disassembly import DisassemblyScreen
-
-from arm_emulator_rs import emulator  # type: ignore : import exists
-
-from assembler import Assembler, AssembledOutput
 
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
@@ -73,6 +76,8 @@ class MainWindow(QMainWindow):
         self._emulator = emulator
         self._assembler = assembler
 
+        self._debugger_controller = DebuggerController(emulator=self._emulator)
+
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2b2b2b;
@@ -119,18 +124,21 @@ class MainWindow(QMainWindow):
         self._init_toolbar()
         self._init_layout()
 
+        self._init_debugger_connections()
+        self._on_execution_stopped()  # Set initial button states
+
         self.retranslateUI()
 
     def _init_widgets(self) -> None:
-        # 1. Create the QTabWidget
+        # Create the QTabWidget
         self.tabs = QTabWidget()
 
-        # 2. Create the screens (the content for each tab)
+        # Create the screens (the content for each tab)
         self._editor = EditorScreen()
         self._memory_view = MemoryViewScreen(emulator=self._emulator)
         self._disassembly = DisassemblyScreen()
 
-        # 3. Add the screens as tabs to the widget
+        # Add the screens as tabs to the widget
         self.tabs.addTab(self._editor, None)
         self.tabs.addTab(self._memory_view, None)
         self.tabs.addTab(self._disassembly, None)
@@ -173,26 +181,80 @@ class MainWindow(QMainWindow):
         self.step_action.triggered.connect(self._on_step)
         self.reset_action.triggered.connect(self._on_reset)
 
+    def _init_debugger_connections(self):
+        # Connect UI actions (buttons) to the controller's slots
+        self.run_action.triggered.connect(self._debugger_controller.run)
+        # Run with breakpoints enabled
+        self.debug_action.triggered.connect(self._debugger_controller.run)
+        self.stop_action.triggered.connect(self._debugger_controller.stop)
+        self.step_action.triggered.connect(self._debugger_controller.step)
+        self.reset_action.triggered.connect(self._debugger_controller.reset_emulator)
+
+        # Connect the editor's breakpoint toggle signal to the controller
+        # This assumes your RichCodeEditor emits a signal like this.
+        # self._editor.breakpoint_toggled.connect(self._debugger_controller.toggle_breakpoint)
+
+        # Connect the controller's signals BACK to the UI's update methods
+        self._debugger_controller.execution_started.connect(self._on_execution_started)
+        self._debugger_controller.execution_stopped.connect(self._on_execution_stopped)
+        self._debugger_controller.state_changed.connect(self._on_state_changed)
+        self._debugger_controller.error_occurred.connect(self._on_error)
+        self._debugger_controller.breakpoint_hit.connect(self._on_breakpoint_hit)
+
     # Slots
+    def _on_execution_started(self):
+        """Update button states when the emulator is running."""
+        self.run_action.setEnabled(False)
+        self.debug_action.setEnabled(False)
+        self.step_action.setEnabled(True)
+        self.reset_action.setEnabled(True)
+        self.stop_action.setEnabled(True)
+
+    def _on_execution_stopped(self):
+        """Update button states when the emulator is paused."""
+        self.run_action.setEnabled(True)
+        self.debug_action.setEnabled(True)
+        self.step_action.setEnabled(True)
+        self.reset_action.setEnabled(True)
+        self.stop_action.setEnabled(False)
+
+    def _on_state_changed(self):
+        """Master update function for all views."""
+        self._memory_view.update_view()
+        # self._register_view.update_view() # Add when register view added
+        # self._disassembly_view.update_view() # Add when disassembly view added
+
+    def _on_breakpoint_hit(self, address: int):
+        print(f"UI notified: Breakpoint hit at {hex(address)}")
+        # Could add UI feedback here, like highlighting the line in the editor.
+
+    def _on_error(self, message: str):
+        """Show a critical error message to the user."""
+        QMessageBox.critical(self, self.tr("Execution Error"), message)
+
     def _on_run(self) -> None:
-        code = self._editor.get_code()
-        print(f"--- Running Code ---\n{code}\n--------------------")
-        print("Assembling...")
-        assembled = self._assembler.assemble(code)
-        print(f"Assembled:\n{assembled}")
+        """Assembles, loads, and then runs the code from the editor."""
+        if self._assemble_and_load():
+            self._debugger_controller.run()
 
     def _on_debug(self) -> None:
-        code = self._editor.get_code()
-        print(f"--- Launching Debugger ---\n{code}\n--------------------")
+        """Assembles and loads the code, then prepares for debugging."""
+        if self._assemble_and_load():
+            print("Ready to debug. Press 'Step' to begin.")
+            # We don't call run(), leaving the UI ready for the user to step.
 
     def _on_stop(self) -> None:
-        print("Execution stopped.")
+        """Slot to stop execution. Delegates directly to the controller."""
+        self._debugger_controller.stop()
 
     def _on_step(self) -> None:
-        print("Stepping to next instruction.")
+        """Slot to perform a single step. Delegates directly to the controller."""
+        self._debugger_controller.step()
+        print(f"Step completed. New state:\n{self._emulator}")
 
     def _on_reset(self) -> None:
-        print("Simulator reset.")
+        """Slot to reset the emulator. Delegates directly to the controller."""
+        self._debugger_controller.reset_emulator()
 
     # Menu
     def _init_menu(self) -> None:
@@ -200,10 +262,10 @@ class MainWindow(QMainWindow):
         if menu_bar is None:
             return
 
-        self._file_menu = menu_bar.addMenu(self.tr("&File"))  # type: ignore : not None
+        self._file_menu: QMenu = menu_bar.addMenu(self.tr("&File"))  # type: ignore : not None
         self._build_file_menu()
 
-        self._language_menu = menu_bar.addMenu(self.tr("&Language"))
+        self._language_menu: QMenu = menu_bar.addMenu(self.tr("&Language"))  # type: ignore : not None
         self._build_language_menu()
 
     def _build_file_menu(self) -> None:
@@ -278,3 +340,41 @@ class MainWindow(QMainWindow):
 
     def _load_file(self, file_path: str) -> None:
         print(f"Loading file: {file_path}")
+
+    def _assemble_and_load(self) -> bool:
+        """
+        Handles the core logic of assembling and loading.
+        Returns True on success, False on failure.
+        """
+        code = self._editor.get_code()
+        print("Assembling...")
+
+        try:
+            assembled_output: AssembledOutput = self._assembler.assemble(code)
+
+            if assembled_output.text is None:
+                # Handle case where assembly produces no output (e.g., empty string)
+                QMessageBox.warning(
+                    self,
+                    self.tr("Assembly Warning"),
+                    self.tr("Assembly produced no code."),
+                )
+                return False
+        except KsError as e:
+            # Catch specific Keystone assembler errors and display them
+            # TODO: Decouple Keystone from the assembler. Implementation detail
+            QMessageBox.critical(
+                self,
+                self.tr("Assembler Error"),
+                f"{self.tr('Failed to assemble code:')}\n{e}",
+            )
+            return False
+
+        print(
+            f"Assembly successful. .text section is {len(assembled_output.text)} bytes."
+        )
+
+        # Pass the entire successful output object to the controller for loading
+        self._debugger_controller.load_program(assembled_output)
+
+        return True

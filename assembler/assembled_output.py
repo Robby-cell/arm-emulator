@@ -4,6 +4,6 @@ from typing import Optional
 
 @dataclass
 class AssembledOutput:
-    text: Optional[bytearray] = None
-    sram: Optional[bytearray] = None
-    external: Optional[bytearray] = None
+    text: Optional[bytes] = None
+    sram: Optional[bytes] = None
+    external: Optional[bytes] = None

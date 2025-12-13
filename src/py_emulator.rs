@@ -9,7 +9,8 @@ use emulator::{
 };
 
 use crate::{
-    error::ToPyResult, py_memory::RamSize, py_peripheral::PyPeripheral,
+    error::{ToPyExecutionResult, ToPyResult},
+    py_peripheral::PyPeripheral,
     py_range::PyRangeInclusiveU32,
 };
 
@@ -28,27 +29,63 @@ impl fmt::Display for PyEmulator {
 #[pymethods]
 impl PyEmulator {
     #[new]
-    #[pyo3(signature = (ram_size = RamSize(0)))]
-    fn new(ram_size: RamSize) -> Self {
+    #[pyo3(signature = (code_size = 0, sram_size = 0, external_size = 0))]
+    fn new(code_size: u32, sram_size: u32, external_size: u32) -> Self {
         Self {
-            emulator: emulator_with_ram_size(ram_size.0),
+            emulator: emulator_with_ram_size(
+                code_size,
+                sram_size,
+                external_size,
+            ),
         }
     }
 
+    fn load_code(&mut self, code: &[u8]) {
+        self.emulator.load_code(code);
+    }
+
+    fn load_sram(&mut self, sram: &[u8]) {
+        self.emulator.load_sram(sram);
+    }
+
+    fn load_external(&mut self, external: &[u8]) {
+        self.emulator.load_external(external);
+    }
+
+    fn reset(&mut self) {
+        self.emulator.reset();
+    }
+
     fn read32(&self, addr: u32) -> PyResult<u32> {
-        self.emulator.read32(addr).to_py_result()
+        Ok(self
+            .emulator
+            .read32(addr)
+            .to_py_execution_result()
+            .to_py_result()?)
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
-        self.emulator.write32(addr, value).to_py_result()
+        self.emulator
+            .write32(addr, value)
+            .to_py_execution_result()
+            .to_py_result()?;
+        Ok(())
     }
 
     fn read_byte(&self, addr: u32) -> PyResult<u8> {
-        self.emulator.read_byte(addr).to_py_result()
+        Ok(self
+            .emulator
+            .read_byte(addr)
+            .to_py_execution_result()
+            .to_py_result()?)
     }
 
     fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
-        self.emulator.write_byte(addr, value).to_py_result()
+        self.emulator
+            .write_byte(addr, value)
+            .to_py_execution_result()
+            .to_py_result()?;
+        Ok(())
     }
 
     fn use_little_endian(&mut self) {
@@ -96,15 +133,16 @@ impl fmt::Debug for PyEmulator {
     }
 }
 
-fn emulator_with_ram_size(ram_size: u32) -> Emulator {
-    Emulator::new(Cpu::new(), Bus::new(ram_size), Endian::Little)
-}
-
-#[pyfunction(name = "emulator_with_ram_size")]
-fn py_emulator_with_ram_size(ram_size: u32) -> PyEmulator {
-    PyEmulator {
-        emulator: emulator_with_ram_size(ram_size),
-    }
+fn emulator_with_ram_size(
+    code_size: u32,
+    sram_size: u32,
+    external_size: u32,
+) -> Emulator {
+    Emulator::new(
+        Cpu::new(),
+        Bus::new(code_size, sram_size, external_size),
+        Endian::Little,
+    )
 }
 
 #[pymodule]
@@ -113,7 +151,6 @@ pub(crate) fn py_emulator(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyEmulator>()?;
 
     // Functions
-    m.add_function(wrap_pyfunction!(py_emulator_with_ram_size, m)?)?;
 
     Ok(())
 }

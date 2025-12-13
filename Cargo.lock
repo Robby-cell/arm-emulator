@@ -64,6 +64,7 @@ version = "0.1.0"
 dependencies = [
  "emulator",
  "pyo3",
+ "thiserror",
  "tracing",
  "tracing-subscriber",
 ]

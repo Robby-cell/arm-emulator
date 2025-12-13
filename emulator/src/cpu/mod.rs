@@ -9,7 +9,7 @@ mod display;
 mod tests;
 
 impl Cpu {
-    pub const DEFAULT_CPSR: u32 = 0x60000010;
+    pub const DEFAULT_CPSR: u32 = 0x000000D3;
 
     pub const N_FLAG: u32 = 1 << 31;
     pub const Z_FLAG: u32 = 1 << 30;
@@ -65,6 +65,8 @@ pub enum Exception {
 pub enum ExecutionState {
     /// The program is currently executing
     #[default]
+    Halted,
+
     Running,
 
     /// This is an active [Breakpoint].
@@ -150,7 +152,7 @@ pub enum CpuError {
 /// Does not include memory, instructions, actual execution logic, etc.
 /// This is simply a low-level representation of the ARM CPU state.
 /// Other crates will build on top of this to provide a full CPU emulator.
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct Cpu {
     pub registers: [u32; 16],
 
@@ -166,6 +168,21 @@ pub struct Cpu {
     pub spsr_fiq: u32,
 
     pub state: ExecutionState,
+}
+
+impl Default for Cpu {
+    fn default() -> Self {
+        Self {
+            registers: [0; _],
+            cpsr: Cpu::DEFAULT_CPSR,
+            spsr_svc: Default::default(),
+            spsr_abt: Default::default(),
+            spsr_und: Default::default(),
+            spsr_irq: Default::default(),
+            spsr_fiq: Default::default(),
+            state: Default::default(),
+        }
+    }
 }
 
 impl Index<u8> for Cpu {
@@ -218,6 +235,10 @@ impl Cpu {
         let cpu = Default::default();
         tracing::trace!("Created new CPU: {cpu:?}");
         cpu
+    }
+
+    pub fn set_halted(&mut self) {
+        self.state = ExecutionState::Halted;
     }
 
     pub fn set_running(&mut self) {

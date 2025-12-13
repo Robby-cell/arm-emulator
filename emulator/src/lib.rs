@@ -10,13 +10,13 @@ use crate::{
     execution::{ExecutableInstruction, ExecutionError},
     instructions::{
         BlockDataTransferInstruction, BranchInstruction,
-        DataProcessingInstruction, Instruction,
+        BreakpointInstruction, DataProcessingInstruction, Instruction,
         InstructionConversionError, MemoryAccessInstruction,
         SupervisorCallInstruction,
     },
     memory::{
-        Bus, Bytes, Endian, MemoryAccessResult, MemoryMappedPeripheral,
-        Word,
+        Bus, Bytes, Endian, MemoryAccessError, MemoryAccessResult,
+        MemoryMappedPeripheral, Word,
     },
 };
 
@@ -53,6 +53,20 @@ pub struct Emulator {
     pub breakpoint_destructive: BreakpointMappings,
 }
 
+impl Emulator {
+    pub fn load_code(&mut self, code: &[u8]) {
+        self.memory_bus.load_code(code);
+    }
+
+    pub fn load_sram(&mut self, sram: &[u8]) {
+        self.memory_bus.load_sram(sram);
+    }
+
+    pub fn load_external(&mut self, external: &[u8]) {
+        self.memory_bus.load_external(external);
+    }
+}
+
 // Creation.
 impl Emulator {
     /// Create an [Emulator] with the provided [Cpu] and [Bus] and [Endian]
@@ -68,6 +82,65 @@ impl Emulator {
 
 // Breakpoints
 impl Emulator {
+    /// The core debugger logic for stepping over a breakpoint.
+    /// This should be called by the UI when the user wants to step
+    /// while the emulator is paused at a breakpoint.
+    /// This function handles un-patching, executing one instruction,
+    /// and immediately re-patching.
+    pub fn step_over_breakpoint(&mut self) -> Result<(), ExecutionError> {
+        // Get the address of the current breakpoint from the CPU state.
+        let breakpoint_addr =
+            if let ExecutionState::Breakpoint(bp) = &self.cpu.state {
+                bp.addr
+            } else {
+                // This function should only be called when at a breakpoint.
+                // If not, it's a logic error in the calling code (the UI).
+                // We can choose to either do a normal step or return an error.
+                // Let's be strict and assume the UI knows the state.
+                // For robustness, you could fall back to `return self.step();`
+                tracing::warn!(
+                    "step_over_breakpoint called when not at a breakpoint."
+                );
+                return Ok(());
+            };
+
+        // Temporarily restore the original instruction.
+        let original_instruction_raw =
+            match self.breakpoint_destructive.get(&breakpoint_addr) {
+                Some(&instr) => instr,
+                None => {
+                    // This indicates a severe logic error, but we'll handle it gracefully.
+                    return Err(ExecutionError::MemoryAccessError(
+                        MemoryAccessError::InvalidReadPermission {
+                            addr: breakpoint_addr,
+                        },
+                    ));
+                }
+            };
+        self.patch_instruction_at(
+            breakpoint_addr,
+            original_instruction_raw,
+        )?;
+
+        // Decode and Execute that single, original instruction.
+        let original_instruction_decoded =
+            self.decode(original_instruction_raw)?;
+
+        // Temporarily set state back to Running to allow the single execution.
+        self.cpu.set_running();
+        self.execute_single_instruction(original_instruction_decoded)?;
+
+        // Immediately re-patch the breakpoint instruction. The emulator is now
+        // safe again. The breakpoint is active for any subsequent "Run" or "Step" command.
+        self.add_breakpoint_at(breakpoint_addr)?;
+
+        // Set the state back to Running. The next `step()` call will proceed normally
+        // from the new PC value.
+        self.cpu.set_running();
+
+        Ok(())
+    }
+
     /// Add a breakpoint to the address supplied.
     pub fn patch_breakpoint_at(
         &mut self,
@@ -139,6 +212,12 @@ impl Emulator {
 
 // Execution of the code (asm).
 impl Emulator {
+    pub fn reset(&mut self) {
+        self.cpu.reset();
+        self.memory_bus.reset();
+        self.breakpoint_destructive = BreakpointMappings::new();
+    }
+
     pub fn read32(&self, addr: Word) -> MemoryAccessResult<u32> {
         match self.endian {
             Endian::Big => self.memory_bus.read32_be(addr),
@@ -196,27 +275,30 @@ impl Emulator {
         instr.try_into()
     }
 
-    fn post_execution_update(&mut self) -> Result<(), ExecutionError> {
-        self.cpu[PC] += size_of::<Word>() as u32;
-        Ok(())
+    fn post_execution_update(&mut self) {
+        // The PC is advanced by default. Branch instructions will override this.
+        self.cpu[PC] = self.cpu[PC].wrapping_add(size_of::<Word>() as u32);
     }
 
     /// Step over one ASM instruction, and then yield execution.
     pub fn step(&mut self) -> Result<(), ExecutionError> {
         match &self.cpu.state {
-            ExecutionState::Running => {}
+            ExecutionState::Running => {
+                // If we are running, proceed with fetch-decode-execute
+            }
             ExecutionState::Breakpoint(breakpoint) => {
+                // If we are at a breakpoint, stop and signal the UI by returning an error.
+                // DO NOT execute anything. The UI must call `step_over_breakpoint`
                 return Err(ExecutionError::Breakpoint(
                     breakpoint.clone(),
                 ));
             }
-            ExecutionState::Exception(exception) => {
-                return Err(ExecutionError::Exception(exception.clone()));
-            }
             ExecutionState::FinishedExecution(_) => {
+                // Program is done, nothing more to do.
                 return Ok(());
             }
-            ExecutionState::SupervisorCall(_) => {}
+            // Handle other states like Exception, SupervisorCall
+            _ => {}
         }
 
         // Fetch
@@ -235,6 +317,8 @@ impl Emulator {
         &mut self,
         instruction: Instruction,
     ) -> Result<(), ExecutionError> {
+        let original_pc = self.cpu.pc();
+
         match instruction {
             Instruction::DataProcessing(instr) => {
                 self.execute_data_processing_instruction(instr)?;
@@ -251,8 +335,14 @@ impl Emulator {
             Instruction::SupervisorCall(instr) => {
                 self.execute_supervisor_call_instruction(instr)?;
             }
+            Instruction::Breakpoint(instr) => {
+                self.execute_breakpoint_instruction(instr)?;
+            }
         }
-        self.post_execution_update()?;
+        if self.cpu.pc() == original_pc {
+            self.post_execution_update();
+        }
+
         Ok(())
     }
 
@@ -293,6 +383,35 @@ impl Emulator {
         instr: SupervisorCallInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Supervisor call instruction: {instr:?}");
+        Ok(())
+    }
+
+    fn execute_breakpoint_instruction(
+        &mut self,
+        _instr: BreakpointInstruction, // Don't need the instruction here
+    ) -> Result<(), ExecutionError> {
+        let current_pc = self.cpu.pc();
+        tracing::warn!(
+            "Breakpoint instruction hit at PC: {:#X}",
+            current_pc
+        );
+
+        // Look up the original instruction from our saved map.
+        let original_instr_raw = self
+            .breakpoint_destructive
+            .get(&current_pc)
+            .ok_or(MemoryAccessError::InvalidReadPermission {
+                addr: current_pc,
+            })?;
+
+        let original_instr_decoded = self.decode(*original_instr_raw)?;
+
+        // Change the CPU state to Breakpoint. This is the signal to the UI.
+        self.cpu.set_breakpoint(Breakpoint {
+            addr: current_pc,
+            instruction: original_instr_decoded,
+        });
+
         Ok(())
     }
 

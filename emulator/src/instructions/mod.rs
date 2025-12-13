@@ -196,6 +196,21 @@ pub struct SupervisorCallInstruction {
 
 assert_u32_sized!(SupervisorCallInstruction);
 
+#[bitfield]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+#[repr(C)]
+pub struct BreakpointInstruction {
+    pub imm4: B4,
+    #[skip]
+    _b8: B8,
+    pub imm12: B12,
+    #[skip]
+    _b8: B8,
+}
+
+assert_u32_sized!(BreakpointInstruction);
+
 /// Represents an ARM instruction, which can be one of several types:
 /// [Data Processing](DataProcessingInstruction), [Memory Access](MemoryAccessInstruction),
 /// [Branch](BranchInstruction), or [Block Data Transfer](BlockDataTransferInstruction).
@@ -235,6 +250,7 @@ pub enum Instruction {
     BlockDataTransfer(BlockDataTransferInstruction),
     Branch(BranchInstruction),
     SupervisorCall(SupervisorCallInstruction),
+    Breakpoint(BreakpointInstruction),
 }
 
 /// Errors that can occur when converting a raw [u32] into an [Instruction].
@@ -248,6 +264,10 @@ impl TryFrom<u32> for Instruction {
     type Error = InstructionConversionError;
 
     fn try_from(raw_instruction: u32) -> Result<Self, Self::Error> {
+        if (raw_instruction & 0x0FF000F0) == 0x01200070 {
+            return Ok(Instruction::Breakpoint(raw_instruction.into()));
+        }
+
         // Check bits [27:25] to identify the instruction class. This is how the
         // ARM processor itself differentiates these top-level instruction types.
         let op_class = (raw_instruction >> 25) & 0b111;
@@ -295,6 +315,7 @@ impl From<Instruction> for u32 {
             Instruction::BlockDataTransfer(instr) => instr.into(),
             Instruction::Branch(instr) => instr.into(),
             Instruction::SupervisorCall(instr) => instr.into(),
+            Instruction::Breakpoint(instr) => instr.into(),
         }
     }
 }

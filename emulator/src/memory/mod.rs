@@ -289,6 +289,30 @@ pub enum Endian {
 }
 
 impl Bus {
+    pub fn load_code(&mut self, code: &[u8]) {
+        tracing::info!("loading code...");
+        self.code = code.to_vec();
+    }
+
+    pub fn load_sram(&mut self, sram: &[u8]) {
+        tracing::info!("loading sram...");
+        self.sram = sram.to_vec();
+    }
+
+    pub fn load_external(&mut self, external: &[u8]) {
+        tracing::info!("loading external...");
+        self.external = external.to_vec();
+    }
+}
+
+impl Bus {
+    pub fn reset(&mut self) {
+        self.code = Vec::new();
+        self.sram = Vec::new();
+        self.peripherals = Vec::new();
+        self.external = Vec::new();
+    }
+
     pub fn get_read_only_memory_view(&self) -> &Bytes {
         &self.code
     }
@@ -313,12 +337,16 @@ impl Bus {
     /// The RAM is initialized to zero.
     /// No peripherals are connected initially.
     /// See [Bus::add_peripheral] to connect peripherals.
-    pub fn new(text_size: Word) -> Self {
+    pub fn new(
+        code_size: Word,
+        sram_size: Word,
+        external_size: Word,
+    ) -> Self {
         Self {
-            code: vec![0; text_size as _],
-            sram: Default::default(),
+            code: vec![0; code_size as _],
+            sram: vec![0; sram_size as _],
             peripherals: Vec::new(),
-            external: Default::default(),
+            external: vec![0; external_size as _],
         }
     }
 
@@ -637,7 +665,11 @@ impl Bus {
 
 impl Default for Bus {
     fn default() -> Self {
-        Self::new(DEFAULT_MEMORY_SIZE)
+        Self::new(
+            DEFAULT_MEMORY_SIZE,
+            DEFAULT_MEMORY_SIZE,
+            DEFAULT_MEMORY_SIZE,
+        )
     }
 }
 

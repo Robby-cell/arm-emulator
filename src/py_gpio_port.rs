@@ -5,7 +5,7 @@ use emulator::{
     peripherals::gpio::GpioPort,
 };
 
-use crate::error::ToPyResult;
+use crate::error::{ToPyExecutionResult, ToPyResult};
 
 #[pyclass(name = "GpioPort", subclass)]
 struct PyGpioPort {
@@ -27,22 +27,34 @@ impl PyGpioPort {
 
     #[pyo3(name = "read32")]
     fn py_read32(&self, offset: u32) -> PyResult<u32> {
-        self.read32(offset).to_py_result()
+        Ok(self
+            .read32(offset)
+            .to_py_execution_result()
+            .to_py_result()?)
     }
 
     #[pyo3(name = "write32")]
     fn py_write32(&self, offset: u32, value: u32) -> PyResult<()> {
-        self.write32(offset, value).to_py_result()
+        self.write32(offset, value)
+            .to_py_execution_result()
+            .to_py_result()?;
+        Ok(())
     }
 
     #[pyo3(name = "read_byte")]
     fn py_read_byte(&self, offset: u32) -> PyResult<u8> {
-        self.read_byte(offset).to_py_result()
+        Ok(self
+            .read_byte(offset)
+            .to_py_execution_result()
+            .to_py_result()?)
     }
 
     #[pyo3(name = "write_byte")]
     fn py_write_byte(&self, offset: u32, value: u8) -> PyResult<()> {
-        self.write_byte(offset, value).to_py_result()
+        self.write_byte(offset, value)
+            .to_py_execution_result()
+            .to_py_result()?;
+        Ok(())
     }
 }
 

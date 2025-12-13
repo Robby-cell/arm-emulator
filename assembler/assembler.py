@@ -5,6 +5,7 @@ from keystone import (
     KS_MODE_LITTLE_ENDIAN,
     Ks,
 )
+
 from . import AssembledOutput
 
 
@@ -24,7 +25,7 @@ class Assembler:
 
     def assemble(self, string: str) -> AssembledOutput:
         [text, _count] = self.ctx.asm(string=string)
-        text = bytearray(text)
+        text = bytes(bytearray(text))
         return AssembledOutput(text=text)
 
 
