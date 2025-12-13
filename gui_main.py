@@ -6,15 +6,13 @@ from PyQt6.QtWidgets import QApplication
 from assembler.assembler import arm_little_endian_assembler
 from gui.main_window import MainWindow
 
-DEFAULT_RAM_SIZE: int = 0x20000
-
 
 def main():
     app = QApplication(argv)
     with MainWindow(
         emulator=emulator.Emulator(
             code_size=0,
-            sram_size=DEFAULT_RAM_SIZE,
+            sram_size=0,
             external_size=0,
         ),
         assembler=arm_little_endian_assembler(),
