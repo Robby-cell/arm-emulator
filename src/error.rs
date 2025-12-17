@@ -1,4 +1,4 @@
-use pyo3::{PyErrArguments, PyTypeInfo, prelude::*};
+use pyo3::prelude::*;
 
 use emulator::{
     Breakpoint, cpu::Exception, instructions::InstructionConversionError,
@@ -10,16 +10,6 @@ pub use pyo3::exceptions::*;
 
 use crate::PyExecutionError;
 
-#[allow(dead_code)]
-#[inline(always)]
-pub fn create_py_err<T, A>(msg: A) -> PyErr
-where
-    T: PyTypeInfo,
-    A: PyErrArguments + Send + Sync + 'static,
-{
-    PyErr::new::<T, _>(msg)
-}
-
 pub trait ToPyError {
     fn to_py_error(self) -> PyErr;
 }
@@ -30,7 +20,16 @@ pub trait ToPyResult<T> {
 
 impl ToPyError for PyExecutionError {
     fn to_py_error(self) -> PyErr {
-        create_py_err::<PyRuntimeError, _>(format!("{self}"))
+        self.into()
+    }
+}
+
+impl From<PyExecutionError> for PyErr {
+    fn from(value: PyExecutionError) -> Self {
+        Python::attach(|py| match Bound::new(py, value) {
+            Ok(bound) => PyErr::from_value(bound.into_any()),
+            Err(e) => e,
+        })
     }
 }
 
