@@ -100,16 +100,39 @@ impl PyEmulator {
         self.emulator.max_address()
     }
 
-    fn execute_until_breakpoint(&mut self) -> PyResult<()> {
-        Ok(())
+    fn step_over_breakpoint(&mut self) -> PyResult<()> {
+        self.emulator
+            .step_over_breakpoint()
+            .to_py_execution_result()
+            .to_py_result()
     }
 
     fn execute(&mut self) -> PyResult<()> {
-        Ok(())
+        self.emulator
+            .execute()
+            .to_py_execution_result()
+            .to_py_result()
     }
 
     fn step(&mut self) -> PyResult<()> {
-        Ok(())
+        self.emulator.step().to_py_execution_result().to_py_result()
+    }
+
+    pub fn add_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
+        self.emulator
+            .add_breakpoint_at(address)
+            .to_py_execution_result()
+            .to_py_result()
+    }
+
+    pub fn restore_instruction_at(
+        &mut self,
+        address: u32,
+    ) -> PyResult<()> {
+        self.emulator
+            .restore_instruction_at(address)
+            .to_py_execution_result()
+            .to_py_result()
     }
 
     fn add_peripheral(

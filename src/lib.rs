@@ -1,7 +1,7 @@
 use std::fmt;
 
 use emulator::prelude::ExecutionError;
-use pyo3::prelude::*;
+use pyo3::{exceptions::PyException, prelude::*};
 use thiserror::Error;
 
 mod error;
@@ -83,7 +83,7 @@ fn add_submodule<'py>(
 }
 
 #[derive(Debug, Error)]
-#[pyclass(name = "ExecutionError")]
+#[pyclass(name = "ExecutionError", extends = PyException)]
 struct PyExecutionError {
     error: ExecutionError,
 }
