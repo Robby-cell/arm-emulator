@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QWidget
 from typing import Optional
+
+from PyQt6.QtWidgets import QWidget
 
 
 class DisassemblyScreen(QWidget):

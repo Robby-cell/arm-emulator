@@ -1,20 +1,20 @@
+from typing import Dict, List, Optional, Tuple, Type
+
+from arm_emulator_rs import memory, peripheral  # type: ignore
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
     QComboBox,
+    QFormLayout,
+    QHeaderView,
+    QLineEdit,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
-    QLineEdit,
-    QFormLayout,
-    QHeaderView,
-    QMessageBox,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtCore import QRegularExpression
-from typing import Optional, Dict, Type, List, Tuple
-
-from arm_emulator_rs import memory, peripheral  # type: ignore
 
 
 # --- The Peripheral "Factory" section ---

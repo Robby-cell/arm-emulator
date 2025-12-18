@@ -1,10 +1,10 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSplitter
+from typing import Optional
+
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QHBoxLayout, QSplitter, QWidget
 
 from ..widgets.code_editor import CodeEditor
 from ..widgets.peripherals_panel import PeripheralsPanel
-
-from typing import Optional
 
 DEFAULT_ASM = r""".global _start
 _start:

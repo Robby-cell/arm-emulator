@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel
 from typing import Optional
+
+from PyQt6.QtWidgets import QLabel, QPushButton, QWidget
 
 
 class Tab(QPushButton):
