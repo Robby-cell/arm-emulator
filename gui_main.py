@@ -1,6 +1,6 @@
 from sys import argv, exit
 
-from arm_emulator_rs import emulator  # type: ignore : import exists
+from arm_emulator_rs import Emulator  # type: ignore : import exists
 from PyQt6.QtWidgets import QApplication
 
 from assembler.assembler import arm_little_endian_assembler
@@ -10,7 +10,7 @@ from gui.main_window import MainWindow
 def main():
     app = QApplication(argv)
     with MainWindow(
-        emulator=emulator.Emulator(
+        emulator=Emulator(
             code_size=0,
             sram_size=0,
             external_size=0,

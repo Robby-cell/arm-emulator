@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple, Type
 
-from arm_emulator_rs import memory, peripheral  # type: ignore
+from arm_emulator_rs import GpioPort, MemoryRegion  # type: ignore : import exists
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import (
@@ -17,8 +17,8 @@ from PyQt6.QtWidgets import (
 )
 
 
-# --- The Peripheral "Factory" section ---
-class PyGpioPort(peripheral.GpioPort):
+# The Peripheral "Factory" section
+class PyGpioPort(GpioPort):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -47,8 +47,8 @@ PERIPHERAL_REGISTRY: Dict[str, Type] = {
     "GPIO Port": PyGpioPort,
 }
 
-VALID_MEMORY_BEGIN: int = int(memory.MemoryRegion.PERIPHERAL_BEGIN)
-VALID_MEMORY_END: int = int(memory.MemoryRegion.PERIPHERAL_END)
+VALID_MEMORY_BEGIN: int = int(MemoryRegion.PERIPHERAL_BEGIN)
+VALID_MEMORY_END: int = int(MemoryRegion.PERIPHERAL_END)
 
 
 class PeripheralsPanel(QWidget):
@@ -60,10 +60,10 @@ class PeripheralsPanel(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
-        # --- Data model to track configured memory ranges ---
+        # Data model to track configured memory ranges
         self._configured_ranges: List[Tuple[int, int]] = []
 
-        # --- Widget initialization ---
+        # Widget initialization
         self._layout = QVBoxLayout(self)
         self.setLayout(self._layout)
         self._form_widget = QWidget()
@@ -78,7 +78,7 @@ class PeripheralsPanel(QWidget):
 
         self.setupUI()
 
-        # --- Connections ---
+        # Connections
         self._add_button.clicked.connect(self._on_add_peripheral)
         self._delete_button.clicked.connect(self._on_delete_peripheral)
         self._peripheral_table.itemSelectionChanged.connect(
@@ -147,7 +147,7 @@ class PeripheralsPanel(QWidget):
         start_addr = self._parse_address(self._begin_addr_input.text())
         end_addr = self._parse_address(self._end_addr_input.text())
 
-        # --- Basic Validation ---
+        # Basic Validation
         if not p_name or start_addr is None or end_addr is None:
             QMessageBox.warning(
                 self,
@@ -163,7 +163,7 @@ class PeripheralsPanel(QWidget):
             )
             return
 
-        # --- Enforce Global Memory Range ---
+        # Enforce Global Memory Range
         if not (
             VALID_MEMORY_BEGIN <= start_addr <= VALID_MEMORY_END
             and VALID_MEMORY_BEGIN <= end_addr <= VALID_MEMORY_END
@@ -185,7 +185,7 @@ class PeripheralsPanel(QWidget):
                 QMessageBox.warning(self, self.tr("Memory Overlap"), msg)
                 return
 
-        # --- All checks passed, add to table AND data model ---
+        # All checks passed, add to table AND data model
         row_count = self._peripheral_table.rowCount()
         self._peripheral_table.insertRow(row_count)
 
@@ -212,7 +212,7 @@ class PeripheralsPanel(QWidget):
         """Deletes the selected row from the table and the data model."""
         current_row = self._peripheral_table.currentRow()
         if current_row > -1:
-            # --- Remove the range from the data model first ---
+            # Remove the range from the data model first
             del self._configured_ranges[current_row]
             # Then remove the row from the view
             self._peripheral_table.removeRow(current_row)

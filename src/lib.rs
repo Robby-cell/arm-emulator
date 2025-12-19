@@ -67,21 +67,6 @@ fn init_tracing() -> PyResult<()> {
     Ok(())
 }
 
-fn add_submodule<'py>(
-    m: &Bound<'py, PyModule>,
-    submodule_name: &str,
-) -> PyResult<Bound<'py, PyModule>> {
-    let submodule = PyModule::new(m.py(), submodule_name)?;
-    m.add_submodule(&submodule)?;
-    let sys = m.py().import("sys")?;
-    let modules = sys.getattr("modules")?;
-    modules.set_item(
-        &format!("{}.{}", m.name()?, submodule_name),
-        &submodule,
-    )?;
-    Ok(submodule)
-}
-
 #[derive(Debug, Error)]
 #[pyclass(name = "ExecutionError", extends = PyException)]
 struct PyExecutionError {
@@ -127,19 +112,16 @@ fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     tracing::info!("Initializing arm_emulator_rs");
 
     {
-        let emulator_m = add_submodule(m, "emulator")?;
-        py_emulator::py_emulator(&emulator_m)?;
+        py_emulator::py_emulator(m)?;
     }
 
     {
-        let memory_m = add_submodule(m, "memory")?;
-        py_memory::py_memory(&memory_m)?;
+        py_memory::py_memory(m)?;
     }
 
     {
-        let peripheral_m = add_submodule(m, "peripheral")?;
-        py_peripheral::py_peripheral(&peripheral_m)?;
-        py_gpio_port::py_gpio_port(&peripheral_m)?;
+        py_peripheral::py_peripheral(m)?;
+        py_gpio_port::py_gpio_port(m)?;
     }
 
     {

@@ -10,11 +10,16 @@ DEFAULT_ASM = r""".global _start
 _start:
     mov r0, #23
     mov r1, #17
-    adds r0, r0, r1    @ Add r0 to r1, and store the result in r0. Set flags
-    bne label0         @ Branch, if not equal, i.e. Z flag is not set
+
+    @ Add r0 to r1, and store the result in r0. Set flags
+    adds r0, r0, r1
+    @ Branch, if not equal, i.e. Z flag is not set
+    bne label0
 label0:
-    mov r7, #1         @ Setup system call to exit
-    mov r0, #0         @ 0 = no error
+    @ Setup system call to exit
+    mov r7, #1
+    @ 0 = no error
+    mov r0, #0
     svc 0
 
 """

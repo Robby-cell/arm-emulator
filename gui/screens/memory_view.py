@@ -1,6 +1,6 @@
 from typing import Optional
 
-from arm_emulator_rs import emulator  # type: ignore
+from arm_emulator_rs import Emulator  # type: ignore : import exists
 from PyQt6.QtCore import QRegularExpression, Qt
 from PyQt6.QtGui import QColor, QFont, QRegularExpressionValidator
 from PyQt6.QtWidgets import (
@@ -24,7 +24,7 @@ class MemoryViewScreen(QWidget):
 
     def __init__(
         self,
-        emulator: emulator.Emulator,
+        emulator: Emulator,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
@@ -44,13 +44,13 @@ class MemoryViewScreen(QWidget):
         self._go_button = QPushButton("Go")
         self._table = QTableWidget()
 
-        self._setup_ui()
+        self.setupUI()
         self._init_connections()
 
         # Initial population of the view
         self.update_view()
 
-    def _setup_ui(self) -> None:
+    def setupUI(self) -> None:
         self.setLayout(self._layout)
         self._controls_layout.addWidget(QLabel("Go to Address:"))
         self._controls_layout.addWidget(self._address_input)
@@ -112,7 +112,7 @@ class MemoryViewScreen(QWidget):
         # self._do_update_view()
         pass
 
-    def _do_update_view(self):
+    def _do_update_view(self) -> None:
         self._table.setRowCount(0)
         self._table.setRowCount(self.ROWS_TO_DISPLAY)
 
@@ -132,7 +132,7 @@ class MemoryViewScreen(QWidget):
             addr_item.setForeground(address_color)
             self._table.setItem(row, 0, addr_item)
 
-            # --- Read byte-by-byte from the emulator ---
+            # Read byte-by-byte from the emulator
             ascii_representation = ""
             for i in range(self.BYTES_PER_ROW):
                 address_to_read = row_start_address + i

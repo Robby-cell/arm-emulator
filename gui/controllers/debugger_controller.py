@@ -1,6 +1,6 @@
 from typing import Optional
 
-from arm_emulator_rs import ExecutionError, emulator  # type: ignore : imports exist
+from arm_emulator_rs import Emulator, ExecutionError  # type: ignore : import exists
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from assembler import AssembledOutput
@@ -18,7 +18,7 @@ class DebuggerController(QObject):
     breakpoint_hit = pyqtSignal(int)  # Emits the address of the breakpoint
     error_occurred = pyqtSignal(str)  # Emits the error message
 
-    def __init__(self, emulator: emulator.Emulator, parent: Optional[QObject] = None):
+    def __init__(self, emulator: Emulator, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
 
         if emulator is None:
@@ -33,7 +33,7 @@ class DebuggerController(QObject):
         self._run_timer = QTimer(self)
         self._run_timer.timeout.connect(self._run_loop_step)
 
-    def load_program(self, program: AssembledOutput):
+    def load_program(self, program: AssembledOutput) -> None:
         """Resets the emulator and loads the assembled program sections into memory."""
 
         self.reset_emulator()
@@ -66,7 +66,7 @@ class DebuggerController(QObject):
         # Notify the UI that the memory state has changed and should be updated.
         self.state_changed.emit()
 
-    def run(self):
+    def run(self) -> None:
         """Starts continuous execution of the emulator."""
         if self._is_running:
             return
@@ -75,7 +75,7 @@ class DebuggerController(QObject):
         self.execution_started.emit()
         self._run_timer.start(0)  # 0ms interval runs as fast as the event loop allows
 
-    def stop(self):
+    def stop(self) -> None:
         """Stops continuous execution."""
         if not self._is_running:
             return
@@ -84,7 +84,7 @@ class DebuggerController(QObject):
         self._is_running = False
         self.execution_stopped.emit()
 
-    def step(self):
+    def step(self) -> None:
         """Executes a single step, handling breakpoints correctly."""
         try:
             if self._is_at_breakpoint:
@@ -114,14 +114,14 @@ class DebuggerController(QObject):
             # In either error case, the state has changed.
             self.state_changed.emit()
 
-    def reset_emulator(self):
+    def reset_emulator(self) -> None:
         """Resets the emulator to its initial state."""
         self.stop()
         self._emulator.reset()
         self._is_at_breakpoint = False
         self.state_changed.emit()
 
-    def toggle_breakpoint(self, address: int, is_set: bool):
+    def toggle_breakpoint(self, address: int, is_set: bool) -> None:
         """Adds or removes a breakpoint in the emulator."""
         try:
             if is_set:
@@ -133,7 +133,7 @@ class DebuggerController(QObject):
                 f"Failed to toggle breakpoint at {hex(address)}: {e}"
             )
 
-    def _run_loop_step(self):
+    def _run_loop_step(self) -> None:
         """A single step within the continuous run loop."""
         if not self._is_running:
             return

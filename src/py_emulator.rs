@@ -1,6 +1,6 @@
 use pyo3::prelude::*;
 
-use std::{fmt, sync::Arc};
+use std::{collections::HashMap, fmt, sync::Arc};
 
 use emulator::{
     Emulator,
@@ -38,6 +38,21 @@ impl PyEmulator {
                 external_size,
             ),
         }
+    }
+
+    #[getter]
+    fn registers(&self) -> Vec<u32> {
+        self.emulator.cpu.registers.to_vec()
+    }
+
+    #[getter]
+    fn flags(&self) -> HashMap<String, bool> {
+        let mut flags = HashMap::new();
+        flags.insert("N".to_string(), self.emulator.cpu.n());
+        flags.insert("Z".to_string(), self.emulator.cpu.z());
+        flags.insert("C".to_string(), self.emulator.cpu.c());
+        flags.insert("V".to_string(), self.emulator.cpu.v());
+        flags
     }
 
     fn load_code(&mut self, code: &[u8]) {
