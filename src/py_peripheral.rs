@@ -21,6 +21,8 @@ impl PyPeripheral {
 
     /// Name of the write method on the python class.
     const WRITE_BYTE: &str = "write_byte";
+
+    const RESET: &str = "reset";
 }
 
 impl Clone for PyPeripheral {
@@ -58,7 +60,7 @@ impl Peripheral for PyPeripheral {
     }
 
     fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()> {
-        _ = Python::attach(|py| {
+        Python::attach(|py| {
             self.obj.call_method1(py, Self::WRITE32, (offset, value))
         })
         .map_err(|_| {
@@ -97,13 +99,24 @@ impl Peripheral for PyPeripheral {
         offset: u32,
         value: u8,
     ) -> MemoryAccessResult<()> {
-        _ = Python::attach(|py| {
+        Python::attach(|py| {
             self.obj.call_method1(py, Self::WRITE_BYTE, (offset, value))
         })
         .map_err(|_| {
             MemoryAccessError::InvalidPeripheralWrite { offset }
         })?;
         Ok(())
+    }
+
+    fn reset(&self) {
+        match Python::attach(|py| {
+            self.obj.call_method1(py, Self::RESET, ())
+        }) {
+            Ok(_) => (),
+            Err(e) => {
+                tracing::error!("PyPeripheral::reset: {e}");
+            }
+        }
     }
 }
 
@@ -113,6 +126,7 @@ impl PyPeripheral {
         Self::WRITE32,
         Self::READ_BYTE,
         Self::WRITE_BYTE,
+        Self::RESET,
     ];
 
     fn verify_valid_object(obj: Bound<'_, PyAny>) -> PyResult<()> {

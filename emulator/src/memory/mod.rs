@@ -225,6 +225,8 @@ pub trait Peripheral {
 
     fn write_byte(&self, offset: u32, value: u8)
     -> MemoryAccessResult<()>;
+
+    fn reset(&self);
 }
 
 pub struct MemoryMappedPeripheral {

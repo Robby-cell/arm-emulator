@@ -109,4 +109,9 @@ impl Peripheral for GpioPort {
 
         self.write32(offset, v)
     }
+
+    fn reset(&self) {
+        self.state.moder.store(0, Ordering::Relaxed);
+        self.state.moder.store(0, Ordering::Relaxed);
+    }
 }

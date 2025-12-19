@@ -8,19 +8,22 @@ from ..widgets.peripherals_panel import PeripheralsPanel
 
 DEFAULT_ASM = r""".global _start
 _start:
-    mov r0, #23
-    mov r1, #17
+    @ 1. Load the base address of the GPIO peripheral
+    LDR R0, =led0      @ Assembler resolves this to 0x40000000
 
-    @ Add r0 to r1, and store the result in r0. Set flags
-    adds r0, r0, r1
-    @ Branch, if not equal, i.e. Z flag is not set
-    bne label0
-label0:
-    @ Setup system call to exit
-    mov r7, #1
-    @ 0 = no error
-    mov r0, #0
-    svc 0
+    @ 2. Configure PA5 as Output
+    @ We need bits 11:10 of MODER (Offset 0x00) to be '01'.
+    @ Binary: ... 0000 0100 0000 0000
+    @ Hex:    0x400
+    MOV R1, #0x400
+    STR R1, [R0]        @ Write to MODER (Offset 0)
+
+    @ 3. Set PA5 High
+    @ We need bit 5 of ODR (Offset 0x14) to be '1'.
+    @ Binary: ... 0010 0000
+    @ Hex:    0x20
+    MOV R1, #0x20
+    STR R1, [R0, #0x14] @ Write to ODR (Offset 20)
 
 """
 

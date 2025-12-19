@@ -4,8 +4,8 @@ use crate::{
     instructions::{
         MemoryAccessInstruction, ShiftedRegisterOffset,
         fields::{
-            ByteWordFlag, IndexFlag, LoadStoreFlag, OffsetType, ShiftType,
-            UpDownFlag, WriteBackFlag,
+            ByteWordFlag, IndexFlag, LoadStoreFlag, OffsetType, Register,
+            ShiftType, UpDownFlag, WriteBackFlag,
         },
     },
 };
@@ -61,7 +61,13 @@ impl ExecutableInstruction for MemoryAccessInstruction {
         emulator: &mut Emulator,
     ) -> Result<(), ExecutionError> {
         let offset = self.calculate_offset(emulator);
-        let base_address = emulator.cpu[self.rn() as _];
+
+        // let base_address = emulator.cpu[self.rn() as _];
+        let base_address = if self.rn() == Register::R15 {
+            emulator.cpu.pc().wrapping_add(8)
+        } else {
+            emulator.cpu[self.rn() as _]
+        };
 
         // Refactored address calculation to be more DRY.
         let new_rn_val = match self.u() {

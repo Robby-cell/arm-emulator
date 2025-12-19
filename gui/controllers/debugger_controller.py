@@ -1,6 +1,10 @@
 from typing import Optional
 
-from arm_emulator_rs import Emulator, ExecutionError  # type: ignore : import exists
+from arm_emulator_rs import (
+    Emulator,  # type: ignore : import exists
+    ExecutionError,  # type: ignore : import exists
+    RangeInclusiveU32,  # type: ignore : import exists
+)
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 from assembler import AssembledOutput
@@ -17,6 +21,7 @@ class DebuggerController(QObject):
     state_changed = pyqtSignal()
     breakpoint_hit = pyqtSignal(int)  # Emits the address of the breakpoint
     error_occurred = pyqtSignal(str)  # Emits the error message
+    _peripherals = []
 
     def __init__(self, emulator: Emulator, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -118,6 +123,9 @@ class DebuggerController(QObject):
         """Resets the emulator to its initial state."""
         self.stop()
         self._emulator.reset()
+
+        self.configure_peripherals(self._peripherals)
+
         self._is_at_breakpoint = False
         self.state_changed.emit()
 
@@ -140,3 +148,10 @@ class DebuggerController(QObject):
         # The step method already contains the try/except block that will
         # automatically stop the timer on an error or breakpoint.
         self.step()
+
+    def set_peripherals(self, peripherals_list) -> None:
+        self._peripherals = peripherals_list
+
+    def configure_peripherals(self, peripherals_list) -> None:
+        for addr, addr_end, instance in peripherals_list:
+            self._emulator.add_peripheral(RangeInclusiveU32(addr, addr_end), instance)

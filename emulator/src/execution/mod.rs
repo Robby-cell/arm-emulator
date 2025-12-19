@@ -51,9 +51,21 @@ impl Operand2 {
         // An Option<bool> is perfect: Some(carry) for shifts, None for immediates.
         match op2 {
             Operand2::Immediate(imm) => {
-                // For an immediate, the carry flag is unaffected.
-                // Let's model this by returning the current C flag value.
-                (imm as u32, None)
+                let value_8 = (imm & 0xFF) as u32;
+                let rotate_4 = (imm >> 8) as u32;
+
+                if rotate_4 == 0 {
+                    // If rotate is 0, carry is unaffected (return None)
+                    (value_8, None)
+                } else {
+                    let rotation = rotate_4 * 2;
+                    let result = value_8.rotate_right(rotation);
+
+                    // If rotated, the carry flag is set to the last bit rotated out.
+                    // This corresponds to bit 31 of the result.
+                    let carry = (result >> 31) & 1 == 1;
+                    (result, Some(carry))
+                }
             }
             Operand2::ShiftedRegisterOffset(sro) => {
                 let rm_val = emulator.cpu[sro.rm() as _];

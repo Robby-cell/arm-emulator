@@ -56,6 +56,11 @@ impl PyGpioPort {
             .to_py_result()?;
         Ok(())
     }
+
+    #[pyo3(name = "reset")]
+    fn py_reset(&self) {
+        self.reset();
+    }
 }
 
 impl Peripheral for PyGpioPort {
@@ -77,6 +82,10 @@ impl Peripheral for PyGpioPort {
         value: u8,
     ) -> MemoryAccessResult<()> {
         self.gpio.write_byte(offset, value)
+    }
+
+    fn reset(&self) {
+        self.gpio.reset();
     }
 }
 

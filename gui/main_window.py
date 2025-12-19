@@ -201,6 +201,7 @@ class MainWindow(QMainWindow):
         """Master update function for all views."""
         self._memory_view.update_view()
         self._cpu_panel.update_view()
+        self._editor._peripherals.update_view()
         # self._disassembly_view.update_view() # Add when disassembly view added
 
     def _on_breakpoint_hit(self, address: int) -> None:
@@ -241,6 +242,8 @@ class MainWindow(QMainWindow):
     def _on_reset(self) -> None:
         """Slot to reset the emulator. Delegates directly to the controller."""
         self._debugger_controller.reset_emulator()
+        if hasattr(self._editor, "_peripherals"):
+            self._editor._peripherals.reset_peripherals()
 
     # Menu
     def _init_menu(self) -> None:
@@ -329,6 +332,14 @@ class MainWindow(QMainWindow):
         Returns True if successful, False otherwise.
         """
         code = self._editor.get_code()
+        self._assembler.symbols.clear()
+
+        panel = self._editor._peripherals
+        peripherals_map = panel.get_defined_symbols()
+
+        for name, addr in peripherals_map.items():
+            self._assembler.add_symbol(name, addr)
+            print(f"Registered peripheral symbol: {name} -> {hex(addr)}")
 
         try:
             # Assemble
@@ -361,6 +372,9 @@ class MainWindow(QMainWindow):
 
         # Load into Emulator via Controller
         print(f"Assembly successful. Text size: {len(assembled.text)} bytes.")
+
+        peripherals = panel.get_peripherals()
+        self._debugger_controller.set_peripherals(peripherals)
 
         self._debugger_controller.load_program(assembled)
 

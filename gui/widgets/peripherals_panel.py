@@ -1,8 +1,9 @@
-from typing import Dict, List, Optional, Tuple, Type
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from arm_emulator_rs import GpioPort, MemoryRegion  # type: ignore : import exists
-from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtCore import QRegularExpression, Qt
+from PyQt6.QtGui import QBrush, QColor, QPainter, QRegularExpressionValidator
 from PyQt6.QtWidgets import (
     QComboBox,
     QFormLayout,
@@ -28,12 +29,12 @@ class PyGpioPort(GpioPort):
         return res
 
     def write32(self, addr: int, data: int) -> None:
-        res: None = super().write_byte(addr, data)
+        res: None = super().write32(addr, data)
         print("PyGpioPort write32")
         return res
 
     def read_byte(self, addr: int) -> int:
-        res: int = super().read32(addr)
+        res: int = super().read_byte(addr)
         print("PyGpioPort read_byte")
         return res
 
@@ -42,13 +43,68 @@ class PyGpioPort(GpioPort):
         print("PyGpioPort write_byte")
         return res
 
+    def reset(self) -> None:
+        res: None = super().reset()
+        print("PyGpioPort reset")
+        return res
+
 
 PERIPHERAL_REGISTRY: Dict[str, Type] = {
     "GPIO Port": PyGpioPort,
 }
 
+
+# Custom LED Widget
+class LedIndicator(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._on = False
+        self.setFixedSize(20, 20)
+
+    def set_state(self, is_on: bool):
+        if self._on != is_on:
+            self._on = is_on
+            self.update()  # Trigger paintEvent
+
+    def paintEvent(self, a0) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        color = QColor("#4CAF50") if self._on else QColor("#555555")
+        painter.setBrush(QBrush(color))
+        painter.setPen(Qt.PenStyle.NoPen)
+
+        painter.drawEllipse(2, 2, 16, 16)
+
+
 VALID_MEMORY_BEGIN: int = int(MemoryRegion.PERIPHERAL_BEGIN)
 VALID_MEMORY_END: int = int(MemoryRegion.PERIPHERAL_END)
+
+
+def parse_address(addr_str: str) -> Optional[int]:
+    addr_str = addr_str.strip().lower()
+    if not addr_str:
+        return None
+    try:
+        return int(addr_str, 0)
+    except ValueError:
+        return None
+
+
+@dataclass
+class PeripheralData:
+    type_name: str
+    name: str
+    start: int
+    end: int
+    instance: Any
+    led_widget: "LedIndicator"
+
+
+def get_default_peripheral():
+    return PeripheralData(
+        "GPIO Port", "led0", 0x40000000, 0x4000FFFF, PyGpioPort(), LedIndicator()
+    )
 
 
 class PeripheralsPanel(QWidget):
@@ -59,6 +115,8 @@ class PeripheralsPanel(QWidget):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+
+        self._peripherals_data: List[PeripheralData] = []
 
         # Data model to track configured memory ranges
         self._configured_ranges: List[Tuple[int, int]] = []
@@ -85,6 +143,8 @@ class PeripheralsPanel(QWidget):
             self._update_delete_button_state
         )
 
+        self._add_peripheral_entry(get_default_peripheral())
+
     def setupUI(self) -> None:
         self._form_layout.addRow(self.tr("Type:"), self._type_combo)
         self._form_layout.addRow(self.tr("Instance Name:"), self._name_input)
@@ -94,6 +154,11 @@ class PeripheralsPanel(QWidget):
 
         self._add_button.setText(self.tr("Add Peripheral"))
         self._delete_button.setText(self.tr("Delete Selected"))
+
+        name_regex = QRegularExpression("^[a-zA-Z_][a-zA-Z0-9_]*$")
+        name_validator = QRegularExpressionValidator(name_regex)
+        self._name_input.setValidator(name_validator)
+        self._name_input.setPlaceholderText("e.g. LED_BANK (No spaces)")
 
         addr_tooltip_text = f"Valid address between {hex(VALID_MEMORY_BEGIN)} ({VALID_MEMORY_BEGIN}) and {hex(VALID_MEMORY_END)} ({VALID_MEMORY_END})"
         hex_regex = QRegularExpression("^(0x)?[0-9a-fA-F]+$")
@@ -106,14 +171,22 @@ class PeripheralsPanel(QWidget):
         self._begin_addr_input.setToolTip(addr_tooltip_text)
         self._end_addr_input.setToolTip(addr_tooltip_text)
 
-        self._peripheral_table.setColumnCount(3)
+        self._peripheral_table.setColumnCount(4)
         self._peripheral_table.setHorizontalHeaderLabels(
-            [self.tr("Type"), self.tr("Name"), self.tr("Memory Range")]
+            [
+                self.tr("Type"),
+                self.tr("Name"),
+                self.tr("Memory Range"),
+                self.tr("State"),
+            ]
         )
         header = self._peripheral_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)  # type: ignore
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)  # type: ignore
+        self._peripheral_table.setColumnWidth(3, 50)
+
         self._peripheral_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._peripheral_table.setSelectionBehavior(
             QTableWidget.SelectionBehavior.SelectRows
@@ -127,25 +200,50 @@ class PeripheralsPanel(QWidget):
         self._layout.addWidget(self._peripheral_table, stretch=1)
         self._delete_button.setEnabled(False)
 
-    def _parse_address(self, addr_str: str) -> Optional[int]:
-        addr_str = addr_str.strip().lower()
-        if not addr_str:
-            return None
-        try:
-            if addr_str.startswith("0x"):
-                return int(addr_str, 16)
-            if any(c in "abcdef" for c in addr_str):
-                return int(addr_str, 16)
-            return int(addr_str, 10)
-        except ValueError:
-            return None
+    def reset_peripherals(self) -> None:
+        for p in self._peripherals_data:
+            if hasattr(p.instance, "reset"):
+                p.instance.reset()
+
+            p.led_widget.set_state(False)
+
+        print("Peripherals reset.")
+
+    def _add_peripheral_entry(self, data: PeripheralData) -> None:
+        """Adds a PeripheralData object to the table and internal lists."""
+        row_count = self._peripheral_table.rowCount()
+        self._peripheral_table.insertRow(row_count)
+
+        memory_range_str = f"{hex(data.start)} - {hex(data.end)}"
+
+        type_item = QTableWidgetItem(data.type_name)
+        type_item.setToolTip(data.type_name)
+        name_item = QTableWidgetItem(data.name)
+        name_item.setToolTip(data.name)
+        range_item = QTableWidgetItem(memory_range_str)
+        range_item.setToolTip(memory_range_str)
+
+        self._peripheral_table.setItem(row_count, 0, type_item)
+        self._peripheral_table.setItem(row_count, 1, name_item)
+        self._peripheral_table.setItem(row_count, 2, range_item)
+
+        # Setup LED container
+        container = QWidget()
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(data.led_widget)
+        self._peripheral_table.setCellWidget(row_count, 3, container)
+
+        self._peripherals_data.append(data)
+        self._configured_ranges.append((data.start, data.end))
 
     def _on_add_peripheral(self) -> None:
         """Validates input against global and existing ranges, then adds."""
         p_type = self._type_combo.currentText()
         p_name = self._name_input.text().strip()
-        start_addr = self._parse_address(self._begin_addr_input.text())
-        end_addr = self._parse_address(self._end_addr_input.text())
+        start_addr = parse_address(self._begin_addr_input.text())
+        end_addr = parse_address(self._end_addr_input.text())
 
         # Basic Validation
         if not p_name or start_addr is None or end_addr is None:
@@ -155,6 +253,16 @@ class PeripheralsPanel(QWidget):
                 self.tr("All fields must be filled with valid values."),
             )
             return
+
+        for p in self._peripherals_data:
+            if p.name == p_name:
+                QMessageBox.warning(
+                    self,
+                    self.tr("Input Error"),
+                    self.tr(f"Peripheral name '{p_name}' already exists."),
+                )
+                return
+
         if start_addr > end_addr:
             QMessageBox.warning(
                 self,
@@ -186,23 +294,21 @@ class PeripheralsPanel(QWidget):
                 return
 
         # All checks passed, add to table AND data model
-        row_count = self._peripheral_table.rowCount()
-        self._peripheral_table.insertRow(row_count)
+        peripheral_class = PERIPHERAL_REGISTRY[p_type]
+        instance = peripheral_class()
 
-        memory_range_str = f"{hex(start_addr)} - {hex(end_addr)}"
+        # Create Data Object
+        data = PeripheralData(
+            type_name=p_type,
+            name=p_name,
+            start=start_addr,
+            end=end_addr,
+            instance=instance,
+            led_widget=LedIndicator(),
+        )
 
-        type_item = QTableWidgetItem(p_type)
-        type_item.setToolTip(p_type)
-        name_item = QTableWidgetItem(p_name)
-        name_item.setToolTip(p_name)
-        range_item = QTableWidgetItem(memory_range_str)
-        range_item.setToolTip(memory_range_str)
-
-        self._peripheral_table.setItem(row_count, 0, type_item)
-        self._peripheral_table.setItem(row_count, 1, name_item)
-        self._peripheral_table.setItem(row_count, 2, range_item)
-
-        self._configured_ranges.append((start_addr, end_addr))
+        # Use the helper to add it
+        self._add_peripheral_entry(data)
 
         self._name_input.clear()
         self._begin_addr_input.clear()
@@ -214,8 +320,39 @@ class PeripheralsPanel(QWidget):
         if current_row > -1:
             # Remove the range from the data model first
             del self._configured_ranges[current_row]
+            del self._peripherals_data[current_row]
             # Then remove the row from the view
             self._peripheral_table.removeRow(current_row)
 
     def _update_delete_button_state(self) -> None:
         self._delete_button.setEnabled(len(self._peripheral_table.selectedItems()) > 0)
+
+    def get_defined_symbols(self) -> Dict[str, int]:
+        """
+        Returns a dictionary of symbol names to start addresses
+        for all configured peripherals.
+        """
+        symbols = {}
+        for p in self._peripherals_data:
+            symbols[p.name] = p.start
+        return symbols
+
+    def get_peripherals(self) -> List[Tuple[int, int, Any]]:
+        """
+        Returns a list of (start_address, size_bytes, instance_object)
+        compatible with the Rust emulator's add_python_peripheral.
+        """
+        results = []
+        for p in self._peripherals_data:
+            start = p.start
+            end = p.end
+            instance = p.instance
+            results.append((start, end, instance))
+        return results
+
+    def update_view(self) -> None:
+        """Called by timer/controller to update LEDs."""
+        for p in self._peripherals_data:
+            if hasattr(p.instance, "is_led_on"):
+                is_on = p.instance.is_led_on()
+                p.led_widget.set_state(is_on)
