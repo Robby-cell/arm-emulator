@@ -14,6 +14,8 @@ The project has two main components:
 
 # Building and Using
 
+To build on Windows, you must use Git Bash.
+
 To build the python bindings:
 
 Tooling requirements:
@@ -26,7 +28,13 @@ Initialize a virtual environment:
 
 ```bash
 uv venv
-# python3 -m venv .venv && source .venv/bin/activate
+# python3 -m venv .venv
+
+# Activate environment
+source .venv/bin/activate
+
+# On Windows:
+# .\.venv\Scripts\activate
 ```
 
 Download maturin:
@@ -40,12 +48,12 @@ uv pip install maturin
 Build the python bindings and install it to the environment:
 
 ```bash
-cargo arm build
+# Debug:
 # uvx maturin develop
 # python3 -m maturin develop
 # For release:
-# cargo arm build --release
-# uvx maturin develop --release
+uvx maturin develop --release
+# python3 -m maturin develop --release
 ```
 
 If rebuilding, the cache can be cleared, so it won't use the old build:
@@ -58,8 +66,8 @@ uv cache clean
 Run a python script that is using the bindings, using the environment that has them installed:
 
 ```bash
-uv run sample-usage.py
-# python3 sample-usage.py
+uv run gui_main.py
+# python3 gui_main.py
 ```
 
 # Run the Tests
@@ -67,8 +75,7 @@ uv run sample-usage.py
 To run the Rust tests:
 
 ```bash
-cargo arm test
-# cargo test --all
+cargo test --all
 ```
 
 # Packaging the GUI
@@ -77,7 +84,8 @@ To build and package the python GUI:
 
 ```bash
 # Build the project first. And then:
-cargo arm package --release --entry sample-usage.py
-# uvx pyinstaller --additional-hooks-dir=hooks sample-usage.py # Use the entrypoint
-# python3 -m pyinstaller --additional-hooks-dir=hooks sample-usage.py
+./package.sh
+
+# On Windows, in Git Bash:
+# ./package-windows.sh
 ```
