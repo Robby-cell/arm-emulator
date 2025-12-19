@@ -1,5 +1,5 @@
 [workspace]
-members = ["emulator", "xbin"]
+members = ["emulator"]
 resolver = "3"
 
 [package]
