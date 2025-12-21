@@ -364,10 +364,10 @@ class CodeEditor(QPlainTextEdit):
         # it is set on the last line. Do this to avoid that.
         self.setPlainText("\n")
 
-        # --- Syntax Highlighting ---
+        # Syntax Highlighting
         self._highlighter = ARMHighlighter(self.document())
 
-        # --- Track Labels ---
+        # Track Labels
         self._labels = set()
         self.textChanged.connect(self._update_labels)
 
@@ -411,7 +411,7 @@ class CodeEditor(QPlainTextEdit):
         if e is None:
             return
 
-        # --- First, check for the Ctrl+Enter shortcut ---
+        # First, check for the Ctrl+Enter shortcut
         if (
             e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
             and e.modifiers() == Qt.KeyboardModifier.ControlModifier
@@ -440,7 +440,7 @@ class CodeEditor(QPlainTextEdit):
             # We have handled the event. Do not process it further.
             return
 
-        # --- Second, check for a regular Enter press for auto-indentation ---
+        # Second, check for a regular Enter press for auto-indentation
         if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             cursor = self.textCursor()
             current_line_text = cursor.block().text()
@@ -464,10 +464,10 @@ class CodeEditor(QPlainTextEdit):
             self.insertPlainText(indentation)
             return
 
-        # --- For all other keys, use the default behavior ---
+        # For all other keys, use the default behavior
         super().keyPressEvent(e)
 
-    # --- Tooltips on Hover ---
+    # Tooltips on Hover
     def event(self, e) -> bool:
         """Show tooltips when hovering over instructions."""
         if e is None:

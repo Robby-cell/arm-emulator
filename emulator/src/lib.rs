@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use std::collections::HashMap;
 
 use thiserror::Error;
@@ -32,6 +34,7 @@ mod tests;
 const BREAKPOINT_BE_BYTES: [u8; 4] = [0xE1, 0x20, 0x00, 0x70];
 
 #[derive(Debug, Error, Clone)]
+#[must_use]
 pub struct Breakpoint {
     pub addr: Word,
     pub instruction: Instruction,
@@ -46,6 +49,7 @@ impl std::fmt::Display for Breakpoint {
 pub type BreakpointMappings = HashMap<Word, u32>;
 
 #[derive(Debug)]
+#[must_use]
 pub struct Emulator {
     pub cpu: Cpu,
     pub memory_bus: Bus,
@@ -142,6 +146,7 @@ impl Emulator {
     }
 
     /// Add a breakpoint to the address supplied.
+    #[must_use]
     pub fn patch_breakpoint_at(
         &mut self,
         addr: Word,
@@ -194,10 +199,12 @@ impl Emulator {
 
 // Getters
 impl Emulator {
+    #[must_use]
     pub fn get_read_only_memory_view(&self) -> &Bytes {
         self.memory_bus.get_read_only_memory_view()
     }
 
+    #[must_use]
     pub fn get_mapped_peripherals(&self) -> &[MemoryMappedPeripheral] {
         self.memory_bus.get_mapped_peripherals()
     }
@@ -218,6 +225,7 @@ impl Emulator {
         self.breakpoint_destructive = BreakpointMappings::new();
     }
 
+    #[must_use]
     pub fn read32(&self, addr: Word) -> MemoryAccessResult<u32> {
         match self.endian {
             Endian::Big => self.memory_bus.read32_be(addr),
@@ -236,6 +244,7 @@ impl Emulator {
         }
     }
 
+    #[must_use]
     pub fn read_byte(&self, addr: Word) -> MemoryAccessResult<u8> {
         match self.endian {
             Endian::Big => self.memory_bus.read_byte_be(addr),
@@ -256,12 +265,14 @@ impl Emulator {
 
     /// Is the emulation finished execution?
     /// Has it returned from the main/_start function?
+    #[must_use]
     pub fn is_done(&self) -> bool {
         true
     }
 
     /// Fetch the instruction at the address of the current PC value
     #[inline]
+    #[must_use]
     pub fn fetch(&self) -> MemoryAccessResult<u32> {
         self.read32(self.cpu.register(registers::PC))
     }
@@ -435,6 +446,7 @@ impl Emulator {
         self.set_endian(Endian::Big);
     }
 
+    #[must_use]
     pub fn max_address(&self) -> u32 {
         u32::MAX
     }

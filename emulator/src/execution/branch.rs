@@ -14,7 +14,7 @@ impl ExecutableInstruction for BranchInstruction {
             emulator.cpu.set_lr(return_address);
         }
 
-        // Manually Sign-Extend the Offset ---
+        // Manually Sign-Extend the Offset
         // Without this, it will treat it as a positive number.
         // So an offset of -1 would be read as a huge number,
         // then it would just be shifted.

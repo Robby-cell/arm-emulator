@@ -12,6 +12,7 @@ use crate::{
 /// Calculates the V (signed overflow) flag for an addition.
 /// Overflow occurs if two positive numbers make a negative, or two negatives make a positive.
 #[inline(always)]
+#[must_use]
 fn v_flag_add(rn: u32, op2: u32, result: u32) -> bool {
     // A simplified way to express this is checking if the sign of the result
     // is different from the operands, but only when the operands had the same sign.
@@ -21,6 +22,7 @@ fn v_flag_add(rn: u32, op2: u32, result: u32) -> bool {
 /// Calculates the V (signed overflow) flag for a subtraction (rn - op2).
 /// Overflow occurs if a positive minus a negative gives a negative, or a negative minus a positive gives a positive.
 #[inline(always)]
+#[must_use]
 fn v_flag_sub(rn: u32, op2: u32, result: u32) -> bool {
     // A simplified way to express this is checking if the operands had different signs,
     // and the result's sign differs from the first operand's.
@@ -166,7 +168,7 @@ impl ExecutableInstruction for DataProcessingInstruction {
         emulator: &mut Emulator,
     ) -> Result<(), ExecutionError> {
         match self.opcode() {
-            // --- Arithmetic Opcodes ---
+            // Arithmetic Opcodes
             Opcode::ADD => self.execute_arithmetic_op(
                 emulator,
                 |a, b| a.overflowing_add(b),
@@ -219,7 +221,7 @@ impl ExecutableInstruction for DataProcessingInstruction {
                 v_flag_sub,
             ),
 
-            // --- Logical Opcodes ---
+            // Logical Opcodes
             Opcode::AND => self.execute_logical_op(emulator, |a, b| a & b),
             Opcode::ORR => self.execute_logical_op(emulator, |a, b| a | b),
             Opcode::EOR => self.execute_logical_op(emulator, |a, b| a ^ b),
@@ -227,7 +229,7 @@ impl ExecutableInstruction for DataProcessingInstruction {
                 self.execute_logical_op(emulator, |a, b| a & !b)
             } // Bit Clear
 
-            // --- Single Operand / Special ---
+            // Single Operand / Special
             Opcode::MOV => {
                 let (value, carry_out) = self.op2().eval(emulator);
 
@@ -269,11 +271,11 @@ impl ExecutableInstruction for DataProcessingInstruction {
                 Ok(())
             }
 
-            // --- Logical Test Opcodes (Non-Writing) ---
+            // Logical Test Opcodes (Non-Writing)
             Opcode::TST => self.execute_test_op(emulator, |a, b| a & b),
             Opcode::TEQ => self.execute_test_op(emulator, |a, b| a ^ b),
 
-            // --- Arithmetic Comparison Opcodes (Non-Writing) ---
+            // Arithmetic Comparison Opcodes (Non-Writing)
             Opcode::CMP => self.execute_comparison_op(
                 emulator,
                 |a, b| {

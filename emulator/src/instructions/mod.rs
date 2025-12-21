@@ -30,6 +30,7 @@ macro_rules! assert_u32_sized {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct DataProcessingInstruction {
     // Fields are defined from LSB (bit 0) to MSB (bit 31)
     pub operand2: B12,
@@ -46,6 +47,7 @@ pub struct DataProcessingInstruction {
 assert_u32_sized!(DataProcessingInstruction);
 
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub enum Operand2 {
     ShiftedRegisterOffset(ShiftedRegisterOffset),
     Immediate(u16),
@@ -72,6 +74,7 @@ impl DataProcessingInstruction {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct MemoryAccessInstruction {
     pub offset: B12,
     pub rd: Register,
@@ -92,6 +95,7 @@ assert_u32_sized!(MemoryAccessInstruction);
 #[bitfield]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u16)]
+#[must_use]
 pub struct ShiftedRegisterOffset {
     pub rm: Register,
     #[skip]
@@ -104,6 +108,7 @@ pub struct ShiftedRegisterOffset {
 
 #[bitfield]
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub struct RotatedImmediate {
     pub immediate: B8,
     pub rotate: B4,
@@ -112,6 +117,7 @@ pub struct RotatedImmediate {
 }
 
 #[derive(Debug, Copy, Clone)]
+#[must_use]
 pub enum MemoryOffset {
     Immediate(u16),
     ShiftedRegister(ShiftedRegisterOffset),
@@ -140,6 +146,7 @@ impl MemoryAccessInstruction {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct BranchInstruction {
     pub offset: B24,
     pub l: LinkFlag,
@@ -160,6 +167,7 @@ assert_u32_sized!(BranchInstruction);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct BlockDataTransferInstruction {
     pub register_list: B16,
     pub rn: Register,
@@ -182,6 +190,7 @@ assert_u32_sized!(BlockDataTransferInstruction);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct SupervisorCallInstruction {
     /// A 24-bit immediate value passed to the supervisor.
     /// Modern OSes like Linux typically ignore this in favor of a register-based ABI.
@@ -200,6 +209,7 @@ assert_u32_sized!(SupervisorCallInstruction);
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 #[repr(C)]
+#[must_use]
 pub struct BreakpointInstruction {
     pub imm4: B4,
     #[skip]
@@ -244,6 +254,7 @@ assert_u32_sized!(BreakpointInstruction);
 /// }
 /// ```
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[must_use]
 pub enum Instruction {
     DataProcessing(DataProcessingInstruction),
     MemoryAccess(MemoryAccessInstruction),

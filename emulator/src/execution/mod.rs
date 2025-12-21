@@ -44,6 +44,7 @@ pub trait ExecutableInstruction: private::Sealed {
 
 impl Operand2 {
     #[inline]
+    #[must_use]
     fn eval(self, emulator: &mut Emulator) -> (u32, Option<bool>) {
         let op2 = self;
 

@@ -5,12 +5,14 @@ use crate::memory::{
 use std::sync::atomic::{AtomicU32, Ordering};
 
 /// The internal state of the gpio port
+#[must_use]
 struct GpioState {
     moder: AtomicU32,
     odr: AtomicU32,
 }
 
 /// The public-facing struct representing a gpio port
+#[must_use]
 pub struct GpioPort {
     state: GpioState,
 }
@@ -26,6 +28,7 @@ impl GpioPort {
     }
 
     // A new public method for a UI thread to safely read the LED state
+    #[must_use]
     pub fn is_led_on(&self) -> bool {
         // Check if PA5 is configured as an output and its ODR bit is set
         let is_output = (self.state.moder.load(Ordering::Relaxed) >> 10)

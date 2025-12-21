@@ -60,6 +60,7 @@ pub type MemoryAccessResult<T> = Result<T, MemoryAccessError>;
 /// System word size (for ARM, 32 bits/4 bytes) amount of bytes
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(align(4))]
+#[must_use]
 pub struct WordBytes {
     data: [u8; 4],
 }
@@ -109,11 +110,13 @@ const _: () = assert!(
 /// An abstraction over endianness for reading and writing words.
 /// This is a little-endian implementation.
 /// See [BigEndian] for the big-endian version.
+#[must_use]
 pub struct LittleEndian;
 
 /// An abstraction over endianness for reading and writing words.
 /// This is a big-endian implementation.
 /// See [LittleEndian] for the little-endian version.
+#[must_use]
 pub struct BigEndian;
 
 /// A trait for reading words with a specific implementation (endianness).
@@ -229,6 +232,7 @@ pub trait Peripheral {
     fn reset(&self);
 }
 
+#[must_use]
 pub struct MemoryMappedPeripheral {
     pub range: RangeInclusive<u32>,
     pub peripheral: Arc<dyn Peripheral + Send + Sync>,
@@ -252,6 +256,7 @@ impl MemoryMappedPeripheral {
 /// Connects the CPU to RAM and peripherals.
 /// Routes reads and writes to the appropriate location.
 #[derive(Debug)]
+#[must_use]
 pub struct Bus {
     /// Main system RAM, represented as a simple byte vector.
     /// 0x00000000 - 0x1FFFFFFF
@@ -285,6 +290,7 @@ impl Bus {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[must_use]
 pub enum Endian {
     Little,
     Big,
@@ -315,22 +321,27 @@ impl Bus {
         self.external = Vec::new();
     }
 
+    #[must_use]
     pub fn get_read_only_memory_view(&self) -> &Bytes {
         &self.code
     }
 
+    #[must_use]
     pub fn get_read_only_memory_view_mut(&mut self) -> &mut Bytes {
         &mut self.code
     }
 
+    #[must_use]
     pub fn get_read_write_memory_view(&self) -> &Bytes {
         &self.sram
     }
 
+    #[must_use]
     pub fn get_read_write_memory_view_mut(&mut self) -> &mut Bytes {
         &mut self.sram
     }
 
+    #[must_use]
     pub fn get_mapped_peripherals(&self) -> &[MemoryMappedPeripheral] {
         &self.peripherals
     }
@@ -366,6 +377,7 @@ impl Bus {
 
     /// Same as [Bus::read32_with_reader], except it does not check for mapped peripherals,
     /// just reads from the address.
+    #[must_use]
     fn read32_ram_with_reader<Reader: BasicRead>(
         pool: &Bytes,
         addr: Word,
@@ -386,6 +398,7 @@ impl Bus {
     }
 
     /// Read a 32-bit word from the bus with the specified reader for endianness.
+    #[must_use]
     fn read32_with_reader<Reader: BasicRead>(
         &self,
         addr: Word,
@@ -423,11 +436,13 @@ impl Bus {
     }
 
     /// Read the bytes at the address specified, as it would be on a little-endian system.
+    #[must_use]
     pub fn read32_le(&self, addr: Word) -> MemoryAccessResult<u32> {
         self.read32_with_reader::<LittleEndian>(addr)
     }
 
     /// Read the bytes at the address specified, as it would be on a big-endian system.
+    #[must_use]
     pub fn read32_be(&self, addr: Word) -> MemoryAccessResult<u32> {
         self.read32_with_reader::<BigEndian>(addr)
     }
@@ -527,6 +542,7 @@ impl Bus {
 
     /// Read a single byte from the bus.
     /// This does not consider endianness, it is just a single byte.
+    #[must_use]
     fn read_byte_ram_with_reader<Reader: BasicRead>(
         pool: &Bytes,
         addr: Word,
@@ -539,6 +555,7 @@ impl Bus {
         }
     }
 
+    #[must_use]
     fn read_byte_with_reader<Reader: BasicRead>(
         &self,
         addr: Word,
@@ -575,10 +592,12 @@ impl Bus {
         }
     }
 
+    #[must_use]
     pub fn read_byte_le(&self, addr: Word) -> MemoryAccessResult<u8> {
         self.read_byte_with_reader::<LittleEndian>(addr)
     }
 
+    #[must_use]
     pub fn read_byte_be(&self, addr: Word) -> MemoryAccessResult<u8> {
         self.read_byte_with_reader::<BigEndian>(addr)
     }
@@ -755,18 +774,22 @@ pub const fn as_bytes_mut<T>(value: &mut T) -> &mut Bytes {
 
 #[cfg(target_endian = "little")]
 mod native_memory {
+    #[must_use]
     pub const fn big_endian_to_native(instr: u32) -> u32 {
         u32::from_be_bytes(instr.to_le_bytes())
     }
 
+    #[must_use]
     pub const fn little_endian_to_native(instr: u32) -> u32 {
         u32::from_le_bytes(instr.to_le_bytes())
     }
 
+    #[must_use]
     pub const fn u32_to_native_bytes(value: u32) -> [u8; 4] {
         value.to_le_bytes()
     }
 
+    #[must_use]
     pub const fn u32_from_native_bytes(bytes: [u8; 4]) -> u32 {
         u32::from_le_bytes(bytes)
     }
@@ -774,18 +797,22 @@ mod native_memory {
 
 #[cfg(target_endian = "big")]
 mod native_memory {
+    #[must_use]
     pub const fn big_endian_to_native(instr: u32) -> u32 {
         u32::from_be_bytes(instr.to_be_bytes())
     }
 
+    #[must_use]
     pub const fn little_endian_to_native(instr: u32) -> u32 {
         u32::from_le_bytes(instr.to_be_bytes())
     }
 
+    #[must_use]
     pub const fn u32_to_native_bytes(value: u32) -> [u8; 4] {
         value.to_be_bytes()
     }
 
+    #[must_use]
     pub const fn u32_from_native_bytes(bytes: [u8; 4]) -> u32 {
         u32::from_be_bytes(bytes)
     }

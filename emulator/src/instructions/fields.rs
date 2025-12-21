@@ -29,7 +29,8 @@ macro_rules! precisely_sized_enum {
             name = $typename,
             bits = $bits,
             attrs = [
-                #[derive(Debug, PartialEq, Eq, Copy, Clone)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone)],
+                #[must_use]
             ],
             options = [$($name $(= $value)?),*]
         }
@@ -296,6 +297,7 @@ pub mod register_mask {
     /// For example, a mask of `0b0000_0000_0000_0011` indicates that R0 and R1 are included.
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
     #[repr(transparent)]
+    #[must_use]
     pub struct RegisterMask(u16);
 
     impl From<super::Register> for RegisterMask {

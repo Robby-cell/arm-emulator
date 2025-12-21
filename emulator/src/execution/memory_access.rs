@@ -11,6 +11,7 @@ use crate::{
 };
 
 impl MemoryAccessInstruction {
+    #[must_use]
     fn calculate_offset(&self, emulator: &Emulator) -> u32 {
         // Use a match statement for clarity and correctness.
         match self.i() {

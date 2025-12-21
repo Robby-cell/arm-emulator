@@ -32,7 +32,7 @@ fn simple_mov_test_with_shifted_register() {
     assert_eq!(emulator.cpu.register(Register::R0 as _), 16 << 2);
 }
 
-// --- Logical ---
+// Logical
 #[test]
 fn test_and_simple_register() {
     // AND R0, R1, R2
@@ -56,7 +56,7 @@ fn test_ands_flags_zero_and_negative() {
     ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
-    // --- Test for Zero Flag ---
+    // Test for Zero Flag
     emulator.cpu.set_register(Register::R1 as _, 0b1010);
     emulator.cpu.set_register(Register::R2 as _, 0b0101);
     emulator.cpu.set_z(false); // Pre-clear the flag
@@ -65,7 +65,7 @@ fn test_ands_flags_zero_and_negative() {
     assert!(emulator.cpu.z(), "Z flag should be set for zero result");
     assert!(!emulator.cpu.n(), "N flag should be clear");
 
-    // --- Test for Negative Flag ---
+    // Test for Negative Flag
     let negative_val = 1 << 31; // 0x80000000
     emulator.cpu.set_register(Register::R1 as _, negative_val);
     emulator.cpu.set_register(Register::R2 as _, negative_val);
@@ -103,7 +103,7 @@ fn test_eors_carry_flag_from_shifter() {
     );
 }
 
-// --- Arithmetic ---
+// Arithmetic
 #[test]
 fn test_add_with_immediate() {
     // ADD R3, R4, #50
@@ -137,10 +137,10 @@ fn test_sub_does_not_alter_flags() {
     // Execute the non-flag-setting instruction
     emulator.execute_data_processing_instruction(instr).unwrap();
 
-    // --- Assert the result is correct ---
+    // Assert the result is correct
     assert_eq!(emulator.cpu.register(Register::R0 as _), 15);
 
-    // --- Assert that NO flags were changed ---
+    // Assert that NO flags were changed
     assert!(
         emulator.cpu.n(),
         "N flag should NOT have been changed by SUB"
@@ -167,7 +167,7 @@ fn test_adds_flags_carry_and_overflow() {
     ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
-    // --- Test for C (unsigned carry) but not V (signed overflow) ---
+    // Test for C (unsigned carry) but not V (signed overflow)
     // 0xFFFFFFFF + 1 = 0, with a carry.
     emulator.cpu.set_register(Register::R1 as _, 0xFFFFFFFF);
     emulator.cpu.set_register(Register::R2 as _, 1);
@@ -180,7 +180,7 @@ fn test_adds_flags_carry_and_overflow() {
     );
     assert!(!emulator.cpu.v(), "V flag should NOT be set");
 
-    // --- Test for V (signed overflow) but not C (unsigned carry) ---
+    // Test for V (signed overflow) but not C (unsigned carry)
     // (MAX_I32) + 1 = (MIN_I32), which is a signed overflow.
     emulator.cpu.set_register(Register::R1 as _, 0x7FFFFFFF);
     emulator.cpu.set_register(Register::R2 as _, 1);
@@ -199,14 +199,14 @@ fn test_subs_carry_flag_as_borrow() {
     ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
-    // --- Test for C=1 (no borrow) when Rn >= Rm ---
+    // Test for C=1 (no borrow) when Rn >= Rm
     emulator.cpu.set_register(Register::R1 as _, 10);
     emulator.cpu.set_register(Register::R2 as _, 5);
     emulator.execute_data_processing_instruction(instr).unwrap();
     assert_eq!(emulator.cpu.register(Register::R0 as _), 5);
     assert!(emulator.cpu.c(), "C flag should be 1 (no borrow) for 10-5");
 
-    // --- Test for C=0 (borrow) when Rn < Rm ---
+    // Test for C=0 (borrow) when Rn < Rm
     emulator.cpu.set_register(Register::R1 as _, 5);
     emulator.cpu.set_register(Register::R2 as _, 10);
     emulator.execute_data_processing_instruction(instr).unwrap();
@@ -255,7 +255,7 @@ fn test_rsbs_reverse_subtract_with_flags() {
     ]));
     let mut emulator = ramless_emulator(Endian::Little);
 
-    // --- Test for C=1 (no borrow) when #100 >= R1 ---
+    // Test for C=1 (no borrow) when #100 >= R1
     emulator.cpu.set_register(Register::R1 as _, 40);
     emulator.execute_data_processing_instruction(instr).unwrap();
     assert_eq!(emulator.cpu.register(Register::R0 as _), 60);
@@ -266,7 +266,7 @@ fn test_rsbs_reverse_subtract_with_flags() {
     assert!(!emulator.cpu.z(), "Z flag should be clear");
     assert!(!emulator.cpu.n(), "N flag should be clear");
 
-    // --- Test for C=0 (borrow) when #100 < R1 ---
+    // Test for C=0 (borrow) when #100 < R1
     emulator.cpu.set_register(Register::R1 as _, 120);
     emulator.execute_data_processing_instruction(instr).unwrap();
     assert_eq!(emulator.cpu.register(Register::R0 as _) as i32, -20);
@@ -274,7 +274,7 @@ fn test_rsbs_reverse_subtract_with_flags() {
     assert!(emulator.cpu.n(), "N flag should be set for negative result");
     assert!(!emulator.cpu.z(), "Z flag should be clear");
 
-    // --- Test for Z=1 (zero result) when #100 == R1 ---
+    // Test for Z=1 (zero result) when #100 == R1
     emulator.cpu.set_register(Register::R1 as _, 100);
     emulator.execute_data_processing_instruction(instr).unwrap();
     assert_eq!(emulator.cpu.register(Register::R0 as _), 0);

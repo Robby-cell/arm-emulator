@@ -24,6 +24,7 @@ impl Cpu {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[must_use]
 pub enum Mode {
     User = 0b10000,
     Fiq = 0b10001,
@@ -36,6 +37,7 @@ pub enum Mode {
 
 /// The program is ready to exit, with the given `exit_code`.
 #[derive(Debug, Clone)]
+#[must_use]
 pub struct ExitStatus {
     /// The exit code of the program.
     /// i.e. the equival of `return 0`
@@ -44,6 +46,7 @@ pub struct ExitStatus {
 
 /// An interupt is currently active. The processor must handle it first.
 #[derive(Debug, Clone)]
+#[must_use]
 pub struct SupervisorCall {
     /// The code of the active supervisor call.
     pub code: u32,
@@ -62,6 +65,7 @@ pub enum Exception {
 /// Execution state of the CPU in the current program. Keeps track of what is happening within the CPU.
 /// Has a breakpoint been hit? Is it still running? Should it be exiting? Is it handling an interupt?
 #[derive(Debug, Default, Clone)]
+#[must_use]
 pub enum ExecutionState {
     /// The program is currently executing
     #[default]
@@ -153,6 +157,7 @@ pub enum CpuError {
 /// This is simply a low-level representation of the ARM CPU state.
 /// Other crates will build on top of this to provide a full CPU emulator.
 #[derive(Clone)]
+#[must_use]
 pub struct Cpu {
     pub registers: [u32; 16],
 
@@ -295,6 +300,7 @@ impl Cpu {
     }
 
     /// Reads the I (IRQ Disable) flag.
+    #[must_use]
     pub fn i(&self) -> bool {
         self.flag(Self::I_FLAG)
     }
@@ -305,6 +311,7 @@ impl Cpu {
     }
 
     /// Reads the F (FIQ Disable) flag.
+    #[must_use]
     pub fn f(&self) -> bool {
         self.flag(Self::F_FLAG)
     }
@@ -315,12 +322,14 @@ impl Cpu {
     }
 
     /// Reads the T (Thumb State) bit.
+    #[must_use]
     pub fn t(&self) -> bool {
         self.flag(Self::T_FLAG)
     }
 
     /// Returns a mutable reference to the SPSR for the current mode.
     /// Panics if the current mode is User or System, as they don't have an SPSR.
+    #[must_use]
     pub fn spsr_mut(&mut self) -> Result<&mut u32, CpuError> {
         match self.mode() {
             Mode::Supervisor => Ok(&mut self.spsr_svc),
@@ -338,6 +347,7 @@ impl Cpu {
     }
 
     /// Returns a read-only reference to the SPSR for the current mode.
+    #[must_use]
     pub fn spsr(&self) -> Result<u32, CpuError> {
         match self.mode() {
             Mode::Supervisor => Ok(self.spsr_svc),
@@ -385,6 +395,7 @@ impl Cpu {
     }
 
     /// Reads a flag from the CPSR.
+    #[must_use]
     pub fn flag(&self, flag: u32) -> bool {
         (self.cpsr & flag) != 0
     }
@@ -407,6 +418,7 @@ impl Cpu {
     }
 
     /// Reads the N flag (Negative).
+    #[must_use]
     pub fn n(&self) -> bool {
         self.flag(Self::N_FLAG)
     }
@@ -429,6 +441,7 @@ impl Cpu {
     }
 
     /// Reads the Z flag (Zero).
+    #[must_use]
     pub fn z(&self) -> bool {
         self.flag(Self::Z_FLAG)
     }
@@ -453,6 +466,7 @@ impl Cpu {
     /// Reads the
     /// [C flag](https://developer.arm.com/documentation/100076/0200/a32-t32-instruction-set-reference/condition-codes/carry-flag)
     /// (Carry).
+    #[must_use]
     pub fn c(&self) -> bool {
         self.flag(Self::C_FLAG)
     }
@@ -477,6 +491,7 @@ impl Cpu {
     /// Reads the
     /// [V flag](https://developer.arm.com/documentation/100076/0200/a32-t32-instruction-set-reference/condition-codes/overflow-flag)
     /// (Overflow).
+    #[must_use]
     pub fn v(&self) -> bool {
         self.flag(Self::V_FLAG)
     }
@@ -487,104 +502,125 @@ impl Cpu {
 /// [Explanation from the ARM documentation](https://developer.arm.com/documentation/dui0473/m/condition-codes/condition-code-suffixes-and-related-flags)
 impl Cpu {
     /// Equal.
+    #[must_use]
     pub fn eq(&self) -> bool {
         self.z()
     }
 
     /// Not equal.
+    #[must_use]
     pub fn ne(&self) -> bool {
         !self.z()
     }
 
     /// Unsigned higher or same (or carry set).
+    #[must_use]
     pub fn hs(&self) -> bool {
         self.cs()
     }
 
+    #[must_use]
     pub fn cs(&self) -> bool {
         self.c()
     }
 
     /// Unsigned lower (or carry clear).
+    #[must_use]
     pub fn lo(&self) -> bool {
         !self.c()
     }
 
+    #[must_use]
     pub fn cc(&self) -> bool {
         self.lo()
     }
 
     /// Negative. The mnemonic stands for "minus".
+    #[must_use]
     pub fn mi(&self) -> bool {
         self.n()
     }
 
     /// Positive or zero. The mnemonic stands for "plus".
+    #[must_use]
     pub fn pl(&self) -> bool {
         !self.n()
     }
 
     /// Signed overflow. The mnemonic stands for "V set".
+    #[must_use]
     pub fn vs(&self) -> bool {
         self.v()
     }
 
     /// No signed overflow. The mnemonic stands for "V clear".
+    #[must_use]
     pub fn vc(&self) -> bool {
         !self.v()
     }
 
     /// Unsigned higher.
+    #[must_use]
     pub fn hi(&self) -> bool {
         self.c() && !self.z()
     }
 
     /// Unsigned lower or same.
+    #[must_use]
     pub fn ls(&self) -> bool {
         !self.c() || self.z()
     }
 
     /// Signed greater than or equal.
+    #[must_use]
     pub fn ge(&self) -> bool {
         self.n() == self.v()
     }
 
     /// Signed less than.
+    #[must_use]
     pub fn lt(&self) -> bool {
         self.n() != self.v()
     }
 
     /// Signed greater than.
+    #[must_use]
     pub fn gt(&self) -> bool {
         !self.z() && self.ge()
     }
 
     /// Signed less than or equal.
+    #[must_use]
     pub fn le(&self) -> bool {
         self.z() || self.lt()
     }
 
     /// Always executed.
+    #[must_use]
     pub fn al(&self) -> bool {
         true
     }
 
     #[inline]
+    #[must_use]
     pub fn pc(&self) -> u32 {
         self.register(registers::PC)
     }
 
     #[inline]
+    #[must_use]
     pub fn lr(&self) -> u32 {
         self.register(registers::LR)
     }
 
     #[inline]
+    #[must_use]
     pub fn sp(&self) -> u32 {
         self.register(registers::SP)
     }
 
     #[inline]
+    #[must_use]
     pub fn register(&self, register: u8) -> u32 {
         self.registers[register as usize]
     }
