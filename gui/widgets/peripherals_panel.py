@@ -50,7 +50,7 @@ class PyGpioPort(GpioPort):
 
 
 PERIPHERAL_REGISTRY: Dict[str, Type] = {
-    "GPIO Port": PyGpioPort,
+    "LED": PyGpioPort,
 }
 
 
@@ -103,7 +103,7 @@ class PeripheralData:
 
 def get_default_peripheral():
     return PeripheralData(
-        "GPIO Port", "led0", 0x40000000, 0x4000FFFF, PyGpioPort(), LedIndicator()
+        "LED", "led0", 0x40000000, 0x4000FFFF, PyGpioPort(), LedIndicator()
     )
 
 
