@@ -14,7 +14,7 @@ use crate::{
         BlockDataTransferInstruction, BranchInstruction,
         BreakpointInstruction, DataProcessingInstruction, Instruction,
         InstructionConversionError, MemoryAccessInstruction,
-        SupervisorCallInstruction,
+        SupervisorCallInstruction, fields::Condition,
     },
     memory::{
         Bus, Bytes, Endian, MemoryAccessError, MemoryAccessResult,
@@ -58,6 +58,37 @@ pub struct Emulator {
 }
 
 impl Emulator {
+    pub fn load_program(
+        &mut self,
+        code: &[u8],
+        sram: Option<&[u8]>,
+        external: Option<&[u8]>,
+    ) {
+        self.reset();
+        self.load_code(code);
+        if let Some(sram) = sram {
+            self.load_sram(sram);
+        }
+        self.memory_bus.reserve_sram(
+            (Bus::SRAM_SIZE as usize
+                - if let Some(sram) = sram { sram.len() } else { 0 })
+                as u32,
+        );
+        if let Some(external) = external {
+            self.load_external(external);
+        }
+
+        let sram_end = memory::Bus::SRAM_BEGIN
+            + (self.memory_bus.get_read_write_memory_view().len() as u32);
+        self.cpu.set_sp(sram_end);
+        tracing::trace!(
+            "SRAM size: {}",
+            self.memory_bus.get_read_write_memory_view().len()
+        );
+
+        tracing::info!("Loaded program. SP reset to {:#X}", self.cpu.sp());
+    }
+
     pub fn load_code(&mut self, code: &[u8]) {
         self.memory_bus.load_code(code);
     }
@@ -318,8 +349,17 @@ impl Emulator {
         // Decode
         let decode = self.decode(fetch)?;
 
-        // Execute
-        self.execute_single_instruction(decode)?;
+        if self.cpu.should_execute(decode) {
+            // Execute
+            (|| {
+                let r = self.execute_single_instruction(decode);
+                tracing::info!("Step result: {r:?}");
+                r
+            })()?;
+        } else {
+            // Move the PC regardless.
+            self.post_execution_update();
+        }
 
         Ok(())
     }
@@ -378,7 +418,7 @@ impl Emulator {
         instr: BlockDataTransferInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Block data transfer instruction: {instr:?}");
-        Ok(())
+        instr.execute_with(self)
     }
 
     fn execute_branch_instruction(
@@ -449,6 +489,29 @@ impl Emulator {
     #[must_use]
     pub fn max_address(&self) -> u32 {
         u32::MAX
+    }
+}
+
+impl Cpu {
+    fn should_execute(&self, instr: Instruction) -> bool {
+        match instr.cond() {
+            Condition::AL => self.al(),
+            Condition::EQ => self.eq(),
+            Condition::NE => self.ne(),
+            Condition::HS => self.hs(),
+            Condition::LO => self.lo(),
+            Condition::VS => self.vs(),
+            Condition::VC => self.vc(),
+            Condition::HI => self.hi(),
+            Condition::LS => self.ls(),
+            Condition::GE => self.ge(),
+            Condition::LT => self.lt(),
+            Condition::GT => self.gt(),
+            Condition::LE => self.le(),
+            Condition::MI => self.mi(),
+            Condition::PL => self.pl(),
+            Condition::NV => self.nv(),
+        }
     }
 }
 

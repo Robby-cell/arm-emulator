@@ -264,6 +264,19 @@ pub enum Instruction {
     Breakpoint(BreakpointInstruction),
 }
 
+impl Instruction {
+    pub fn cond(&self) -> Condition {
+        match self {
+            Instruction::DataProcessing(inst) => inst.cond(),
+            Instruction::MemoryAccess(inst) => inst.cond(),
+            Instruction::BlockDataTransfer(inst) => inst.cond(),
+            Instruction::Branch(inst) => inst.cond(),
+            Instruction::SupervisorCall(inst) => inst.cond(),
+            Instruction::Breakpoint(_inst) => Condition::AL,
+        }
+    }
+}
+
 /// Errors that can occur when converting a raw [u32] into an [Instruction].
 #[derive(Error, Debug, Clone)]
 pub enum InstructionConversionError {

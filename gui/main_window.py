@@ -179,6 +179,12 @@ class MainWindow(QMainWindow):
         self._debugger_controller.state_changed.connect(self._on_state_changed)
         self._debugger_controller.error_occurred.connect(self._on_error)
         self._debugger_controller.breakpoint_hit.connect(self._on_breakpoint_hit)
+        self._debugger_controller.highlight_line.connect(
+            self._editor._editor.set_execution_line
+        )
+        self._editor._editor.breakpoint_toggled.connect(
+            self._debugger_controller.on_breakpoint_toggled
+        )
 
     # Slots
     def _on_execution_started(self) -> None:

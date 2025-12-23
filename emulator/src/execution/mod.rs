@@ -9,6 +9,7 @@ use crate::{
     memory::MemoryAccessError,
 };
 
+mod block_data_transfer;
 mod branch;
 mod data_processing;
 mod memory_access;
@@ -50,7 +51,7 @@ impl Operand2 {
 
         // We need both the final value and a potential carry bit from the shifter.
         // An Option<bool> is perfect: Some(carry) for shifts, None for immediates.
-        match op2 {
+        let result = match op2 {
             Operand2::Immediate(imm) => {
                 let value_8 = (imm & 0xFF) as u32;
                 let rotate_4 = (imm >> 8) as u32;
@@ -135,7 +136,9 @@ impl Operand2 {
                     }
                 }
             }
-        }
+        };
+        tracing::trace!("Evaluation of Operand2: {result:?}");
+        result
     }
 }
 

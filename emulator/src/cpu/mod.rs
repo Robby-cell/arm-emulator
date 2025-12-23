@@ -601,6 +601,11 @@ impl Cpu {
         true
     }
 
+    #[must_use]
+    pub fn nv(&self) -> bool {
+        false
+    }
+
     #[inline]
     #[must_use]
     pub fn pc(&self) -> u32 {
