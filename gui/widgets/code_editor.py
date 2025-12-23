@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, QRect, QRegularExpression
+from PyQt6.QtCore import Qt, QRect, QRegularExpression, pyqtSignal
 from PyQt6.QtGui import (
     QPainter,
     QColor,
@@ -7,8 +7,10 @@ from PyQt6.QtGui import (
     QTextCursor,
     QSyntaxHighlighter,
     QTextCharFormat,
+    QTextDocument,
+    QTextFormat,
 )
-from PyQt6.QtWidgets import QWidget, QPlainTextEdit, QToolTip
+from PyQt6.QtWidgets import QWidget, QPlainTextEdit, QToolTip, QTextEdit
 from typing import Optional, List
 
 
@@ -337,6 +339,7 @@ class CodeEditor(QPlainTextEdit):
     """A code editor with a stable gutter, using a 'guard line' at the end."""
 
     GUTTER_FIXED_WIDTH = 60
+    breakpoint_toggled = pyqtSignal(int, bool)
 
     def __init__(
         self,
@@ -375,6 +378,30 @@ class CodeEditor(QPlainTextEdit):
         self.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
 
         self._setup_shortcuts()
+
+    def set_execution_line(self, line_number: int) -> None:
+        """Highlights the background of the specified line number."""
+        extra_selections = []
+
+        if line_number >= 0:
+            selection = QTextEdit.ExtraSelection()
+            line_color = QColor("#3A3d41")  # Subtle highlight (VSCode style debug line)
+            # Or brighter: QColor("#5c5c3d") (Yellowish tint)
+
+            selection.format.setBackground(line_color)
+            selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+
+            # Find the block for the line
+            doc: QTextDocument = self.document()  # type: ignore
+            block = doc.findBlockByNumber(line_number)
+
+            if block.isValid():
+                cursor = self.textCursor()
+                cursor.setPosition(block.position())
+                selection.cursor = cursor
+                extra_selections.append(selection)
+
+        self.setExtraSelections(extra_selections)
 
     def _setup_shortcuts(self):
         """Initializes all editor-specific keyboard shortcuts."""
@@ -529,8 +556,6 @@ class CodeEditor(QPlainTextEdit):
             return
 
         doc = self.document()
-        if doc is None:
-            return
         block = doc.findBlockByNumber(line_number)
         if not block.isValid():
             return
@@ -539,9 +564,14 @@ class CodeEditor(QPlainTextEdit):
         if not data:
             data = BreakpointUserData()
 
-        data.is_breakpoint = not data.is_breakpoint  # type: ignore : This is our custom data type.
+        # Toggle state
+        new_state = not data.is_breakpoint
+        data.is_breakpoint = new_state
         block.setUserData(data)
         self._line_number_area.update()
+
+        # EMIT SIGNAL
+        self.breakpoint_toggled.emit(line_number, new_state)
 
     def is_breakpoint(self, line_number: int) -> bool:
         doc = self.document()

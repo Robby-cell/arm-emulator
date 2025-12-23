@@ -55,6 +55,15 @@ impl PyEmulator {
         flags
     }
 
+    fn load_program(
+        &mut self,
+        code: &[u8],
+        sram: Option<&[u8]>,
+        external: Option<&[u8]>,
+    ) {
+        self.emulator.load_program(code, sram, external);
+    }
+
     fn load_code(&mut self, code: &[u8]) {
         self.emulator.load_code(code);
     }

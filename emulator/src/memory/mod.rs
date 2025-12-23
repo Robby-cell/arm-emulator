@@ -255,7 +255,6 @@ impl MemoryMappedPeripheral {
 
 /// Connects the CPU to RAM and peripherals.
 /// Routes reads and writes to the appropriate location.
-#[derive(Debug)]
 #[must_use]
 pub struct Bus {
     /// Main system RAM, represented as a simple byte vector.
@@ -275,18 +274,35 @@ pub struct Bus {
     external: Vec<u8>,
 }
 
+impl fmt::Debug for Bus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Bus")
+            .field("code", &self.code)
+            .field("sram", &[0; 0])
+            .field("peripherals", &self.peripherals)
+            .field("external", &[0; 0])
+            .finish()
+    }
+}
+
 impl Bus {
     pub const CODE_BEGIN: u32 = 0x00000000;
     pub const CODE_END: u32 = 0x1FFFFFFF;
+    pub const CODE_SIZE: u32 = Self::CODE_END - Self::CODE_BEGIN + 1;
 
     pub const SRAM_BEGIN: u32 = 0x20000000;
     pub const SRAM_END: u32 = 0x3FFFFFFF;
+    pub const SRAM_SIZE: u32 = Self::SRAM_END - Self::SRAM_BEGIN + 1;
 
     pub const PERIPHERAL_BEGIN: u32 = 0x40000000;
     pub const PERIPHERAL_END: u32 = 0x5FFFFFFF;
+    pub const PERIPHERAL_SIZE: u32 =
+        Self::PERIPHERAL_END - Self::PERIPHERAL_BEGIN + 1;
 
     pub const EXTERNAL_BEGIN: u32 = 0x60000000;
     pub const EXTERNAL_END: u32 = u32::MAX;
+    pub const EXTERNAL_SIZE: u32 =
+        Self::EXTERNAL_END - Self::EXTERNAL_BEGIN + 1;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -310,6 +326,11 @@ impl Bus {
     pub fn load_external(&mut self, external: &[u8]) {
         tracing::info!("loading external...");
         self.external = external.to_vec();
+    }
+
+    pub fn reserve_sram(&mut self, size: u32) {
+        self.sram.reserve_exact(size as _);
+        self.sram.resize(self.sram.capacity(), 0);
     }
 }
 
@@ -380,20 +401,20 @@ impl Bus {
     #[must_use]
     fn read32_ram_with_reader<Reader: BasicRead>(
         pool: &Bytes,
-        addr: Word,
+        offset: Word,
     ) -> MemoryAccessResult<u32> {
-        tracing::trace!("Reading RAM at address: {addr:#X}");
-        if addr % 4 != 0 {
+        tracing::trace!("Reading RAM at offset: {offset:#X}");
+        if offset % 4 != 0 {
             tracing::error!(
-                "Unaligned access attempt at address: {addr:#X}"
+                "Unaligned access attempt at offset: {offset:#X}"
             );
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 <= pool.len() as _ {
-            Reader::read32(pool, addr)
+        if offset + 4 <= pool.len() as _ {
+            Reader::read32(pool, offset)
         } else {
-            Err(MemoryAccessError::InvalidReadPermission { addr })
+            Err(MemoryAccessError::InvalidReadPermission { addr: offset })
         }
     }
 
@@ -405,12 +426,27 @@ impl Bus {
     ) -> MemoryAccessResult<u32> {
         match addr {
             Self::CODE_BEGIN..=Self::CODE_END => {
-                Self::read32_ram_with_reader::<Reader>(&self.code, addr)
+                tracing::trace!(
+                    "Reading word from code memory at address {addr:#X}"
+                );
+                Self::read32_ram_with_reader::<Reader>(
+                    &self.code,
+                    addr - Self::CODE_BEGIN,
+                )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
-                Self::read32_ram_with_reader::<Reader>(&self.sram, addr)
+                tracing::trace!(
+                    "Reading word from SRAM memory at address {addr:#X}"
+                );
+                Self::read32_ram_with_reader::<Reader>(
+                    &self.sram,
+                    addr - Self::SRAM_BEGIN,
+                )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                tracing::trace!(
+                    "Reading word from peripheral memory at address {addr:#X}"
+                );
                 for MemoryMappedPeripheral { range, peripheral } in
                     self.peripherals.iter()
                 {
@@ -427,9 +463,12 @@ impl Bus {
                 Err(MemoryAccessError::InvalidReadPermission { addr })
             }
             Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                tracing::trace!(
+                    "Reading word from external memory at address {addr:#X}"
+                );
                 Self::read32_ram_with_reader::<Reader>(
                     &self.external,
-                    addr,
+                    addr - Self::EXTERNAL_BEGIN,
                 )
             }
         }
@@ -451,24 +490,24 @@ impl Bus {
     /// just writes to the address.
     fn write32_ram_with_writer<Writer: BasicWrite>(
         pool: &mut Bytes,
-        addr: Word,
+        offset: Word,
         value: u32,
     ) -> MemoryAccessResult<()> {
         tracing::trace!(
-            "Writing word {value:#X} to RAM at address: {addr:#X}"
+            "Writing word {value:#X} to RAM at offset: {offset:#X}"
         );
         // Right now: Unaligned access is not allowed
-        if addr % 4 != 0 {
+        if offset % 4 != 0 {
             tracing::error!(
-                "Unaligned write attempt at address: {addr:#X}"
+                "Unaligned write attempt at offset: {offset:#X}"
             );
             return Err(MemoryAccessError::UnalignedAccess);
         }
 
-        if addr + 4 <= pool.len() as _ {
-            Writer::write32(pool, addr, value)
+        if offset + 4 <= pool.len() as _ {
+            Writer::write32(pool, offset, value)
         } else {
-            Err(MemoryAccessError::InvalidWritePermission { addr })
+            Err(MemoryAccessError::InvalidWritePermission { addr: offset })
         }
     }
 
@@ -483,20 +522,29 @@ impl Bus {
     ) -> MemoryAccessResult<()> {
         match addr {
             Self::CODE_BEGIN..=Self::CODE_END => {
+                tracing::trace!(
+                    "Writing word {value:#X} to code at address {addr:#X}"
+                );
                 Self::write32_ram_with_writer::<Writer>(
                     &mut self.code,
-                    addr,
+                    addr - Self::CODE_BEGIN,
                     value,
                 )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
+                tracing::trace!(
+                    "Writing word {value:#X} to SRAM at address {addr:#X}"
+                );
                 Self::write32_ram_with_writer::<Writer>(
                     &mut self.sram,
-                    addr,
+                    addr - Self::SRAM_BEGIN,
                     value,
                 )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
+                tracing::trace!(
+                    "Writing word {value:#X} to peripheral at address {addr:#X}"
+                );
                 for MemoryMappedPeripheral { range, peripheral } in
                     self.peripherals.iter()
                 {
@@ -513,9 +561,12 @@ impl Bus {
                 Err(MemoryAccessError::InvalidWritePermission { addr })
             }
             Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                tracing::trace!(
+                    "Writing word {value:#X} to external memory at address {addr:#X}"
+                );
                 Self::write32_ram_with_writer::<Writer>(
                     &mut self.external,
-                    addr,
+                    addr - Self::EXTERNAL_BEGIN,
                     value,
                 )
             }

@@ -1,4 +1,5 @@
-from typing import Dict, Union
+from typing import Dict, List, Optional, Union
+import re
 
 from keystone import (
     KS_ARCH_ARM,
@@ -6,6 +7,7 @@ from keystone import (
     KS_MODE_BIG_ENDIAN,
     KS_MODE_LITTLE_ENDIAN,
     Ks,
+    KsError,
 )
 
 from .assembled_output import AssembledOutput
@@ -35,15 +37,12 @@ class Assembler:
         Callback for Keystone to resolve symbols.
         'value' is a mutable list/array where the resolved address must be stored at index 0.
         """
-        sym_str = symbol.decode("utf-8") if isinstance(symbol, bytes) else symbol
 
+        sym_str = symbol.decode("utf-8") if isinstance(symbol, bytes) else symbol
         if sym_str in self.symbols:
             addr = self.symbols[sym_str]
-            print(f"[Assembler] Resolved '{sym_str}' to {hex(addr)}")
             value[0] = addr
             return True
-
-        print(f"[Assembler] Failed to resolve '{sym_str}'")
         return False
 
     def add_symbol(self, name: str, address: int) -> None:
@@ -52,16 +51,59 @@ class Assembler:
         """
         self.symbols[name] = address
 
-    def assemble(self, string: str, address: int = 0) -> AssembledOutput:
+    def assemble(self, code: str, start_address: int = 0) -> AssembledOutput:
         """
         Assemble the string.
-        :param string: Assembly code.
-        :param address: Base address for the code (default 0x00000000).
+        :param code: Assembly code.
+        :param start_address: Base address for the code (default 0x00000000).
         """
-        # Keystone asm returns [encoding, count]
-        [text, _count] = self.ctx.asm(string=string, addr=address)
-        text = bytes(bytearray(text))
-        return AssembledOutput(text=text)
+        # 1. Assemble the raw binary using Keystone
+        try:
+            encoding, count = self.ctx.asm(code, addr=start_address)
+            binary = bytes(encoding)
+        except KsError as e:
+            return AssembledOutput(success=False, error=str(e))
+
+        # Generate Source Map (Line <-> Address)
+        # We assume standard ARM instructions (4 bytes).
+        # We must filter out labels and comments to match the binary offset.
+        # Generally, this should work well enough. So we won't bother with making it more complex.
+        source_map = {}
+        reverse_map = {}
+        current_addr = start_address
+
+        lines = code.split("\n")
+
+        # Regex to detect labels (e.g., "loop:") and directives (e.g., ".global")
+        # Everything else is considered an instruction.
+        label_pattern = re.compile(r"^.*\s*[a-zA-Z0-9_]+:$")
+        directive_pattern = re.compile(r"^.*\s*\.")
+        comment_pattern = re.compile(r"^.*\s*(@|;)")
+        empty_pattern = re.compile(r"^.*\s*$")
+
+        instruction_count = 0
+
+        for line_num, line in enumerate(lines):
+            # Remove inline comments for checking
+            clean = line.split("@")[0].split(";")[0].strip()
+
+            if not clean:
+                continue  # Empty line
+            if label_pattern.match(clean):
+                continue  # Label only
+            if directive_pattern.match(clean):
+                continue  # Directive
+
+            # If we are here, we assume it's an instruction
+            source_map[line_num] = current_addr
+            reverse_map[current_addr] = line_num
+
+            current_addr += 4
+            instruction_count += 1
+
+        return AssembledOutput(
+            success=True, text=binary, source_map=source_map, reverse_map=reverse_map
+        )
 
 
 def arm_assembler_with_mode(mode) -> Assembler:
