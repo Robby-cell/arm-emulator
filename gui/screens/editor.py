@@ -6,25 +6,58 @@ from PyQt6.QtWidgets import QHBoxLayout, QSplitter, QWidget
 from ..widgets.code_editor import CodeEditor
 from ..widgets.peripherals_panel import PeripheralsPanel
 
-DEFAULT_ASM = r""".global _start
-_start:
-    @ 1. Load the base address of the GPIO peripheral
-    LDR R0, =led0      @ Assembler resolves this to 0x40000000
+DEFAULT_ASM = r"""_start:
+    B main
 
-    @ 2. Configure PA5 as Output
+turn_on:
+    @ Save return address
+    PUSH {LR}
+
+    @ 1. Configure PA5 as Output
     @ We need bits 11:10 of MODER (Offset 0x00) to be '01'.
     @ Binary: ... 0000 0100 0000 0000
     @ Hex:    0x400
     MOV R1, #0x400
     STR R1, [R0]        @ Write to MODER (Offset 0)
 
-    @ 3. Set PA5 High
+    @ 2. Set PA5 High
     @ We need bit 5 of ODR (Offset 0x14) to be '1'.
     @ Binary: ... 0010 0000
     @ Hex:    0x20
     MOV R1, #0x20
     STR R1, [R0, #0x14] @ Write to ODR (Offset 20)
 
+    @ Restore return address
+    POP {LR}
+    BX LR
+    @ Or just POP {PC}
+
+turn_off:
+    PUSH {LR}
+
+    @ 1. Configure PA5 as Output
+    MOV R1, #0x400
+    STR R1, [R0]        @ Write to MODER (Offset 0)
+
+    @ 2. Set PA5 Low
+    MOV R1, #0x00
+    STR R1, [R0, #0x14] @ Write to ODR (Offset 20)
+
+    POP {PC}
+
+main:
+    MOV R2, #0
+
+loop:
+    LDR R0, =led0
+    BL turn_on
+
+    LDR R0, =led0
+    BL turn_off
+
+    ADD R2, R2, #1
+    CMP R2, #0x5
+    BNE loop
 """
 
 

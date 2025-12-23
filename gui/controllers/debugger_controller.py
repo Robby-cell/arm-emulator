@@ -51,6 +51,7 @@ class DebuggerController(QObject):
 
         try:
             self._emulator.load_program(program.text, program.sram, program.external)
+            self.configure_peripherals(self._peripherals)
 
             print("Load successful.")
             print(f"{self._emulator}")

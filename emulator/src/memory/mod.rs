@@ -548,6 +548,9 @@ impl Bus {
                 for MemoryMappedPeripheral { range, peripheral } in
                     self.peripherals.iter()
                 {
+                    tracing::trace!(
+                        "Checking peripheral mapped to {range:?}"
+                    );
                     if range.contains(&addr) {
                         let offset = addr - range.start();
 
