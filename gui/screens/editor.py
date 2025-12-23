@@ -28,9 +28,7 @@ turn_on:
     STR R1, [R0, #0x14] @ Write to ODR (Offset 20)
 
     @ Restore return address
-    POP {LR}
-    BX LR
-    @ Or just POP {PC}
+    POP {PC}
 
 turn_off:
     PUSH {LR}
