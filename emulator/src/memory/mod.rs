@@ -332,6 +332,12 @@ impl Bus {
         self.sram.reserve_exact(size as _);
         self.sram.resize(self.sram.capacity(), 0);
     }
+
+    pub fn reserve_exact_sram(&mut self, size: u32) {
+        if size as usize > self.sram.len() {
+            self.reserve_sram(size - self.sram.len() as u32);
+        }
+    }
 }
 
 impl Bus {

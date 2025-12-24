@@ -10,6 +10,7 @@ impl ExecutableInstruction for BranchInstruction {
     ) -> Result<(), ExecutionError> {
         // Step 1: Handle the "Link" operation for BL instructions.
         if self.l() == LinkFlag::Yes {
+            tracing::trace!("Linking branch instruction");
             let return_address = emulator.cpu.pc().wrapping_add(4);
             emulator.cpu.set_lr(return_address);
         }
@@ -50,6 +51,7 @@ impl ExecutableInstruction for BranchInstruction {
             (base_address as i64 + byte_offset as i64) as u32;
         // base_address.wrapping_add(byte_offset as _);
 
+        tracing::trace!("Branching to address: 0x{:08X}", target_address);
         emulator.cpu.set_pc(target_address);
 
         Ok(())

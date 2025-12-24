@@ -11,8 +11,9 @@ use crate::{
     },
     execution::{ExecutableInstruction, ExecutionError},
     instructions::{
-        BlockDataTransferInstruction, BranchInstruction,
-        BreakpointInstruction, DataProcessingInstruction, Instruction,
+        BlockDataTransferInstruction, BranchExchangeInstruction,
+        BranchInstruction, BreakpointInstruction,
+        DataProcessingInstruction, Instruction,
         InstructionConversionError, MemoryAccessInstruction,
         SupervisorCallInstruction, fields::Condition,
     },
@@ -58,27 +59,25 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn load_program(
+    pub fn load_program_with_sram_size(
         &mut self,
         code: &[u8],
         sram: Option<&[u8]>,
         external: Option<&[u8]>,
+        sram_size: u32,
     ) {
         self.reset();
         self.load_code(code);
         if let Some(sram) = sram {
             self.load_sram(sram);
         }
-        self.memory_bus.reserve_sram(
-            (Bus::SRAM_SIZE as usize
-                - if let Some(sram) = sram { sram.len() } else { 0 })
-                as u32,
-        );
+        self.memory_bus.reserve_exact_sram(sram_size);
+
         if let Some(external) = external {
             self.load_external(external);
         }
 
-        let sram_end = memory::Bus::SRAM_BEGIN
+        let sram_end = Bus::SRAM_BEGIN
             + (self.memory_bus.get_read_write_memory_view().len() as u32);
         self.cpu.set_sp(sram_end);
         tracing::trace!(
@@ -87,6 +86,20 @@ impl Emulator {
         );
 
         tracing::info!("Loaded program. SP reset to {:#X}", self.cpu.sp());
+    }
+
+    pub fn load_program(
+        &mut self,
+        code: &[u8],
+        sram: Option<&[u8]>,
+        external: Option<&[u8]>,
+    ) {
+        self.load_program_with_sram_size(
+            code,
+            sram,
+            external,
+            Bus::SRAM_SIZE,
+        );
     }
 
     pub fn load_code(&mut self, code: &[u8]) {
@@ -383,6 +396,9 @@ impl Emulator {
             Instruction::Branch(instr) => {
                 self.execute_branch_instruction(instr)?;
             }
+            Instruction::BranchExchange(instr) => {
+                self.execute_branch_exchange_instruction(instr)?;
+            }
             Instruction::SupervisorCall(instr) => {
                 self.execute_supervisor_call_instruction(instr)?;
             }
@@ -426,6 +442,14 @@ impl Emulator {
         instr: BranchInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Branch instruction: {instr:?}");
+        instr.execute_with(self)
+    }
+
+    fn execute_branch_exchange_instruction(
+        &mut self,
+        instr: BranchExchangeInstruction,
+    ) -> Result<(), ExecutionError> {
+        tracing::trace!("Branch exchange instruction: {instr:?}");
         instr.execute_with(self)
     }
 

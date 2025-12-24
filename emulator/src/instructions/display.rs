@@ -1,9 +1,9 @@
 use std::fmt;
 
 use super::{
-    BlockDataTransferInstruction, BranchInstruction,
-    BreakpointInstruction, DataProcessingInstruction, Instruction,
-    MemoryAccessInstruction, SupervisorCallInstruction,
+    BlockDataTransferInstruction, BranchExchangeInstruction,
+    BranchInstruction, BreakpointInstruction, DataProcessingInstruction,
+    Instruction, MemoryAccessInstruction, SupervisorCallInstruction,
 };
 
 impl fmt::Display for DataProcessingInstruction {
@@ -19,6 +19,12 @@ impl fmt::Display for MemoryAccessInstruction {
 }
 
 impl fmt::Display for BranchInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
+impl fmt::Display for BranchExchangeInstruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
     }
@@ -48,6 +54,7 @@ impl fmt::Display for Instruction {
             Self::DataProcessing(inst) => write!(f, "{inst}"),
             Self::MemoryAccess(inst) => write!(f, "{inst}"),
             Self::Branch(inst) => write!(f, "{inst}"),
+            Self::BranchExchange(inst) => write!(f, "{inst}"),
             Self::BlockDataTransfer(inst) => write!(f, "{inst}"),
             Self::SupervisorCall(inst) => write!(f, "{inst}"),
             Self::Breakpoint(inst) => write!(f, "{inst}"),

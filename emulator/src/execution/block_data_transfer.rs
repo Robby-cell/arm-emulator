@@ -50,6 +50,11 @@ impl ExecutableInstruction for BlockDataTransferInstruction {
         if is_load {
             for i in 0..16 {
                 if (register_list >> i) & 1 == 1 {
+                    tracing::trace!(
+                        "Loading register R{} from address: 0x{:08X}",
+                        i,
+                        current_address
+                    );
                     let value = emulator.read32(current_address)?;
                     emulator.cpu.set_register(i, value);
 
@@ -59,6 +64,11 @@ impl ExecutableInstruction for BlockDataTransferInstruction {
         } else {
             for i in 0..16 {
                 if (register_list >> i) & 1 == 1 {
+                    tracing::trace!(
+                        "Storing register R{} to address: 0x{:08X}",
+                        i,
+                        current_address
+                    );
                     let value = emulator.cpu.register(i);
                     emulator.write32(current_address, value)?;
 
@@ -83,6 +93,7 @@ impl ExecutableInstruction for BlockDataTransferInstruction {
 
         // Handle Write-back (update base register)
         if self.w() == WriteBackFlag::Write {
+            tracing::trace!("Writing back base register {:?}", rn);
             let new_base = match self.u() {
                 UpDownFlag::Add => base_address.wrapping_add(total_bytes),
                 UpDownFlag::Sub => base_address.wrapping_sub(total_bytes),

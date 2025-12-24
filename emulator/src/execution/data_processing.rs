@@ -167,6 +167,10 @@ impl ExecutableInstruction for DataProcessingInstruction {
         &self,
         emulator: &mut Emulator,
     ) -> Result<(), ExecutionError> {
+        tracing::trace!(
+            "Data processing instruction: {:?}",
+            self.opcode()
+        );
         match self.opcode() {
             // Arithmetic Opcodes
             Opcode::ADD => self.execute_arithmetic_op(

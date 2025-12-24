@@ -205,6 +205,7 @@ pub struct SupervisorCallInstruction {
 
 assert_u32_sized!(SupervisorCallInstruction);
 
+/// Represents a Breakpoint instruction.
 #[bitfield]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
@@ -220,6 +221,23 @@ pub struct BreakpointInstruction {
 }
 
 assert_u32_sized!(BreakpointInstruction);
+
+#[bitfield]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+#[repr(C)]
+pub struct BranchExchangeInstruction {
+    pub rm: Register, // Bits 0-3: The register containing the target address
+    #[skip]
+    _should_be_1: B4, // Bits 4-7: Always 0001
+    #[skip]
+    _should_be_fff: B12, // Bits 8-19: Always 1111 1111 1111
+    #[skip]
+    _should_be_12: B8, // Bits 20-27: Always 0001 0010
+    pub cond: Condition, // Bits 28-31
+}
+
+assert_u32_sized!(BranchExchangeInstruction);
 
 /// Represents an ARM instruction, which can be one of several types:
 /// [Data Processing](DataProcessingInstruction), [Memory Access](MemoryAccessInstruction),
@@ -260,6 +278,7 @@ pub enum Instruction {
     MemoryAccess(MemoryAccessInstruction),
     BlockDataTransfer(BlockDataTransferInstruction),
     Branch(BranchInstruction),
+    BranchExchange(BranchExchangeInstruction),
     SupervisorCall(SupervisorCallInstruction),
     Breakpoint(BreakpointInstruction),
 }
@@ -271,6 +290,7 @@ impl Instruction {
             Instruction::MemoryAccess(inst) => inst.cond(),
             Instruction::BlockDataTransfer(inst) => inst.cond(),
             Instruction::Branch(inst) => inst.cond(),
+            Instruction::BranchExchange(inst) => inst.cond(),
             Instruction::SupervisorCall(inst) => inst.cond(),
             Instruction::Breakpoint(_inst) => Condition::AL,
         }
@@ -290,6 +310,15 @@ impl TryFrom<u32> for Instruction {
     fn try_from(raw_instruction: u32) -> Result<Self, Self::Error> {
         if (raw_instruction & 0x0FF000F0) == 0x01200070 {
             return Ok(Instruction::Breakpoint(raw_instruction.into()));
+        }
+
+        // Pattern: cond 0001 0010 1111 1111 1111 0001 Rm
+        // Mask:    0x0F FF FF F0
+        // Value:   0x01 2F FF 10
+        if (raw_instruction & 0x0FFFFFF0) == 0x012FFF10 {
+            return Ok(Instruction::BranchExchange(
+                raw_instruction.into(),
+            ));
         }
 
         // Check bits [27:25] to identify the instruction class. This is how the
@@ -338,6 +367,7 @@ impl From<Instruction> for u32 {
             Instruction::MemoryAccess(instr) => instr.into(),
             Instruction::BlockDataTransfer(instr) => instr.into(),
             Instruction::Branch(instr) => instr.into(),
+            Instruction::BranchExchange(instr) => instr.into(),
             Instruction::SupervisorCall(instr) => instr.into(),
             Instruction::Breakpoint(instr) => instr.into(),
         }
