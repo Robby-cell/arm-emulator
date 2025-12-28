@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QTabWidget,
     QToolBar,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -24,6 +25,7 @@ from .screens.disassembly import DisassemblyScreen
 from .screens.editor import EditorScreen
 from .screens.memory_view import MemoryViewScreen
 from .widgets.cpu_panel import CpuPanel
+from .widgets.title_bar import TitleBar
 
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
@@ -72,7 +74,13 @@ class MainWindow(QMainWindow):
         flags: Qt.WindowType = Qt.WindowType.Window,
     ) -> None:
         super().__init__(parent=parent, flags=flags)
-        self.setWindowTitle("ARM Emulator")
+
+        # Setup title bar
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.title_bar = TitleBar("ARM Emulator", self)
+        # self.layout.addWidget(self.title_bar)
+        # self.setWindowTitle("ARM Emulator")
 
         self._translator = QTranslator()
         QCoreApplication.instance().installTranslator(self._translator)  # type: ignore : not None
@@ -111,6 +119,16 @@ class MainWindow(QMainWindow):
         self._cpu_panel = CpuPanel(emulator=self._emulator)
 
     def _init_layout(self) -> None:
+        self._root_widget = QWidget(self)
+        self._root_layout = QVBoxLayout(self._root_widget)
+
+        self._root_layout.setSpacing(0)
+        self._root_widget.setLayout(self._root_layout)
+
+        self._root_layout.addWidget(self.title_bar, 0)
+        self._root_layout.addWidget(self._menu, 0)
+        self._root_layout.addWidget(self.toolbar, 0)
+
         # Create a horizontal splitter
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -123,8 +141,9 @@ class MainWindow(QMainWindow):
         # Set initial sizes (Give most space to the tabs)
         self._main_splitter.setSizes([800, 250])
         self._main_splitter.setCollapsible(1, True)  # Allow CPU panel to be hidden
+        self._root_layout.addWidget(self._main_splitter, 1)
 
-        self.setCentralWidget(self._main_splitter)
+        self.setCentralWidget(self._root_widget)
 
     def _init_toolbar(self) -> None:
         self.toolbar = QToolBar(self.tr("Main Toolbar"))
@@ -133,7 +152,7 @@ class MainWindow(QMainWindow):
         )  # Slightly smaller icon for balance with text
         self.toolbar.setMovable(False)
         self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
+        # self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolbar)
 
         run_icon = create_themed_icon(RUN_ICON, "#4CAF50")  # Green
         debug_icon = create_themed_icon(DEBUG_ICON, "#FFC107")  # Amber/Yellow
@@ -253,15 +272,17 @@ class MainWindow(QMainWindow):
 
     # Menu
     def _init_menu(self) -> None:
-        menu_bar: QMenuBar = self.menuBar()  # type: ignore : not None
+        self._menu: QMenuBar = QMenuBar()
+        self._menu.setNativeMenuBar(False)
+        self._menu.setContentsMargins(0, 0, 0, 0)
 
-        self._file_menu: QMenu = menu_bar.addMenu(self.tr("&File"))  # type: ignore : not None
+        self._file_menu: QMenu = self._menu.addMenu(self.tr("&File"))  # type: ignore : not None
         self._build_file_menu()
 
-        self._build_menu: QMenu = menu_bar.addMenu(self.tr("&Build"))  # type: ignore : not None
+        self._build_menu: QMenu = self._menu.addMenu(self.tr("&Build"))  # type: ignore : not None
         self._build_build_menu_actions()
 
-        self._language_menu: QMenu = menu_bar.addMenu(self.tr("&Language"))  # type: ignore : not None
+        self._language_menu: QMenu = self._menu.addMenu(self.tr("&Language"))  # type: ignore : not None
         self._build_language_menu()
 
     def _build_build_menu_actions(self) -> None:
