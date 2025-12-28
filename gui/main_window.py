@@ -388,8 +388,13 @@ class MainWindow(QMainWindow):
 
     def _set_styling(self) -> None:
         self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e1e;
+                color: #f0f0f0;
+            }
             QMainWindow {
                 background-color: #2b2b2b;
+                color: white;
             }
             QToolBar {
                 background-color: #3c3f41;

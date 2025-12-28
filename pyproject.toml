@@ -13,7 +13,8 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "keystone-engine>=0.9.2",
-    "pyqt6>=6.7.1"
+    "pyqt6>=6.7.1",
+    "pyqtdarktheme>=2.1.0",
 ]
 [tool.maturin]
 features = ["pyo3/extension-module"]
