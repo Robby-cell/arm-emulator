@@ -7,7 +7,22 @@ from ..widgets.code_editor import CodeEditor
 from ..widgets.peripherals_panel import PeripheralsPanel
 
 DEFAULT_ASM = r"""_start:
-    B main
+    MOV R2, #0
+
+loop:
+    LDR R0, =led0
+    BL turn_on
+
+    LDR R0, =led0
+    BL turn_off
+
+    ADD R2, R2, #1
+    CMP R2, #0x3
+    BNE loop
+
+    MOV R7, #1 @ Exit syscall
+    MOV R0, #0 @ Exit code 0
+    SVC 0      @ Supervisor call
 
 turn_on:
     @ Save return address
@@ -31,8 +46,6 @@ turn_on:
     POP {PC}
 
 turn_off:
-    PUSH {LR}
-
     @ 1. Configure PA5 as Output
     MOV R1, #0x400
     STR R1, [R0]        @ Write to MODER (Offset 0)
@@ -41,25 +54,9 @@ turn_off:
     MOV R1, #0x00
     STR R1, [R0, #0x14] @ Write to ODR (Offset 20)
 
-    POP {PC}
-
-main:
-    MOV R2, #0
-
-loop:
-    LDR R0, =led0
-    BL turn_on
-
-    LDR R0, =led0
-    BL turn_off
-
-    ADD R2, R2, #1
-    CMP R2, #0x3
-    BNE loop
-
-    MOV R7, #1 @ Exit syscall
-    MOV R0, #0 @ Exit code 0
-    SVC 0      @ Supervisor call
+    @ Or just use BX to return,
+    @ since we don't need to restore LR, as we had no need to save it
+    BX LR
 
 """
 

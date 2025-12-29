@@ -134,6 +134,16 @@
         <source>Assembler Error</source>
         <translation>Błąd asemblera</translation>
     </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="407"/>
+        <source>Failed to assemble code:</source>
+        <translation>Nie udało się złożyć kodu:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="414"/>
+        <source>An unexpected error occurred:</source>
+        <translation>Wystąpił nieoczekiwany błąd:</translation>
+    </message>
 </context>
 <context>
     <name>MemoryViewScreen</name>
@@ -163,131 +173,108 @@
 <context>
     <name>PeripheralsPanel</name>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="149"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="366"/>
-        <source>Type:</source>
-        <translation>Typ:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="150"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="370"/>
-        <source>Instance Name:</source>
-        <translation>Nazwa instancji:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="151"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="374"/>
-        <source>Begin Address:</source>
-        <translation>Adres początkowy:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="152"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="378"/>
-        <source>End Address:</source>
-        <translation>Adres końcowy:</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="155"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="381"/>
-        <source>Add Peripheral</source>
-        <translation>Dodaj urządzenie peryferyjne</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="156"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="382"/>
-        <source>Delete Selected</source>
-        <translation>Usuń wybrane</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="177"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="387"/>
-        <source>Type</source>
-        <translation>Typ</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="178"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="388"/>
-        <source>Name</source>
-        <translation>Nazwa</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="179"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="389"/>
-        <source>Memory Range</source>
-        <translation>Zakres pamięci</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="180"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="390"/>
-        <source>State</source>
-        <translation>Państwo</translation>
-    </message>
-    <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="252"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="261"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="269"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="241"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="250"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="258"/>
         <source>Input Error</source>
         <translation>Błąd wprowadzania</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="253"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="242"/>
         <source>All fields must be filled with valid values.</source>
         <translation>Wszystkie pola muszą być wypełnione prawidłowymi wartościami.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="262"/>
-        <source>Peripheral name &apos;{p_name}&apos; already exists.</source>
-        <translation>Nazwa urządzenia peryferyjnego „{p_name}” już istnieje.</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="251"/>
+        <source>Peripheral name &apos;{}&apos; already exists.</source>
+        <translation>Nazwa urządzenia peryferyjnego „{}” już istnieje.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="270"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="259"/>
         <source>Start address must not be greater than end address.</source>
         <translation>Adres początkowy nie może być większy niż adres końcowy.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="280"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="269"/>
         <source>Memory addresses must be within the valid range:
-{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}</source>
+{} - {}</source>
         <translation>Adresy pamięci muszą mieścić się w prawidłowym zakresie:
-{szesnastkowy (VALID_MEMORY_BEGIN)} - {szesnastkowy (VALID_MEMORY_END)}</translation>
+{} - {}</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="282"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="271"/>
         <source>Address Out of Range</source>
         <translation>Adres poza zakresem</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="289"/>
-        <source>The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) overlaps with an existing peripheral&apos;s range ({hex(exist_start)} - {hex(exist_end)}).</source>
-        <translation>Proponowany zakres pamięci ({hex(start_addr)} - {hex(end_addr)}) pokrywa się z zakresem istniejącego urządzenia peryferyjnego ({hex(exist_start)} - ​​{hex(exist_end)}).</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="278"/>
+        <source>The proposed memory range ({} - {}) overlaps with an existing peripheral&apos;s range ({} - {}).</source>
+        <translation>Proponowany zakres pamięci ({} - {}) pokrywa się z zakresem istniejącego urządzenia peryferyjnego ({} - {}).</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="293"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="284"/>
         <source>Memory Overlap</source>
         <translation>Nakładanie się pamięci</translation>
     </message>
-</context>
-<context>
-    <name>translator</name>
     <message>
-        <location filename="../../gui/language.py" line="9"/>
-        <source>English</source>
-        <translation>angielski</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="359"/>
+        <source>Type:</source>
+        <translation>Typ:</translation>
     </message>
     <message>
-        <location filename="../../gui/language.py" line="10"/>
-        <source>Русский</source>
-        <translation>Rosyjski</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="365"/>
+        <source>Instance Name:</source>
+        <translation>Nazwa instancji:</translation>
     </message>
     <message>
-        <location filename="../../gui/language.py" line="11"/>
-        <source>Polski</source>
-        <translation>Polski</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="369"/>
+        <source>Begin Address:</source>
+        <translation>Adres początkowy:</translation>
     </message>
     <message>
-        <location filename="../../gui/language.py" line="12"/>
-        <source>Español</source>
-        <translation>hiszpański</translation>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="373"/>
+        <source>End Address:</source>
+        <translation>Adres końcowy:</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="376"/>
+        <source>Add Peripheral</source>
+        <translation>Dodaj urządzenie peryferyjne</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="377"/>
+        <source>Delete Selected</source>
+        <translation>Usuń wybrane</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="382"/>
+        <source>Type</source>
+        <translation>Typ</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="383"/>
+        <source>Name</source>
+        <translation>Nazwa</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="384"/>
+        <source>Memory Range</source>
+        <translation>Zakres pamięci</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="385"/>
+        <source>State</source>
+        <translation>Państwo</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="390"/>
+        <source>Valid address between {} ({}) and {} ({})</source>
+        <translation>Prawidłowy adres pomiędzy {} ({}) a {} ({})</translation>
+    </message>
+    <message>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="400"/>
+        <source>Hex or Decimal</source>
+        <translation>Szesnastkowy lub dziesiętny</translation>
     </message>
 </context>
 </TS>

@@ -145,41 +145,30 @@ class PeripheralsPanel(QWidget):
 
         self._add_peripheral_entry(get_default_peripheral())
 
+        self.retranslateUi()
+
     def setupUI(self) -> None:
-        self._form_layout.addRow(self.tr("Type:"), self._type_combo)
-        self._form_layout.addRow(self.tr("Instance Name:"), self._name_input)
-        self._form_layout.addRow(self.tr("Begin Address:"), self._begin_addr_input)
-        self._form_layout.addRow(self.tr("End Address:"), self._end_addr_input)
+        self._form_layout.addRow("Type:", self._type_combo)
+        self._form_layout.addRow("Instance Name:", self._name_input)
+        self._form_layout.addRow("Begin Address:", self._begin_addr_input)
+        self._form_layout.addRow("End Address:", self._end_addr_input)
         self._type_combo.addItems(PERIPHERAL_REGISTRY.keys())
 
-        self._add_button.setText(self.tr("Add Peripheral"))
-        self._delete_button.setText(self.tr("Delete Selected"))
+        self._add_button.setText("")
+        self._delete_button.setText("")
 
         name_regex = QRegularExpression("^[a-zA-Z_][a-zA-Z0-9_]*$")
         name_validator = QRegularExpressionValidator(name_regex)
         self._name_input.setValidator(name_validator)
         self._name_input.setPlaceholderText("e.g. LED_BANK (No spaces)")
 
-        addr_tooltip_text = f"Valid address between {hex(VALID_MEMORY_BEGIN)} ({VALID_MEMORY_BEGIN}) and {hex(VALID_MEMORY_END)} ({VALID_MEMORY_END})"
         hex_regex = QRegularExpression("^(0x)?[0-9a-fA-F]+$")
         hex_validator = QRegularExpressionValidator(hex_regex)
         self._begin_addr_input.setValidator(hex_validator)
         self._end_addr_input.setValidator(hex_validator)
-        self._begin_addr_input.setPlaceholderText("Hex or Decimal")
-        self._end_addr_input.setPlaceholderText("Hex or Decimal")
-
-        self._begin_addr_input.setToolTip(addr_tooltip_text)
-        self._end_addr_input.setToolTip(addr_tooltip_text)
 
         self._peripheral_table.setColumnCount(4)
-        self._peripheral_table.setHorizontalHeaderLabels(
-            [
-                self.tr("Type"),
-                self.tr("Name"),
-                self.tr("Memory Range"),
-                self.tr("State"),
-            ]
-        )
+
         header = self._peripheral_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore
@@ -259,7 +248,7 @@ class PeripheralsPanel(QWidget):
                 QMessageBox.warning(
                     self,
                     self.tr("Input Error"),
-                    self.tr(f"Peripheral name '{p_name}' already exists."),
+                    self.tr("Peripheral name '{}' already exists.").format(p_name),
                 )
                 return
 
@@ -277,8 +266,8 @@ class PeripheralsPanel(QWidget):
             and VALID_MEMORY_BEGIN <= end_addr <= VALID_MEMORY_END
         ):
             msg = self.tr(
-                f"Memory addresses must be within the valid range:\n{hex(VALID_MEMORY_BEGIN)} - {hex(VALID_MEMORY_END)}"
-            )
+                "Memory addresses must be within the valid range:\n{} - {}"
+            ).format(hex(VALID_MEMORY_BEGIN), hex(VALID_MEMORY_END))
             QMessageBox.warning(self, self.tr("Address Out of Range"), msg)
             return
 
@@ -286,9 +275,11 @@ class PeripheralsPanel(QWidget):
             # Classic interval overlap check
             if start_addr <= exist_end and end_addr >= exist_start:
                 msg = self.tr(
-                    f"The proposed memory range ({hex(start_addr)} - {hex(end_addr)}) "
-                    f"overlaps with an existing peripheral's range "
-                    f"({hex(exist_start)} - {hex(exist_end)})."
+                    "The proposed memory range ({} - {}) "
+                    "overlaps with an existing peripheral's range "
+                    "({} - {})."
+                ).format(
+                    hex(start_addr), hex(end_addr), hex(exist_start), hex(exist_end)
                 )
                 QMessageBox.warning(self, self.tr("Memory Overlap"), msg)
                 return
@@ -361,9 +352,13 @@ class PeripheralsPanel(QWidget):
         """Refreshes all visible text."""
         # 1. Update Form Labels
         # QFormLayout.labelForField returns the QLabel associated with the input widget
+
         type_label = self._form_layout.labelForField(self._type_combo)
         if type_label is not None:
+            print("Type label")
             type_label.setText(self.tr("Type:"))
+        else:
+            print("No Type label")
 
         name_label = self._form_layout.labelForField(self._name_input)
         if name_label:
@@ -390,3 +385,18 @@ class PeripheralsPanel(QWidget):
                 self.tr("State"),
             ]
         )
+
+        # 4. Update tooltips
+        addr_tooltip = self.tr("Valid address between {} ({}) and {} ({})").format(
+            hex(VALID_MEMORY_BEGIN),
+            VALID_MEMORY_BEGIN,
+            hex(VALID_MEMORY_END),
+            VALID_MEMORY_END,
+        )
+        self._begin_addr_input.setToolTip(addr_tooltip)
+        self._end_addr_input.setToolTip(addr_tooltip)
+
+        # 5. Update placeholder text
+        placeholder_text = self.tr("Hex or Decimal")
+        self._begin_addr_input.setPlaceholderText(placeholder_text)
+        self._end_addr_input.setPlaceholderText(placeholder_text)

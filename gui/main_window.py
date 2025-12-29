@@ -404,14 +404,14 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 self.tr("Assembler Error"),
-                f"{self.tr('Failed to assemble code:')}\n{e}",
+                "{}\n{}".format(self.tr("Failed to assemble code:"), e),
             )
             return False
         except Exception as e:
             QMessageBox.critical(
                 self,
                 self.tr("Assembler Error"),
-                f"{self.tr('An unexpected error occurred:')}\n{e}",
+                "{}\n{}".format(self.tr("An unexpected error occurred:"), e),
             )
             return False
 
