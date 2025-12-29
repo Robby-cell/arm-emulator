@@ -20,4 +20,9 @@ dependencies = [
 features = ["pyo3/extension-module"]
 
 [dependency-groups]
-dev = ["pyinstaller>=6.16.0"]
+dev = [
+    "deep-translator>=1.11.4",
+    "lxml>=6.0.2",
+    "pyinstaller>=6.16.0",
+    "pyside6>=6.6.3.1",
+]

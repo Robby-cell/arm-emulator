@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from arm_emulator_rs import Emulator  # type: ignore : import exists
@@ -300,7 +301,7 @@ class MainWindow(QMainWindow):
     def _build_language_menu(self) -> None:
         for lang, code in get_languages_and_codes(self):
             action = QAction(lang, self)
-            action.triggered.connect(lambda: self.load_language(code))
+            action.triggered.connect(lambda checked, c=code: self.load_language(c))
             self._language_menu.addAction(action)
 
     def load_language(self, lang_code: str):
@@ -310,10 +311,22 @@ class MainWindow(QMainWindow):
 
         app.removeTranslator(self._translator)  # type: ignore : not None
 
+        base_dir = os.path.abspath(os.getcwd())
+        file_path = os.path.join(
+            base_dir, "assets", "translations", f"app_{lang_code}.qm"
+        )
+
+        print(f"Attempting to load translation: {file_path}")
+
         self._translator = QTranslator()
         # Load the new .qm file
-        if self._translator.load(f"assets/translations/app_{lang_code}.qm"):
+        if self._translator.load(file_path):
             app.installTranslator(self._translator)
+            print(f"Successfully loaded language: {lang_code}")
+        else:
+            print(f"FAILED to load language file: {file_path}")
+            # Optional: Fallback to English or show an error
+            return
 
         self.retranslateUI()
 
@@ -332,6 +345,7 @@ class MainWindow(QMainWindow):
 
         # Toolbar
         self.toolbar.setWindowTitle(self.tr("Main Toolbar"))
+        self.build_action.setText(self.tr("Build"))
         self.run_action.setText(self.tr("Run"))
         self.debug_action.setText(self.tr("Debug"))
         self.stop_action.setText(self.tr("Stop"))
@@ -342,6 +356,10 @@ class MainWindow(QMainWindow):
         self.tabs.setTabText(0, self.tr("Editor"))
         self.tabs.setTabText(1, self.tr("Memory View"))
         self.tabs.setTabText(2, self.tr("Disassembly"))
+
+        self._editor.retranslateUi()
+        self._memory_view.retranslateUi()
+        self._cpu_panel.retranslateUi()
 
     def _load_file_selected(self) -> None:
         dialog = QFileDialog(self)

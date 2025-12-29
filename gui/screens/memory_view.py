@@ -41,7 +41,7 @@ class MemoryViewScreen(QWidget):
         self._controls_widget = QWidget()
         self._controls_layout = QHBoxLayout(self._controls_widget)
         self._address_input = QLineEdit()
-        self._go_button = QPushButton("Go")
+        self._go_button = QPushButton(self.tr("Go"))
         self._table = QTableWidget()
 
         self.setupUI()
@@ -52,7 +52,8 @@ class MemoryViewScreen(QWidget):
 
     def setupUI(self) -> None:
         self.setLayout(self._layout)
-        self._controls_layout.addWidget(QLabel("Go to Address:"))
+        self._go_label = QLabel(self.tr("Go to Address:"))
+        self._controls_layout.addWidget(self._go_label)
         self._controls_layout.addWidget(self._address_input)
         self._controls_layout.addWidget(self._go_button)
         self._address_input.setPlaceholderText("e.g., 0x20000000")
@@ -97,8 +98,8 @@ class MemoryViewScreen(QWidget):
         if address is None:
             QMessageBox.warning(
                 self,
-                "Invalid Address",
-                "Please enter a valid decimal or hexadecimal address.",
+                self.tr("Invalid Address"),
+                self.tr("Please enter a valid decimal or hexadecimal address."),
             )
             return
         self._current_address = address - (address % self.BYTES_PER_ROW)
@@ -155,3 +156,9 @@ class MemoryViewScreen(QWidget):
             # Set the final ASCII item
             ascii_item = QTableWidgetItem(ascii_representation)
             self._table.setItem(row, self.BYTES_PER_ROW + 1, ascii_item)
+
+    def retranslateUi(self) -> None:
+        if hasattr(self, "_go_label"):
+            self._go_label.setText(self.tr("Go to Address:"))
+
+        self._go_button.setText(self.tr("Go"))

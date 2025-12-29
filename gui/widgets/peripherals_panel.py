@@ -356,3 +356,37 @@ class PeripheralsPanel(QWidget):
             if hasattr(p.instance, "is_led_on"):
                 is_on = p.instance.is_led_on()
                 p.led_widget.set_state(is_on)
+
+    def retranslateUi(self):
+        """Refreshes all visible text."""
+        # 1. Update Form Labels
+        # QFormLayout.labelForField returns the QLabel associated with the input widget
+        type_label = self._form_layout.labelForField(self._type_combo)
+        if type_label is not None:
+            type_label.setText(self.tr("Type:"))
+
+        name_label = self._form_layout.labelForField(self._name_input)
+        if name_label:
+            name_label.setText(self.tr("Instance Name:"))
+
+        start_label = self._form_layout.labelForField(self._begin_addr_input)
+        if start_label:
+            start_label.setText(self.tr("Begin Address:"))
+
+        end_label = self._form_layout.labelForField(self._end_addr_input)
+        if end_label:
+            end_label.setText(self.tr("End Address:"))
+
+        # 2. Update Buttons
+        self._add_button.setText(self.tr("Add Peripheral"))
+        self._delete_button.setText(self.tr("Delete Selected"))
+
+        # 3. Update Table Headers
+        self._peripheral_table.setHorizontalHeaderLabels(
+            [
+                self.tr("Type"),
+                self.tr("Name"),
+                self.tr("Memory Range"),
+                self.tr("State"),
+            ]
+        )

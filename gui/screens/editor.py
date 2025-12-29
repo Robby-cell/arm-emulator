@@ -94,3 +94,6 @@ class EditorScreen(QWidget):
     def get_code(self) -> str:
         """A method to allow the MainWindow to retrieve the code."""
         return self._editor.toPlainText()
+
+    def retranslateUi(self) -> None:
+        self._peripherals.retranslateUi()

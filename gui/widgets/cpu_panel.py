@@ -34,7 +34,8 @@ class CpuPanel(QWidget):
 
     def setupUI(self) -> None:
         # 1. Registers Group
-        reg_group = QGroupBox(self.tr("Registers"))
+        self._register_group = QGroupBox(self.tr("Registers"))
+        reg_group = self._register_group
         reg_layout = QGridLayout()
         reg_group.setLayout(reg_layout)
 
@@ -62,7 +63,8 @@ class CpuPanel(QWidget):
             reg_layout.addWidget(val_lbl, row, col + 1)
 
         # 2. Flags Group (CPSR)
-        flag_group = QGroupBox(self.tr("CPSR Flags"))
+        self._flag_group = QGroupBox(self.tr("CPSR Flags"))
+        flag_group = self._flag_group
         flag_layout = QHBoxLayout()
         flag_group.setLayout(flag_layout)
 
@@ -131,3 +133,7 @@ class CpuPanel(QWidget):
             label.setStyleSheet(base_style)
 
         self._last_flags = dict(current_flags)
+
+    def retranslateUi(self) -> None:
+        self._register_group.setTitle(self.tr("Registers"))
+        self._flag_group.setTitle(self.tr("CPSR Flags"))
