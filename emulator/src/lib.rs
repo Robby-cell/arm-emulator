@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::{
     cpu::{
-        Cpu, ExecutionState,
+        Cpu, ExecutionState, ExitStatus,
         registers::{self, PC},
     },
     execution::{ExecutableInstruction, ExecutionError},
@@ -311,7 +311,17 @@ impl Emulator {
     /// Has it returned from the main/_start function?
     #[must_use]
     pub fn is_done(&self) -> bool {
-        true
+        matches!(self.cpu.state, ExecutionState::FinishedExecution(_))
+    }
+
+    #[must_use]
+    pub fn get_exit_status(&self) -> Option<ExitStatus> {
+        match &self.cpu.state {
+            ExecutionState::FinishedExecution(status) => {
+                Some(status.clone())
+            }
+            _ => None,
+        }
     }
 
     /// Fetch the instruction at the address of the current PC value
@@ -395,15 +405,21 @@ impl Emulator {
             }
             Instruction::Branch(instr) => {
                 self.execute_branch_instruction(instr)?;
+                // We must NOT auto-increment, even if the branch target is the same as current PC.
+                return Ok(());
             }
             Instruction::BranchExchange(instr) => {
                 self.execute_branch_exchange_instruction(instr)?;
+                // BX instructions determine the next PC explicitly.
+                return Ok(());
             }
             Instruction::SupervisorCall(instr) => {
                 self.execute_supervisor_call_instruction(instr)?;
             }
             Instruction::Breakpoint(instr) => {
                 self.execute_breakpoint_instruction(instr)?;
+                // Breakpoints shouldn't advance PC either (they halt).
+                return Ok(());
             }
         }
         if self.cpu.pc() == original_pc {
@@ -458,7 +474,7 @@ impl Emulator {
         instr: SupervisorCallInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Supervisor call instruction: {instr:?}");
-        Ok(())
+        instr.execute_with(self)
     }
 
     fn execute_breakpoint_instruction(

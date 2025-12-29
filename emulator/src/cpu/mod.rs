@@ -368,6 +368,7 @@ impl Cpu {
     pub fn reset(&mut self) {
         self.reset_registers();
         self.reset_cpsr();
+        self.state = ExecutionState::Halted;
     }
 
     /// Zeroes all registers.

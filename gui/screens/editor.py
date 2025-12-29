@@ -54,8 +54,12 @@ loop:
     BL turn_off
 
     ADD R2, R2, #1
-    CMP R2, #0x5
+    CMP R2, #0x3
     BNE loop
+
+    MOV R7, #1 @ Exit syscall
+    MOV R0, #0 @ Exit code 0
+    SVC 0      @ Supervisor call
 
 """
 

@@ -4,7 +4,7 @@ use std::{collections::HashMap, fmt, sync::Arc};
 
 use emulator::{
     Emulator,
-    cpu::Cpu,
+    cpu::{Cpu, ExitStatus},
     memory::{Bus, Endian, MemoryMappedPeripheral},
 };
 
@@ -37,6 +37,13 @@ impl PyEmulator {
                 sram_size,
                 external_size,
             ),
+        }
+    }
+
+    fn get_exit_code(&self) -> Option<i32> {
+        match self.emulator.get_exit_status() {
+            Some(ExitStatus { exit_code }) => Some(exit_code),
+            None => None,
         }
     }
 

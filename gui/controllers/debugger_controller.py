@@ -93,6 +93,11 @@ class DebuggerController(QObject):
                 # Otherwise, just do a normal step.
                 self._emulator.step()
 
+            exit_code = self._emulator.get_exit_code()
+            if exit_code is not None:
+                print(f"Program exited with code {exit_code}")
+                self.stop()
+
             # After a successful step, tell the UI to update everything.
             self.state_changed.emit()
             self._update_highlight()
