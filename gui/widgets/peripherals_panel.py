@@ -355,10 +355,7 @@ class PeripheralsPanel(QWidget):
 
         type_label = self._form_layout.labelForField(self._type_combo)
         if type_label is not None:
-            print("Type label")
             type_label.setText(self.tr("Type:"))
-        else:
-            print("No Type label")
 
         name_label = self._form_layout.labelForField(self._name_input)
         if name_label:
