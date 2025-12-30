@@ -164,11 +164,21 @@ class MainWindow(QMainWindow):
         reset_icon = create_themed_icon(RESET_ICON, "#9E9E9E")  # Gray
 
         self.build_action = QAction(build_icon, self.tr("Load"), self)
+        self.build_action.setShortcut("F7")
+
         self.run_action = QAction(run_icon, self.tr("Run"), self)
+        self.run_action.setShortcut("F5")
+
         self.debug_action = QAction(debug_icon, self.tr("Debug"), self)
+
         self.stop_action = QAction(stop_icon, self.tr("Stop"), self)
+        self.stop_action.setShortcut("Shift+F5")
+
         self.step_action = QAction(step_icon, self.tr("Step"), self)
+        self.step_action.setShortcut("F10")
+
         self.reset_action = QAction(reset_icon, self.tr("Reset"), self)
+        self.reset_action.setShortcut("Ctrl+R")
 
         self.toolbar.addAction(self.build_action)
         self.toolbar.addSeparator()
@@ -276,6 +286,7 @@ class MainWindow(QMainWindow):
     def _on_reset(self) -> None:
         """Slot to reset the emulator. Delegates directly to the controller."""
         self._debugger_controller.reset_emulator()
+        self._debugger_controller.set_running_but_halt_for_debugging()
 
     def _set_ready_for_debugging(self) -> None:
         self.step_action.setEnabled(True)
@@ -302,7 +313,6 @@ class MainWindow(QMainWindow):
     def _build_build_menu_actions(self) -> None:
         # Action for the menu
         self.build_action_menu = QAction(self.tr("Build and Load"), self)
-        self.build_action_menu.setShortcut("F7")  # Standard IDE shortcut
         self.build_action_menu.triggered.connect(self._on_build_and_load)
         self._build_menu.addAction(self.build_action_menu)
 
@@ -369,6 +379,13 @@ class MainWindow(QMainWindow):
         self.step_action.setText(self.tr("Step"))
         self.reset_action.setText(self.tr("Reset"))
 
+        self.build_action.setToolTip(self.tr("Assemble and Load (F7)"))
+        self.run_action.setToolTip(self.tr("Run (F5)"))
+        self.debug_action.setToolTip(self.tr("Prepare for Debugging"))
+        self.stop_action.setToolTip(self.tr("Stop Execution (Shift+F5)"))
+        self.step_action.setToolTip(self.tr("Step Instruction (F10)"))
+        self.reset_action.setToolTip(self.tr("Reset Emulator (Ctrl+R)"))
+
         # Tabs
         self.tabs.setTabText(0, self.tr("Editor"))
         self.tabs.setTabText(1, self.tr("Memory View"))
@@ -393,6 +410,7 @@ class MainWindow(QMainWindow):
         Helper: Gets code, Assembles it, and Loads it into the Emulator.
         Returns True if successful, False otherwise.
         """
+        self._debugger_controller.stop()
         code = self._editor.get_code()
         self._assembler.symbols.clear()
 
