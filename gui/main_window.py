@@ -3,9 +3,10 @@ from typing import Optional
 
 from arm_emulator_rs import Emulator  # type: ignore : import exists
 from keystone.keystone import KsError
-from PyQt6.QtCore import QByteArray, QCoreApplication, QSize, Qt, QTranslator
+from PyQt6.QtCore import QByteArray, QCoreApplication, QLocale, QSize, Qt, QTranslator
 from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import (
+    QApplication,
     QFileDialog,
     QMainWindow,
     QMenu,
@@ -327,6 +328,10 @@ class MainWindow(QMainWindow):
             print(f"FAILED to load language file: {file_path}")
             # Optional: Fallback to English or show an error
             return
+
+        locale = QLocale(lang_code)
+        direction = locale.textDirection()
+        QApplication.setLayoutDirection(direction)
 
         self.retranslateUI()
 
