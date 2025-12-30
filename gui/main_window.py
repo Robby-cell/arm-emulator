@@ -261,7 +261,24 @@ class MainWindow(QMainWindow):
             # The controller.load_program emits state_changed, so UI updates automatically.
 
     def _on_run(self) -> None:
-        """Assembles, loads, and then runs the code from the editor."""
+        """
+        F5 Action:
+        1. If paused (loaded & not halted): Resume execution.
+        2. If finished or not loaded: Assemble, Load, and Restart execution.
+        """
+        # If the program is loaded, we check the state of the CPU
+        if self._debugger_controller.is_program_loaded:
+            # If the CPU is NOT halted (meaning we are just paused/stepped),
+            # we simply resume the timer.
+            if not self._emulator.is_halted():
+                print("Resuming execution...")
+                self._debugger_controller.run()
+                return
+
+            # If self._emulator.is_halted() is True (e.g. SVC 0 exit),
+            # we fall through to the logic below to Re-Assemble and Restart.
+
+        # Standard Build & Run flow (Initial run, or Restart after finish)
         if self._assemble_and_load():
             print("Starting execution...")
             self.step_action.setEnabled(True)

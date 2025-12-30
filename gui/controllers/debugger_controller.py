@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 from arm_emulator_rs import (
     Emulator,  # type: ignore : import exists
@@ -23,6 +23,7 @@ class DebuggerController(QObject):
     error_occurred = pyqtSignal(str)  # Emits the error message
     _peripherals = []
     highlight_line = pyqtSignal(int)
+    _breakpoints: Set[int] = set()
 
     def __init__(self, emulator: Emulator, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -62,6 +63,7 @@ class DebuggerController(QObject):
         try:
             self._emulator.load_program(program.text, program.sram, program.external)
             self.configure_peripherals(self._peripherals)
+            self._set_breakpoints()
 
             print("Load successful.")
             print(f"{self._emulator}")
@@ -76,6 +78,11 @@ class DebuggerController(QObject):
         self.state_changed.emit()
         self._update_highlight()
 
+    def _set_breakpoints(self) -> None:
+        for line in self._breakpoints:
+            print(f"adding breakpoint at {self._source_map[line]}")
+            self._emulator.add_breakpoint_at(self._source_map[line])
+
     def set_running_but_halt_for_debugging(self) -> None:
         if self.is_running or not self.is_program_loaded:
             return
@@ -85,11 +92,16 @@ class DebuggerController(QObject):
 
     def run(self) -> None:
         """Starts continuous execution of the emulator."""
-        if self.is_running or not self.is_program_loaded:
+        if not self.is_program_loaded:
             return
 
-        self.set_running_but_halt_for_debugging()
-        self._run_timer.start(0)  # 0ms interval runs as fast as the event loop allows
+        if self.is_running:
+            self._run_timer.start(0)
+        else:
+            self.set_running_but_halt_for_debugging()
+            self._run_timer.start(
+                0
+            )  # 0ms interval runs as fast as the event loop allows
 
     def stop(self) -> None:
         """Stops continuous execution."""
@@ -159,6 +171,20 @@ class DebuggerController(QObject):
 
         self._is_at_breakpoint = False
 
+    def add_breakpoint_at_line(self, line: int) -> None:
+        if line in self._source_map:
+            if self.is_program_loaded:
+                self._emulator.add_breakpoint_at(self._source_map[line])
+            else:
+                self._breakpoints.add(line)
+
+    def remove_breakpoint_at(self, line: int) -> None:
+        if line in self._source_map:
+            if self.is_program_loaded:
+                self._emulator.remove_breakpoint_at(self._source_map[line])
+            else:
+                self._breakpoints.remove(line)
+
     def reset_emulator(self) -> None:
         """Resets the emulator to its initial state."""
         self._reset_basic()
@@ -187,19 +213,48 @@ class DebuggerController(QObject):
             )
 
     def on_breakpoint_toggled(self, line_number: int, is_set: bool):
-        if line_number in self._source_map:
+        if self.is_program_loaded and line_number in self._source_map:
             addr = self._source_map[line_number]
-            try:
-                if is_set:
-                    print(f"Setting breakpoint at line {line_number} (0x{addr:X})")
+
+            if is_set:
+                print(f"Setting breakpoint at address {hex(addr)} while running")
+                try:
                     self._emulator.add_breakpoint_at(addr)
-                else:
-                    print(f"Removing breakpoint at line {line_number} (0x{addr:X})")
+                    self._breakpoints.add(line_number)
+                except Exception as e:
+                    self.error_occurred.emit(f"Failed to add breakpoint: {e}")
+            else:
+                print(f"Removing breakpoint at address {hex(addr)} while running")
+                try:
+                    # Note: Using restore_instruction_at, because we are actually running.
+                    # Simple using remove_instruction_at does not also restore the instruction.
+                    # Only removes the original instruction from the map.
                     self._emulator.restore_instruction_at(addr)
-            except Exception as e:
-                self.error_occurred.emit(f"Breakpoint Error: {e}")
+                    self._breakpoints.remove(line_number)
+
+                    # Check if we just removed the breakpoint we are stuck on
+                    if self._is_at_breakpoint:
+                        # Fetch current PC (Register 15)
+                        regs = self._emulator.registers
+                        current_pc = regs[15]
+
+                        if current_pc == addr:
+                            print("Active breakpoint removed. Resuming normal state.")
+                            # The Rust side (cpu.set_running) handles the CPU state.
+                            # We must update the Python controller state so the next 'step' works.
+                            self._is_at_breakpoint = False
+
+                except Exception as e:
+                    self.error_occurred.emit(f"Failed to remove breakpoint: {e}")
         else:
-            print(f"Warning: Line {line_number} does not map to an instruction.")
+            if is_set:
+                if line_number not in self._breakpoints:
+                    print(f"Setting breakpoint at line {line_number} (deferred)")
+                    self._breakpoints.add(line_number)
+            else:
+                if line_number in self._breakpoints:
+                    print(f"Removing breakpoint at line {line_number} (deferred)")
+                    self._breakpoints.remove(line_number)
 
     def _run_loop_step(self) -> None:
         """A single step within the continuous run loop."""

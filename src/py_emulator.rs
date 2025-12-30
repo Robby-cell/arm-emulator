@@ -164,6 +164,13 @@ impl PyEmulator {
             .to_py_result()
     }
 
+    pub fn remove_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
+        self.emulator
+            .remove_breakpoint_at(address)
+            .to_py_execution_result()
+            .to_py_result()
+    }
+
     pub fn restore_instruction_at(
         &mut self,
         address: u32,

@@ -200,6 +200,7 @@ impl Emulator {
         Ok(instr)
     }
 
+    /// Patch an instruction at the address supplied. Just delegates to `write32`.
     pub fn patch_instruction_at(
         &mut self,
         addr: Word,
@@ -209,10 +210,15 @@ impl Emulator {
         Ok(())
     }
 
+    /// Save a breakpoint in the list of addresses -> instructions.
+    /// Save the 'original' instruction (value) at the address (key) provided.
     pub fn save_breakpoint_at(&mut self, addr: Word, instr: u32) {
         self.breakpoint_destructive.insert(addr, instr);
     }
 
+    /// Add a breakpoint to the address supplied.
+    /// Saves the original instruction, and then patches a breakpoint to that address.
+    /// This operation is distructive. It will overwrite the original instruction.
     pub fn add_breakpoint_at(
         &mut self,
         addr: Word,
@@ -223,13 +229,46 @@ impl Emulator {
         Ok(())
     }
 
-    pub fn restore_instruction_at(
+    /// Remove breakpoint at the address supplied.
+    /// Restores the original instruction at the address given, and removes it from the cache.
+    pub fn remove_breakpoint_at(
         &mut self,
         addr: Word,
     ) -> MemoryAccessResult<()> {
         match self.breakpoint_destructive.remove(&addr) {
             Some(instr) => {
                 self.patch_instruction_at(addr, instr)?;
+                tracing::info!(
+                    "Removed breakpoint at address {addr:#X} and patched instruction"
+                );
+                Ok(())
+            }
+            None => Ok(()),
+        }
+    }
+
+    /// Restore the instruction at the address supplied.
+    /// Restores the original instruction at the address given, removes it from the cache,
+    /// and changes the CPU state back to running, if we are currently halted on this breakpoint.
+    pub fn restore_instruction_at(
+        &mut self,
+        addr: Word,
+    ) -> MemoryAccessResult<()> {
+        match self.breakpoint_destructive.remove(&addr) {
+            Some(instr) => {
+                // 1. Put the original instruction back in memory
+                self.patch_instruction_at(addr, instr)?;
+
+                // 2. Check if we are currently halted on this breakpoint
+                if let ExecutionState::Breakpoint(bp) = &self.cpu.state {
+                    if bp.addr == addr {
+                        // We are removing the breakpoint we are currently stuck on.
+                        // Since the original instruction is now restored,
+                        // we can treat the CPU as simply "Running" (ready to execute).
+                        self.cpu.set_running();
+                    }
+                }
+
                 Ok(())
             }
             None => {
