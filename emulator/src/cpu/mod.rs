@@ -242,6 +242,13 @@ impl Cpu {
         cpu
     }
 
+    pub fn is_halted(&self) -> bool {
+        matches!(
+            self.state,
+            ExecutionState::Halted | ExecutionState::FinishedExecution(_)
+        )
+    }
+
     pub fn set_halted(&mut self) {
         self.state = ExecutionState::Halted;
     }

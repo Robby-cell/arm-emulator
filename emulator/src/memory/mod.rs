@@ -348,6 +348,10 @@ impl Bus {
         self.external = Vec::new();
     }
 
+    pub fn get_sp_default_addr(&self) -> Word {
+        self.sram.len() as Word + Self::SRAM_BEGIN
+    }
+
     #[must_use]
     pub fn get_read_only_memory_view(&self) -> &Bytes {
         &self.code

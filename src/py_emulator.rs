@@ -87,6 +87,14 @@ impl PyEmulator {
         self.emulator.reset();
     }
 
+    fn reset_cpu(&mut self) {
+        self.emulator.reset_cpu();
+    }
+
+    fn is_halted(&self) -> bool {
+        self.emulator.is_halted()
+    }
+
     fn read32(&self, addr: u32) -> PyResult<u32> {
         Ok(self
             .emulator

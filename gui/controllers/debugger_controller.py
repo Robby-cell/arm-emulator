@@ -35,6 +35,8 @@ class DebuggerController(QObject):
         self._is_at_breakpoint = False
         self._breakpoint_addr = None
 
+        self._is_program_loaded = False
+
         # Use a QTimer for the non-blocking run loop
         self._run_timer = QTimer(self)
         self._run_timer.timeout.connect(self._run_loop_step)
@@ -42,10 +44,18 @@ class DebuggerController(QObject):
         self._source_map: Dict[int, int] = {}  # Line -> Addr
         self._reverse_map: Dict[int, int] = {}  # Addr -> Line
 
+    @property
+    def is_running(self) -> bool:
+        return self._is_running
+
+    @property
+    def is_program_loaded(self) -> bool:
+        return self._is_program_loaded
+
     def load_program(self, program: AssembledOutput) -> None:
         """Resets the emulator and loads the assembled program sections into memory."""
 
-        self.reset_emulator()
+        self.complete_reset()
         self._source_map = program.source_map
         self._reverse_map = program.reverse_map
 
@@ -55,21 +65,30 @@ class DebuggerController(QObject):
 
             print("Load successful.")
             print(f"{self._emulator}")
+
+            self._is_program_loaded = True
         except Exception as e:
             self.error_occurred.emit(f"Failed to write program to emulator memory: {e}")
+            self._is_program_loaded = False
             return
 
         # Notify the UI that the memory state has changed and should be updated.
         self.state_changed.emit()
         self._update_highlight()
 
-    def run(self) -> None:
-        """Starts continuous execution of the emulator."""
-        if self._is_running:
+    def set_running_but_halt_for_debugging(self) -> None:
+        if self.is_running or not self.is_program_loaded:
             return
 
         self._is_running = True
         self.execution_started.emit()
+
+    def run(self) -> None:
+        """Starts continuous execution of the emulator."""
+        if self.is_running or not self.is_program_loaded:
+            return
+
+        self.set_running_but_halt_for_debugging()
         self._run_timer.start(0)  # 0ms interval runs as fast as the event loop allows
 
     def stop(self) -> None:
@@ -131,14 +150,28 @@ class DebuggerController(QObject):
             # PC is in unknown territory (e.g. OS code or unmapped), clear highlight
             self.highlight_line.emit(-1)
 
-    def reset_emulator(self) -> None:
+    def _reset_basic(self) -> None:
         """Resets the emulator to its initial state."""
-        self.stop()
-        self._emulator.reset()
+        if not self._is_running:
+            return
 
         self.configure_peripherals(self._peripherals)
 
         self._is_at_breakpoint = False
+
+    def reset_emulator(self) -> None:
+        """Resets the emulator to its initial state."""
+        self._reset_basic()
+        self._emulator.reset_cpu()
+        self._is_at_breakpoint = False
+        self.state_changed.emit()
+        self._update_highlight()
+
+    def complete_reset(self) -> None:
+        """Resets the emulator to its initial state."""
+        self.stop()
+        self._reset_basic()
+        self._emulator.reset()
         self.state_changed.emit()
 
     def toggle_breakpoint(self, address: int, is_set: bool) -> None:

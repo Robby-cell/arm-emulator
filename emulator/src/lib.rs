@@ -269,6 +269,19 @@ impl Emulator {
         self.breakpoint_destructive = BreakpointMappings::new();
     }
 
+    pub fn reset_cpu(&mut self) {
+        self.cpu.reset();
+        self.set_sp_to_default();
+    }
+
+    fn set_sp_to_default(&mut self) {
+        self.cpu.set_sp(self.memory_bus.get_sp_default_addr());
+    }
+
+    pub fn is_halted(&self) -> bool {
+        self.cpu.is_halted()
+    }
+
     #[must_use]
     pub fn read32(&self, addr: Word) -> MemoryAccessResult<u32> {
         match self.endian {
