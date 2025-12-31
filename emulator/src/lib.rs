@@ -15,6 +15,7 @@ use crate::{
         BranchInstruction, BreakpointInstruction,
         DataProcessingInstruction, Instruction,
         InstructionConversionError, MemoryAccessInstruction,
+        MultiplyInstruction, MultiplyLongInstruction,
         SupervisorCallInstruction, fields::Condition,
     },
     memory::{
@@ -465,6 +466,12 @@ impl Emulator {
             Instruction::SupervisorCall(instr) => {
                 self.execute_supervisor_call_instruction(instr)?;
             }
+            Instruction::Multiply(instr) => {
+                self.execute_multiply_instruction(instr)?;
+            }
+            Instruction::MultiplyLong(instr) => {
+                self.execute_multiply_long_instruction(instr)?;
+            }
             Instruction::Breakpoint(instr) => {
                 self.execute_breakpoint_instruction(instr)?;
                 // Breakpoints shouldn't advance PC either (they halt).
@@ -523,6 +530,22 @@ impl Emulator {
         instr: SupervisorCallInstruction,
     ) -> Result<(), ExecutionError> {
         tracing::trace!("Supervisor call instruction: {instr:?}");
+        instr.execute_with(self)
+    }
+
+    fn execute_multiply_instruction(
+        &mut self,
+        instr: MultiplyInstruction,
+    ) -> Result<(), ExecutionError> {
+        tracing::trace!("Multiply instruction: {instr:?}");
+        instr.execute_with(self)
+    }
+
+    fn execute_multiply_long_instruction(
+        &mut self,
+        instr: MultiplyLongInstruction,
+    ) -> Result<(), ExecutionError> {
+        tracing::trace!("Multiply Long instruction: {instr:?}");
         instr.execute_with(self)
     }
 

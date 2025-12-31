@@ -205,23 +205,6 @@ pub struct SupervisorCallInstruction {
 
 assert_u32_sized!(SupervisorCallInstruction);
 
-/// Represents a Breakpoint instruction.
-#[bitfield]
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[repr(u32)]
-#[repr(C)]
-#[must_use]
-pub struct BreakpointInstruction {
-    pub imm4: B4,
-    #[skip]
-    _b8: B8,
-    pub imm12: B12,
-    #[skip]
-    _b8: B8,
-}
-
-assert_u32_sized!(BreakpointInstruction);
-
 #[bitfield]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
@@ -238,6 +221,68 @@ pub struct BranchExchangeInstruction {
 }
 
 assert_u32_sized!(BranchExchangeInstruction);
+
+/// Represents 32-bit Multiply instructions (MUL, MLA).
+/// Format: cond 0000 00AS Rd Rn Rs 1001 Rm
+#[bitfield]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+#[repr(C)]
+pub struct MultiplyInstruction {
+    pub rm: Register,
+    #[skip]
+    _signature: B4, // Must be 1001 (9)
+    pub rs: Register,
+    pub rn: Register,
+    pub rd: Register,
+    pub s: SetFlags,
+    pub a: AccumulateFlag,
+    #[skip]
+    _zeros: B6, // Must be 000000
+    pub cond: Condition,
+}
+
+assert_u32_sized!(MultiplyInstruction);
+
+/// Represents 64-bit Multiply Long instructions (UMULL, UMLAL, SMULL, SMLAL).
+/// Format: cond 0000 1UAS RdHi RdLo Rs 1001 Rm
+#[bitfield]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+#[repr(C)]
+pub struct MultiplyLongInstruction {
+    pub rm: Register,
+    #[skip]
+    _signature: B4, // Must be 1001 (9)
+    pub rs: Register,
+    pub rd_lo: Register,
+    pub rd_hi: Register,
+    pub s: SetFlags,
+    pub a: AccumulateFlag,
+    pub u: SignedFlag,
+    #[skip]
+    _zeros: B5, // Must be 00001
+    pub cond: Condition,
+}
+
+assert_u32_sized!(MultiplyLongInstruction);
+
+/// Represents a Breakpoint instruction.
+#[bitfield]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[repr(u32)]
+#[repr(C)]
+#[must_use]
+pub struct BreakpointInstruction {
+    pub imm4: B4,
+    #[skip]
+    _b8: B8,
+    pub imm12: B12,
+    #[skip]
+    _b8: B8,
+}
+
+assert_u32_sized!(BreakpointInstruction);
 
 /// Represents an ARM instruction, which can be one of several types:
 /// [Data Processing](DataProcessingInstruction), [Memory Access](MemoryAccessInstruction),
@@ -280,6 +325,8 @@ pub enum Instruction {
     Branch(BranchInstruction),
     BranchExchange(BranchExchangeInstruction),
     SupervisorCall(SupervisorCallInstruction),
+    Multiply(MultiplyInstruction),
+    MultiplyLong(MultiplyLongInstruction),
     Breakpoint(BreakpointInstruction),
 }
 
@@ -292,6 +339,8 @@ impl Instruction {
             Instruction::Branch(inst) => inst.cond(),
             Instruction::BranchExchange(inst) => inst.cond(),
             Instruction::SupervisorCall(inst) => inst.cond(),
+            Instruction::Multiply(inst) => inst.cond(),
+            Instruction::MultiplyLong(inst) => inst.cond(),
             Instruction::Breakpoint(_inst) => Condition::AL,
         }
     }
@@ -319,6 +368,22 @@ impl TryFrom<u32> for Instruction {
             return Ok(Instruction::BranchExchange(
                 raw_instruction.into(),
             ));
+        }
+
+        // Multiply instructions are identified by bits [27:24] = 0000 and bits [7:4] = 1001
+        // We check the "9" signature at [7:4] first, then check the top bits.
+        if (raw_instruction & 0x0F0000F0) == 0x00000090 {
+            // Check Bit 23 to distinguish Short vs Long
+            // 32-bit Multiply (MUL, MLA): 0000 00AS ...
+            // 64-bit Multiply (UMULL...): 0000 1UAS ...
+
+            if (raw_instruction & 0x00800000) == 0 {
+                return Ok(Instruction::Multiply(raw_instruction.into()));
+            } else {
+                return Ok(Instruction::MultiplyLong(
+                    raw_instruction.into(),
+                ));
+            }
         }
 
         // Check bits [27:25] to identify the instruction class. This is how the
@@ -369,6 +434,8 @@ impl From<Instruction> for u32 {
             Instruction::Branch(instr) => instr.into(),
             Instruction::BranchExchange(instr) => instr.into(),
             Instruction::SupervisorCall(instr) => instr.into(),
+            Instruction::Multiply(instr) => instr.into(),
+            Instruction::MultiplyLong(instr) => instr.into(),
             Instruction::Breakpoint(instr) => instr.into(),
         }
     }

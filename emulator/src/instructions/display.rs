@@ -3,7 +3,8 @@ use std::fmt;
 use super::{
     BlockDataTransferInstruction, BranchExchangeInstruction,
     BranchInstruction, BreakpointInstruction, DataProcessingInstruction,
-    Instruction, MemoryAccessInstruction, SupervisorCallInstruction,
+    Instruction, MemoryAccessInstruction, MultiplyInstruction,
+    MultiplyLongInstruction, SupervisorCallInstruction,
 };
 
 impl fmt::Display for DataProcessingInstruction {
@@ -42,6 +43,18 @@ impl fmt::Display for SupervisorCallInstruction {
     }
 }
 
+impl fmt::Display for MultiplyInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
+impl fmt::Display for MultiplyLongInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 impl fmt::Display for BreakpointInstruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{self:?}")
@@ -57,6 +70,8 @@ impl fmt::Display for Instruction {
             Self::BranchExchange(inst) => write!(f, "{inst}"),
             Self::BlockDataTransfer(inst) => write!(f, "{inst}"),
             Self::SupervisorCall(inst) => write!(f, "{inst}"),
+            Self::Multiply(inst) => write!(f, "{inst}"),
+            Self::MultiplyLong(inst) => write!(f, "{inst}"),
             Self::Breakpoint(inst) => write!(f, "{inst}"),
         }
     }

@@ -249,6 +249,24 @@ precisely_sized_enum! {
     ],
 }
 
+precisely_sized_enum! {
+    name = AccumulateFlag,
+    bits = 1,
+    options = [
+        Accumulate = 0b1,
+        NoAccumulate = 0b0,
+    ],
+}
+
+precisely_sized_enum! {
+    name = SignedFlag,
+    bits = 1,
+    options = [
+        Signed = 0b1,
+        Unsigned = 0b0,
+    ],
+}
+
 pub mod register_mask {
     macro_rules! create_register_mask {
         [$($r:ident),+ $(,)?] => {

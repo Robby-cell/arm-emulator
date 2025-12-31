@@ -11,6 +11,7 @@ mod block_data_transfer;
 mod branch;
 mod data_processing;
 mod memory_access;
+mod multiply;
 
 fn ramless_emulator(endian: Endian) -> Emulator {
     Emulator::new(Cpu::new(), Bus::new(0, 0, 0), endian)

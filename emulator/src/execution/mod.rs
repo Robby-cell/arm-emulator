@@ -14,6 +14,7 @@ mod branch;
 mod branch_exchange;
 mod data_processing;
 mod memory_access;
+mod multiply;
 mod supervisor_call;
 
 #[cfg(test)]

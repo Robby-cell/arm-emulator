@@ -125,9 +125,12 @@ fn test_stack_operations() {
     emulator.step().unwrap();
     emulator.step().unwrap();
 
-    assert_eq!(emulator.cpu.sp(), initial_sp - 4);
+    assert_eq!(emulator.cpu.sp(), initial_sp.overflowing_sub(4).0);
     // Verify memory write manually
-    assert_eq!(emulator.read32(initial_sp - 4).unwrap(), 0xAA);
+    assert_eq!(
+        emulator.read32(initial_sp.overflowing_sub(4).0).unwrap(),
+        0xAA
+    );
 
     // Run MOV (clear R0)
     emulator.step().unwrap();
