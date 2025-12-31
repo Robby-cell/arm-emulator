@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Union
 import re
+from typing import Dict, Union
 
 from keystone import (
     KS_ARCH_ARM,
@@ -40,8 +40,7 @@ class Assembler:
 
         sym_str = symbol.decode("utf-8") if isinstance(symbol, bytes) else symbol
         if sym_str in self.symbols:
-            addr = self.symbols[sym_str]
-            value[0] = addr
+            value[0] = self.symbols[sym_str]
             return True
         return False
 
@@ -51,23 +50,49 @@ class Assembler:
         """
         self.symbols[name] = address
 
+    def _convert_decimals_to_hex(self, full_code: str) -> str:
+        """
+        Scans the entire code block and replaces standalone decimal numbers with hex.
+        Executed in one pass for performance.
+        """
+        # Regex Explanation:
+        # (?<![\w.]) : Negative Lookbehind. Prev char must NOT be word char (a-z,0-9,_) or dot.
+        #              This prevents matching 'R10', '0x10', '.10'.
+        # (-?\d+)    : Group 1. Optional minus sign followed by digits.
+        # (?![\w.])  : Negative Lookahead. Next char must NOT be word char or dot.
+        pattern = re.compile(r"(?<![\w.])(-?\d+)(?![\w.])")
+
+        def replacer(match):
+            number_str = match.group(1)
+            try:
+                # Convert "4294967295" -> "0xffffffff"
+                value = int(number_str)
+                return hex(value)
+            except ValueError:
+                return number_str
+
+        return pattern.sub(replacer, full_code)
+
     def assemble(self, code: str, start_address: int = 0) -> AssembledOutput:
         """
         Assemble the string.
         :param code: Assembly code.
         :param start_address: Base address for the code (default 0x00000000).
         """
-        # 1. Assemble the raw binary using Keystone
+
+        # 1. Efficient Pre-process: Convert all decimals to hex in one go
+        full_processed_code = self._convert_decimals_to_hex(code)
+
+        # 2. Assemble using Keystone
         try:
-            encoding, count = self.ctx.asm(code, addr=start_address)
+            encoding, count = self.ctx.asm(full_processed_code, addr=start_address)
             binary = bytes(encoding)
         except KsError as e:
             return AssembledOutput(success=False, error=str(e))
 
-        # Generate Source Map (Line <-> Address)
-        # We assume standard ARM instructions (4 bytes).
-        # We must filter out labels and comments to match the binary offset.
-        # Generally, this should work well enough. So we won't bother with making it more complex.
+        # 3. Generate Source Map (Line <-> Address)
+        # We must still loop here to calculate addresses for the UI,
+        # but we use the original code to ensure line numbers match what the user sees.
         source_map = {}
         reverse_map = {}
         current_addr = start_address
@@ -76,30 +101,42 @@ class Assembler:
 
         # Regex to detect labels (e.g., "loop:") and directives (e.g., ".global")
         # Everything else is considered an instruction.
-        label_pattern = re.compile(r"^.*\s*[a-zA-Z0-9_]+:$")
-        directive_pattern = re.compile(r"^.*\s*\.")
-        comment_pattern = re.compile(r"^.*\s*(@|;)")
-        empty_pattern = re.compile(r"^.*\s*$")
-
-        instruction_count = 0
+        label_pattern = re.compile(r"^\s*[a-zA-Z0-9_]+:$")
+        directive_pattern = re.compile(r"^\s*\.")
 
         for line_num, line in enumerate(lines):
-            # Remove inline comments for checking
             clean = line.split("@")[0].split(";")[0].strip()
 
             if not clean:
-                continue  # Empty line
+                continue
             if label_pattern.match(clean):
-                continue  # Label only
-            if directive_pattern.match(clean):
-                continue  # Directive
+                continue
 
-            # If we are here, we assume it's an instruction
+            # Handle Data Directives Memory Usage
+            if directive_pattern.match(clean):
+                if any(x in clean for x in [".long", ".word", ".int"]):
+                    source_map[line_num] = current_addr
+                    reverse_map[current_addr] = line_num
+                    current_addr += 4
+                elif any(x in clean for x in [".short", ".hword"]):
+                    source_map[line_num] = current_addr
+                    reverse_map[current_addr] = line_num
+                    current_addr += 2
+                elif ".byte" in clean:
+                    try:
+                        args = clean.split(".byte")[1]
+                        count = args.count(",") + 1
+                        source_map[line_num] = current_addr
+                        reverse_map[current_addr] = line_num
+                        current_addr += count
+                    except IndexError:
+                        pass
+                continue
+
+            # Standard Instruction
             source_map[line_num] = current_addr
             reverse_map[current_addr] = line_num
-
             current_addr += 4
-            instruction_count += 1
 
         return AssembledOutput(
             success=True, text=binary, source_map=source_map, reverse_map=reverse_map
