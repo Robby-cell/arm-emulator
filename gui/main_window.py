@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
 
     def _on_execution_stopped(self):
         """Update button states when the emulator is paused."""
-        is_finished = self._emulator.is_halted()
+        is_finished = self._emulator.is_finished()
 
         self.run_action.setEnabled(True)
         self.debug_action.setEnabled(True)
@@ -303,7 +303,7 @@ class MainWindow(QMainWindow):
     def _on_reset(self) -> None:
         """Slot to reset the emulator. Delegates directly to the controller."""
         self._debugger_controller.reset_emulator()
-        self._debugger_controller.set_running_but_halt_for_debugging()
+        self._ready_for_debugging()
 
     def _ready_for_debugging(self) -> None:
         self.run_action.setEnabled(True)
