@@ -95,6 +95,10 @@ impl PyEmulator {
         self.emulator.is_halted()
     }
 
+    fn is_finished(&self) -> bool {
+        self.emulator.is_finished()
+    }
+
     fn read32(&self, addr: u32) -> PyResult<u32> {
         Ok(self
             .emulator

@@ -319,6 +319,10 @@ impl Emulator {
         self.cpu.is_halted()
     }
 
+    pub fn is_finished(&self) -> bool {
+        self.cpu.is_finished()
+    }
+
     #[must_use]
     pub fn read32(&self, addr: Word) -> MemoryAccessResult<u32> {
         match self.endian {
