@@ -257,7 +257,6 @@ class MainWindow(QMainWindow):
         """Assembles and loads the binary, refreshing the memory view, but does NOT run."""
         if self._assemble_and_load():
             print("Program loaded. Ready to execute.")
-            self._set_ready_for_debugging()
             # The controller.load_program emits state_changed, so UI updates automatically.
 
     def _on_run(self) -> None:
@@ -288,7 +287,6 @@ class MainWindow(QMainWindow):
         """Assembles and loads the code, then prepares for debugging."""
         if self._assemble_and_load():
             print("Ready to debug. Press 'Step' to begin.")
-            self._set_ready_for_debugging()
             # We don't call run(), leaving the UI ready for the user to step.
 
     def _on_stop(self) -> None:
@@ -303,13 +301,6 @@ class MainWindow(QMainWindow):
     def _on_reset(self) -> None:
         """Slot to reset the emulator. Delegates directly to the controller."""
         self._debugger_controller.reset_emulator()
-        self._debugger_controller.set_running_but_halt_for_debugging()
-
-    def _set_ready_for_debugging(self) -> None:
-        self.step_action.setEnabled(True)
-        self.run_action.setEnabled(True)
-        self.stop_action.setEnabled(True)
-        self.reset_action.setEnabled(True)
         self._debugger_controller.set_running_but_halt_for_debugging()
 
     # Menu

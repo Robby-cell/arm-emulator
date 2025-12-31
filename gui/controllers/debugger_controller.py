@@ -220,7 +220,6 @@ class DebuggerController(QObject):
                 print(f"Setting breakpoint at address {hex(addr)} while running")
                 try:
                     self._emulator.add_breakpoint_at(addr)
-                    self._breakpoints.add(line_number)
                 except Exception as e:
                     self.error_occurred.emit(f"Failed to add breakpoint: {e}")
             else:
@@ -230,7 +229,6 @@ class DebuggerController(QObject):
                     # Simple using remove_instruction_at does not also restore the instruction.
                     # Only removes the original instruction from the map.
                     self._emulator.restore_instruction_at(addr)
-                    self._breakpoints.remove(line_number)
 
                     # Check if we just removed the breakpoint we are stuck on
                     if self._is_at_breakpoint:
@@ -246,7 +244,8 @@ class DebuggerController(QObject):
 
                 except Exception as e:
                     self.error_occurred.emit(f"Failed to remove breakpoint: {e}")
-        else:
+
+            # Add to the cache anyway
             if is_set:
                 if line_number not in self._breakpoints:
                     print(f"Setting breakpoint at line {line_number} (deferred)")
