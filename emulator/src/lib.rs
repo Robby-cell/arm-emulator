@@ -77,15 +77,12 @@ impl Emulator {
             self.load_external(external);
         }
 
-        let sram_end = Bus::SRAM_BEGIN
-            + (self.memory_bus.get_read_write_memory_view().len() as u32);
-        self.cpu.set_sp(sram_end);
+        self.set_sp_to_default();
+
         tracing::trace!(
             "SRAM size: {}",
             self.memory_bus.get_read_write_memory_view().len()
         );
-
-        tracing::info!("Loaded program. SP reset to {:#X}", self.cpu.sp());
     }
 
     pub fn load_program(

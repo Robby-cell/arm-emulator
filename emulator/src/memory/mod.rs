@@ -272,15 +272,25 @@ pub struct Bus {
     /// External memory and devices
     /// 0x60000000 -
     external: Vec<u8>,
+
+    stack: Vec<u8>,
+}
+
+struct NonPrintableMemory;
+impl fmt::Debug for NonPrintableMemory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[ .. ]")
+    }
 }
 
 impl fmt::Debug for Bus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Bus")
             .field("code", &self.code)
-            .field("sram", &[0; 0])
+            .field("sram", &NonPrintableMemory)
             .field("peripherals", &self.peripherals)
-            .field("external", &[0; 0])
+            .field("external", &NonPrintableMemory)
+            .field("stack", &NonPrintableMemory)
             .finish()
     }
 }
@@ -300,9 +310,17 @@ impl Bus {
         Self::PERIPHERAL_END - Self::PERIPHERAL_BEGIN + 1;
 
     pub const EXTERNAL_BEGIN: u32 = 0x60000000;
-    pub const EXTERNAL_END: u32 = u32::MAX;
+    pub const EXTERNAL_END: u32 = 0xFFFFEFFF;
     pub const EXTERNAL_SIZE: u32 =
         Self::EXTERNAL_END - Self::EXTERNAL_BEGIN + 1;
+
+    pub const STACK_BEGIN: u32 = 0xFFFF0000;
+    pub const STACK_END: u32 = 0xFFFFFFFF;
+    pub const STACK_SIZE: u32 = Self::STACK_END - Self::STACK_BEGIN + 1; // 64 KiB
+}
+
+macro_rules! default_stack {
+    () => {{ vec![0; Bus::STACK_SIZE as usize] }};
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -346,10 +364,11 @@ impl Bus {
         self.sram = Vec::new();
         self.peripherals = Vec::new();
         self.external = Vec::new();
+        self.stack = default_stack!();
     }
 
     pub fn get_sp_default_addr(&self) -> Word {
-        self.sram.len() as Word + Self::SRAM_BEGIN
+        0
     }
 
     #[must_use]
@@ -391,6 +410,7 @@ impl Bus {
             sram: vec![0; sram_size as _],
             peripherals: Vec::new(),
             external: vec![0; external_size as _],
+            stack: default_stack!(),
         }
     }
 
@@ -480,6 +500,11 @@ impl Bus {
                     &self.external,
                     addr - Self::EXTERNAL_BEGIN,
                 )
+            }
+            Self::STACK_BEGIN..=Self::STACK_END => {
+                // Calculate offset relative to start of stack region
+                let offset = addr - Self::STACK_BEGIN;
+                Self::read32_ram_with_reader::<Reader>(&self.stack, offset)
             }
         }
     }
@@ -583,6 +608,14 @@ impl Bus {
                     value,
                 )
             }
+            Self::STACK_BEGIN..=Self::STACK_END => {
+                let offset = addr - Self::STACK_BEGIN;
+                Self::write32_ram_with_writer::<Writer>(
+                    &mut self.stack,
+                    offset,
+                    value,
+                )
+            }
         }
     }
 
@@ -651,6 +684,13 @@ impl Bus {
                 Self::read_byte_ram_with_reader::<Reader>(
                     &self.external,
                     addr,
+                )
+            }
+            Self::STACK_BEGIN..=Self::STACK_END => {
+                let offset = addr - Self::STACK_BEGIN;
+                Self::read_byte_ram_with_reader::<Reader>(
+                    &self.stack,
+                    offset,
                 )
             }
         }
@@ -728,6 +768,14 @@ impl Bus {
                     value,
                 )
             }
+            Self::STACK_BEGIN..=Self::STACK_END => {
+                let offset = addr - Self::STACK_BEGIN;
+                Self::write_byte_ram_with_writer::<Writer>(
+                    &mut self.stack,
+                    offset,
+                    value,
+                )
+            }
         }
     }
 
@@ -770,6 +818,7 @@ impl Bus {
             sram,
             peripherals,
             external,
+            stack: default_stack!(),
         }
     }
 
