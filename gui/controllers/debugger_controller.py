@@ -170,6 +170,7 @@ class DebuggerController(QObject):
         self.configure_peripherals(self._peripherals)
 
         self._is_at_breakpoint = False
+        self._run_timer.stop()
 
     def add_breakpoint_at_line(self, line: int) -> None:
         if line in self._source_map:
