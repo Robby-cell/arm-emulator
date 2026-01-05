@@ -79,6 +79,7 @@ class DebuggerController(QObject):
         self._update_highlight()
 
     def _set_breakpoints(self) -> None:
+        print("Setting breakpoints")
         for line in self._breakpoints:
             print(f"adding breakpoint at {self._source_map[line]}")
             self._emulator.add_breakpoint_at(self._source_map[line])
@@ -167,24 +168,23 @@ class DebuggerController(QObject):
         if not self._is_running:
             return
 
-        self.configure_peripherals(self._peripherals)
-
         self._is_at_breakpoint = False
         self._run_timer.stop()
 
     def add_breakpoint_at_line(self, line: int) -> None:
-        if line in self._source_map:
-            if self.is_program_loaded:
+        if self.is_program_loaded:
+            if line in self._source_map:
                 self._emulator.add_breakpoint_at(self._source_map[line])
-            else:
-                self._breakpoints.add(line)
+
+        self._breakpoints.add(line)
 
     def remove_breakpoint_at(self, line: int) -> None:
-        if line in self._source_map:
-            if self.is_program_loaded:
+        if self.is_program_loaded:
+            if line in self._source_map:
                 self._emulator.remove_breakpoint_at(self._source_map[line])
-            else:
-                self._breakpoints.remove(line)
+
+        if line in self._breakpoints:
+            self._breakpoints.remove(line)
 
     def reset_emulator(self) -> None:
         """Resets the emulator to its initial state."""
@@ -246,15 +246,15 @@ class DebuggerController(QObject):
                 except Exception as e:
                     self.error_occurred.emit(f"Failed to remove breakpoint: {e}")
 
-            # Add to the cache anyway
-            if is_set:
-                if line_number not in self._breakpoints:
-                    print(f"Setting breakpoint at line {line_number} (deferred)")
-                    self._breakpoints.add(line_number)
-            else:
-                if line_number in self._breakpoints:
-                    print(f"Removing breakpoint at line {line_number} (deferred)")
-                    self._breakpoints.remove(line_number)
+        # Update the cache regardless
+        if is_set:
+            if line_number not in self._breakpoints:
+                print(f"Setting breakpoint at line {line_number} (deferred)")
+                self._breakpoints.add(line_number)
+        else:
+            if line_number in self._breakpoints:
+                print(f"Removing breakpoint at line {line_number} (deferred)")
+                self._breakpoints.remove(line_number)
 
     def _run_loop_step(self) -> None:
         """A single step within the continuous run loop."""

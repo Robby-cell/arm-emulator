@@ -236,7 +236,6 @@ class MainWindow(QMainWindow):
         self.step_action.setEnabled(not is_finished)
 
         self.reset_action.setEnabled(True)
-        self.stop_action.setEnabled(False)
 
     def _on_state_changed(self) -> None:
         """Master update function for all views."""
@@ -294,6 +293,7 @@ class MainWindow(QMainWindow):
     def _on_stop(self) -> None:
         """Slot to stop execution. Delegates directly to the controller."""
         self._debugger_controller.stop()
+        self._set_buttons_stopped()
 
     def _on_step(self) -> None:
         """Slot to perform a single step. Delegates directly to the controller."""
@@ -304,6 +304,12 @@ class MainWindow(QMainWindow):
         """Slot to reset the emulator. Delegates directly to the controller."""
         self._debugger_controller.reset_emulator()
         self._ready_for_debugging()
+
+    def _set_buttons_stopped(self) -> None:
+        self.run_action.setEnabled(True)
+        self.step_action.setEnabled(False)
+        self.reset_action.setEnabled(True)
+        self.stop_action.setEnabled(False)
 
     def _ready_for_debugging(self) -> None:
         self.run_action.setEnabled(True)
