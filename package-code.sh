@@ -38,7 +38,7 @@ function main() {
     # --additional-hooks-dir hooks: include additional hooks from the "hooks" directory.
     # --add-data "assets:assets": include the assets directory in the executable.
     export PYTHONOPTIMIZE=1
-    $PYINSTALLER --onefile --name arm_emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui_main.py
+    $PYINSTALLER --noconfirm --onefile --windowed --name arm_emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui_main.py --exclude-module PySide6
 }
 
 main
