@@ -78,6 +78,34 @@ class DebuggerController(QObject):
         self.state_changed.emit()
         self._update_highlight()
 
+    def unload_program(self) -> None:
+        """
+        Stops execution, clears emulator memory, and resets internal state.
+        This effectively 'ejects' the current cartridge.
+        """
+        self.stop()
+
+        # Clear Emulator Memory
+        # We load an empty byte array.
+        try:
+            self._emulator.load_program(b"")
+        except Exception:
+            pass  # Ignore errors during unload
+
+        # Reset Internal State
+        self._is_program_loaded = False
+        self._is_at_breakpoint = False
+        self._breakpoint_addr = None
+
+        # Clear Maps
+        self._source_map.clear()
+        self._reverse_map.clear()
+        self._breakpoints.clear()  # Clear breakpoints as they correspond to old addresses
+
+        # Notify UI
+        self.state_changed.emit()
+        self.highlight_line.emit(-1)  # Clear highlighter
+
     def _set_breakpoints(self) -> None:
         print("Setting breakpoints")
         for line in self._breakpoints:

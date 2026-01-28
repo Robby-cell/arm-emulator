@@ -4,7 +4,7 @@ from typing import Optional
 from arm_emulator_rs import Emulator  # type: ignore : import exists
 from keystone.keystone import KsError
 from PyQt6.QtCore import QByteArray, QCoreApplication, QLocale, QSize, Qt, QTranslator
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QActionGroup, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from assembler import Assembler
+from assembler import Assembler, arm_big_endian_assembler, arm_little_endian_assembler
 
 from .controllers.debugger_controller import DebuggerController
 from .language import get_languages_and_codes
@@ -108,10 +108,12 @@ class MainWindow(QMainWindow):
         # Create the QTabWidget
         self.tabs = QTabWidget()
 
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+
         # Create the screens (the content for each tab)
         self._editor = EditorScreen()
         self._memory_view = MemoryViewScreen(emulator=self._emulator)
-        self._disassembly = DisassemblyScreen()
+        self._disassembly = DisassemblyScreen(emulator=self._emulator)
 
         # Add the screens as tabs to the widget
         self.tabs.addTab(self._editor, None)
@@ -238,11 +240,31 @@ class MainWindow(QMainWindow):
         self.reset_action.setEnabled(True)
 
     def _on_state_changed(self) -> None:
-        """Master update function for all views."""
-        self._memory_view.update_view()
+        """
+        Master update function.
+        Optimized: Only updates the CPU panel and the currently visible tab.
+        """
+        # Always update the side panel (it's always visible)
         self._cpu_panel.update_view()
         self._editor._peripherals.update_view()
-        # self._disassembly_view.update_view() # Add when disassembly view added
+
+        # Only update the currently active tab
+        self._update_active_tab()
+
+    def _on_tab_changed(self, index: int) -> None:
+        """
+        Called when the user clicks a different tab.
+        We must update the view immediately because it might be stale.
+        """
+        self._update_active_tab()
+
+    def _update_active_tab(self) -> None:
+        """Finds the current tab and calls its update_view method."""
+        current_widget = self.tabs.currentWidget()
+
+        # Check if the widget has an update_view method (duck typing)
+        if hasattr(current_widget, "update_view"):
+            current_widget.update_view()
 
     def _on_breakpoint_hit(self, address: int) -> None:
         print(f"UI notified: Breakpoint hit at {hex(address)}")
@@ -331,6 +353,9 @@ class MainWindow(QMainWindow):
         self._build_menu: QMenu = self._menu.addMenu(self.tr("&Build"))  # type: ignore : not None
         self._build_build_menu_actions()
 
+        self._options_menu: QMenu = self._menu.addMenu(self.tr("&Options"))  # type: ignore : not None
+        self._build_options_menu()
+
         self._language_menu: QMenu = self._menu.addMenu(self.tr("&Language"))  # type: ignore : not None
         self._build_language_menu()
 
@@ -345,13 +370,76 @@ class MainWindow(QMainWindow):
         self._load_file_action.triggered.connect(self._load_file_selected)
         self._file_menu.addAction(self._load_file_action)  # type: ignore : not None
 
+    def _build_options_menu(self) -> None:
+        # Endianness Submenu
+        endian_menu = self._options_menu.addMenu(self.tr("Endianness"))
+
+        # Create an exclusive group (Radio button behavior)
+        self._endian_group = QActionGroup(self)
+
+        # Little Endian Action
+        self._action_le = QAction(self.tr("Little Endian"), self)
+        self._action_le.setCheckable(True)
+        self._action_le.setChecked(True)  # Default
+        self._action_le.triggered.connect(lambda: self._set_endianness(little=True))
+        self._endian_group.addAction(self._action_le)
+        endian_menu.addAction(self._action_le)
+
+        # Big Endian Action
+        self._action_be = QAction(self.tr("Big Endian"), self)
+        self._action_be.setCheckable(True)
+        self._action_be.triggered.connect(lambda: self._set_endianness(little=False))
+        self._endian_group.addAction(self._action_be)
+        endian_menu.addAction(self._action_be)
+
     def _build_language_menu(self) -> None:
         for lang, code in get_languages_and_codes(self):
             action = QAction(lang, self)
             action.triggered.connect(lambda checked, c=code: self.load_language(c))
             self._language_menu.addAction(action)
 
-    def load_language(self, lang_code: str):
+    def _set_endianness(self, little: bool) -> None:
+        print(f"Switching to {'Little' if little else 'Big'} Endian...")
+
+        self._debugger_controller.unload_program()
+
+        # Update Assembler
+        old_symbols = self._assembler.symbols
+        if little:
+            self._assembler = arm_little_endian_assembler()
+        else:
+            self._assembler = arm_big_endian_assembler()
+        self._assembler.symbols = old_symbols
+
+        # Update Emulator
+        if little:
+            self._emulator.use_little_endian()
+        else:
+            self._emulator.use_big_endian()
+
+        # Update Disassembly Screen
+        self._disassembly.set_endianness(little)
+
+        # Trigger a refresh of the current view
+        self._update_active_tab()
+
+        if hasattr(self, "_update_button_states"):
+            self._update_button_states()
+
+    def _update_button_states(self) -> None:
+        is_loaded = self._debugger_controller.is_program_loaded  # This is now False
+
+        # Run/Debug should be enabled (so user can reload/rebuild)
+        self.run_action.setEnabled(True)
+        self.debug_action.setEnabled(True)
+
+        # Step should be DISABLED (No code to step through)
+        self.step_action.setEnabled(False)  # is_loaded is False
+
+        # Reset should be DISABLED (Nothing to reset)
+        self.reset_action.setEnabled(is_loaded)
+
+    def load_language(self, lang_code: str) -> None:
         app = QCoreApplication.instance()
         if app is None:
             return
@@ -389,6 +477,7 @@ class MainWindow(QMainWindow):
         # Menu Bar
         self._file_menu.setTitle(self.tr("&File"))
         self._build_menu.setTitle(self.tr("&Build"))
+        self._options_menu.setTitle(self.tr("&Options"))
         self._language_menu.setTitle(self.tr("&Language"))
 
         self._load_file_action.setText(self.tr("Load File"))
@@ -418,6 +507,7 @@ class MainWindow(QMainWindow):
         self._editor.retranslateUi()
         self._memory_view.retranslateUi()
         self._cpu_panel.retranslateUi()
+        self._disassembly.retranslateUi()
 
     def _load_file_selected(self) -> None:
         dialog = QFileDialog(self)

@@ -659,9 +659,15 @@ impl Bus {
     ) -> MemoryAccessResult<u8> {
         match addr {
             Self::CODE_BEGIN..=Self::CODE_END => {
+                tracing::trace!(
+                    "Reading byte from code at address {addr:#X}"
+                );
                 Self::read_byte_ram_with_reader::<Reader>(&self.code, addr)
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
+                tracing::trace!(
+                    "Reading byte from SRAM at address {addr:#X}"
+                );
                 Self::read_byte_ram_with_reader::<Reader>(&self.sram, addr)
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
@@ -681,12 +687,18 @@ impl Bus {
                 Err(MemoryAccessError::InvalidReadPermission { addr })
             }
             Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                tracing::trace!(
+                    "Reading byte from external memory at address {addr:#X}"
+                );
                 Self::read_byte_ram_with_reader::<Reader>(
                     &self.external,
                     addr,
                 )
             }
             Self::STACK_BEGIN..=Self::STACK_END => {
+                tracing::trace!(
+                    "Reading byte from stack at address {addr:#X}"
+                );
                 let offset = addr - Self::STACK_BEGIN;
                 Self::read_byte_ram_with_reader::<Reader>(
                     &self.stack,
@@ -732,6 +744,9 @@ impl Bus {
     ) -> MemoryAccessResult<()> {
         match addr {
             Self::CODE_BEGIN..=Self::CODE_END => {
+                tracing::trace!(
+                    "Writing byte {value:#X} from code at address {addr:#X}"
+                );
                 Self::write_byte_ram_with_writer::<Writer>(
                     &mut self.code,
                     addr,
@@ -739,6 +754,9 @@ impl Bus {
                 )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
+                tracing::trace!(
+                    "Writing byte {value:#X} from SRAM at address {addr:#X}"
+                );
                 Self::write_byte_ram_with_writer::<Writer>(
                     &mut self.sram,
                     addr,
@@ -762,6 +780,9 @@ impl Bus {
                 Err(MemoryAccessError::InvalidWritePermission { addr })
             }
             Self::EXTERNAL_BEGIN..=Self::EXTERNAL_END => {
+                tracing::trace!(
+                    "Writing byte {value:#X} from external memory at address {addr:#X}"
+                );
                 Self::write_byte_ram_with_writer::<Writer>(
                     &mut self.external,
                     addr,
@@ -769,6 +790,9 @@ impl Bus {
                 )
             }
             Self::STACK_BEGIN..=Self::STACK_END => {
+                tracing::trace!(
+                    "Writing byte {value:#X} from stack at address {addr:#X}"
+                );
                 let offset = addr - Self::STACK_BEGIN;
                 Self::write_byte_ram_with_writer::<Writer>(
                     &mut self.stack,
