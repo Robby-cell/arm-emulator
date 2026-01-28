@@ -344,6 +344,11 @@ class PeripheralsPanel(QWidget):
     def update_view(self) -> None:
         """Called by timer/controller to update LEDs."""
         for p in self._peripherals_data:
+            # instance = p.instance
+            # led_widget = p.led_widget
+            # if hasattr(instance, "is_led_on"):
+            #     is_on = instance.is_led_on()
+            #     led_widget.set_state(is_on)
             if hasattr(p.instance, "is_led_on"):
                 is_on = p.instance.is_led_on()
                 p.led_widget.set_state(is_on)
