@@ -246,6 +246,7 @@ class MainWindow(QMainWindow):
         """
         # Always update the side panel (it's always visible)
         self._cpu_panel.update_view()
+        self._editor._peripherals.update_view()
 
         # Only update the currently active tab
         self._update_active_tab()
