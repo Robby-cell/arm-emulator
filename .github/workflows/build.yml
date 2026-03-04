@@ -64,6 +64,9 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
+      - name: Build Translations
+        run: uv run scripts/build_translations.py
+
       - name: Package Executable
         # 'shell: bash' ensures Git Bash is used on Windows so 'source' and '.sh' scripts work
         shell: bash
