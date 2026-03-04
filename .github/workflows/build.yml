@@ -1,78 +1,109 @@
-name: Build and Package
+name: Build and Release
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+" # Triggers release job on version tags
   pull_request:
-    branches: ["main"]
-  # Allows you to run this workflow manually from the Actions tab
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
+    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false # If one OS fails, let the others finish
-      matrix: os:[ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: arm-emulator-linux.tar.gz
+            binary_name: arm_emulator
+            package_script: package.sh
+            venv_activate: .venv/bin/activate
+          - os: macos-latest
+            asset_name: arm-emulator-macos.tar.gz
+            binary_name: arm_emulator
+            package_script: package.sh
+            venv_activate: .venv/bin/activate
+          - os: windows-latest
+            asset_name: arm-emulator-windows.zip
+            binary_name: arm_emulator.exe
+            package_script: package-windows.sh
+            venv_activate: .venv/Scripts/activate
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Setup Rust
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      # 2. Setup Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # 3. Setup uv (Astral's official GitHub Action)
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
-      # 4. Sync Environment
       - name: Sync dependencies
         run: uv sync
 
-      # 5. Run Rust Tests
       - name: Run Cargo tests
         run: cargo test --all
 
-      # 6. Build Rust Bindings via maturin
       - name: Build Rust bindings
         run: uvx maturin develop --release
 
-      # 7a. Package (Linux and macOS)
-      - name: Package Executable (Linux/macOS)
+      - name: Package Executable
+        # 'shell: bash' ensures Git Bash is used on Windows so 'source' and '.sh' scripts work
+        shell: bash
+        run: |
+          source ${{ matrix.venv_activate }}
+          bash ${{ matrix.package_script }}
+
+      - name: Archive artifact for Linux and macOS
         if: runner.os != 'Windows'
         run: |
-          # Activate the uv virtual environment
-          source .venv/bin/activate
-          # Run the packaging script
-          bash package.sh
+          cd dist
+          tar -czf ../${{ matrix.asset_name }} ${{ matrix.binary_name }}
 
-      # 7b. Package (Windows)
-      - name: Package Executable (Windows)
+      - name: Archive artifact for Windows
         if: runner.os == 'Windows'
-        shell: bash # Forces GitHub Actions to use Git Bash
+        shell: bash
         run: |
-          # Activate the uv virtual environment (Windows path)
-          source .venv/Scripts/activate
-          # Run the Windows packaging script
-          bash package-windows.sh
+          cd dist
+          # 7z is pre-installed on GitHub Windows runners and handles zip reliably
+          7z a ../${{ matrix.asset_name }} ${{ matrix.binary_name }}
 
-      # 8. Upload Artifacts
-      - name: Upload Executable
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arm_emulator-${{ runner.os }}
-          path: |
-            dist/arm_emulator
-            dist/arm_emulator.exe
-          if-no-files-found: error
+          name: ${{ matrix.os }}-artifact
+          path: ${{ matrix.asset_name }}
+
+  release:
+    name: Create Release
+    needs: build
+    # Only run this job if a tag was pushed (e.g., git tag v1.0.0 && git push --tags)
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true # Flattens the downloads into a single directory
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
