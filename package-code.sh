@@ -25,11 +25,21 @@ function _ensure_venv() {
     fi
 }
 
+function _build_translations() {
+    echo "Building translations..."
+
+    bash build-translations.sh
+
+    echo "Translations built."
+}
+
 function main() {
     echo "Building standalone executable using PyInstaller."
 
     echo "Creating spec file..."
     $PYI_MAKESPEC gui_main.py --name arm_emulator
+
+    _build_translations
 
     echo "Building executable..."
     # use pyinstaller to create a standalone binary.
