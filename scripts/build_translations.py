@@ -163,6 +163,8 @@ def cleanup(): ...
 
 
 def main():
+    global TRANSLATIONS_DIR
+
     parser = argparse.ArgumentParser(description="Automated Qt Translation Pipeline")
     parser.add_argument(
         "--languages",
@@ -173,8 +175,11 @@ def main():
     parser.add_argument(
         "--dir", default="gui", help="Root directory to scan for python files"
     )
+    parser.add_argument("--translations_dir", default="assets/translations", help="Translations directory")
 
     args = parser.parse_args()
+
+    TRANSLATIONS_DIR = Path(args.translations_dir)
 
     # 1. Scan for files
     sources = find_sources(args.dir)
