@@ -52,14 +52,14 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Sync dependencies
-        run: uv sync
-
       - name: Run Cargo tests
         run: cargo test --all
 
       - name: Build Rust bindings
         run: uvx maturin develop --release
+
+      - name: Sync dependencies
+        run: uv sync
 
       - name: Package Executable
         # 'shell: bash' ensures Git Bash is used on Windows so 'source' and '.sh' scripts work
