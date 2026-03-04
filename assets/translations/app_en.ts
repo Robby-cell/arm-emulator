@@ -40,179 +40,179 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/main_window.py" line="153"/>
-        <location filename="../../gui/main_window.py" line="487"/>
+        <location filename="../../gui/main_window.py" line="156"/>
+        <location filename="../../gui/main_window.py" line="488"/>
         <source>Main Toolbar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="168"/>
-        <source>Load</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="489"/>
-        <source>Run</source>
+        <source>Load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="174"/>
         <location filename="../../gui/main_window.py" line="490"/>
-        <source>Debug</source>
+        <source>Run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="176"/>
+        <location filename="../../gui/main_window.py" line="177"/>
         <location filename="../../gui/main_window.py" line="491"/>
-        <source>Stop</source>
+        <source>Debug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="179"/>
         <location filename="../../gui/main_window.py" line="492"/>
-        <source>Step</source>
+        <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="182"/>
         <location filename="../../gui/main_window.py" line="493"/>
+        <source>Step</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="185"/>
+        <location filename="../../gui/main_window.py" line="494"/>
         <source>Reset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="275"/>
+        <location filename="../../gui/main_window.py" line="278"/>
         <source>Execution Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/main_window.py" line="350"/>
-        <location filename="../../gui/main_window.py" line="478"/>
-        <source>&amp;File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="353"/>
         <location filename="../../gui/main_window.py" line="479"/>
-        <source>&amp;Build</source>
+        <source>&amp;File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="356"/>
         <location filename="../../gui/main_window.py" line="480"/>
-        <source>&amp;Options</source>
+        <source>&amp;Build</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="359"/>
         <location filename="../../gui/main_window.py" line="481"/>
+        <source>&amp;Options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="362"/>
+        <location filename="../../gui/main_window.py" line="482"/>
         <source>&amp;Language</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="364"/>
-        <location filename="../../gui/main_window.py" line="484"/>
+        <location filename="../../gui/main_window.py" line="367"/>
+        <location filename="../../gui/main_window.py" line="485"/>
         <source>Build and Load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="375"/>
+        <location filename="../../gui/main_window.py" line="378"/>
         <source>Endianness</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="381"/>
+        <location filename="../../gui/main_window.py" line="384"/>
         <source>Little Endian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="389"/>
+        <location filename="../../gui/main_window.py" line="392"/>
         <source>Big Endian</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="475"/>
+        <location filename="../../gui/main_window.py" line="476"/>
         <source>ARM Emulator</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="483"/>
+        <location filename="../../gui/main_window.py" line="484"/>
         <source>Load File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="488"/>
+        <location filename="../../gui/main_window.py" line="489"/>
         <source>Build</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="495"/>
+        <location filename="../../gui/main_window.py" line="496"/>
         <source>Assemble and Load (F7)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="496"/>
+        <location filename="../../gui/main_window.py" line="497"/>
         <source>Run (F5)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="497"/>
+        <location filename="../../gui/main_window.py" line="498"/>
         <source>Prepare for Debugging</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="498"/>
+        <location filename="../../gui/main_window.py" line="499"/>
         <source>Stop Execution (Shift+F5)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="499"/>
+        <location filename="../../gui/main_window.py" line="500"/>
         <source>Step Instruction (F10)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="500"/>
+        <location filename="../../gui/main_window.py" line="501"/>
         <source>Reset Emulator (Ctrl+R)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="503"/>
+        <location filename="../../gui/main_window.py" line="504"/>
         <source>Editor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="504"/>
+        <location filename="../../gui/main_window.py" line="505"/>
         <source>Memory View</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="505"/>
+        <location filename="../../gui/main_window.py" line="506"/>
         <source>Disassembly</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="547"/>
+        <location filename="../../gui/main_window.py" line="548"/>
         <source>Assembly Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="548"/>
+        <location filename="../../gui/main_window.py" line="549"/>
         <source>Assembly produced no code.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="555"/>
-        <location filename="../../gui/main_window.py" line="562"/>
+        <location filename="../../gui/main_window.py" line="556"/>
+        <location filename="../../gui/main_window.py" line="563"/>
         <source>Assembler Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="556"/>
+        <location filename="../../gui/main_window.py" line="557"/>
         <source>Failed to assemble code:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="563"/>
+        <location filename="../../gui/main_window.py" line="564"/>
         <source>An unexpected error occurred:</source>
         <translation type="unfinished"></translation>
     </message>
