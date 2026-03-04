@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
 )
 
 from assembler import Assembler, arm_big_endian_assembler, arm_little_endian_assembler
+from gui.resource import get_resource_path
 
 from .controllers.debugger_controller import DebuggerController
 from .language import get_languages_and_codes
@@ -42,7 +43,9 @@ def create_themed_icon(svg_path: str, color: str) -> QIcon:
     Reads an SVG file, replaces its fill/stroke color, and returns a QIcon.
     This allows programmatic, theme-aware coloring of icons.
     """
-    with open(svg_path, "r") as f:
+    actual_path = get_resource_path(svg_path)
+
+    with open(actual_path, "r") as f:
         svg_data = f.read()
 
     # Replace the placeholder 'currentColor' with the desired hex color
@@ -446,10 +449,8 @@ class MainWindow(QMainWindow):
 
         app.removeTranslator(self._translator)  # type: ignore : not None
 
-        base_dir = os.path.abspath(os.getcwd())
-        file_path = os.path.join(
-            base_dir, "assets", "translations", f"app_{lang_code}.qm"
-        )
+        relative_path = os.path.join("assets", "translations", f"app_{lang_code}.qm")
+        file_path = get_resource_path(relative_path)
 
         print(f"Attempting to load translation: {file_path}")
 
