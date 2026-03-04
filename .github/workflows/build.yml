@@ -55,6 +55,9 @@ jobs:
       - name: Run Cargo tests
         run: cargo test --all
 
+      - name: Create Virtual Environment
+        run: uv venv
+
       - name: Build Rust bindings
         run: uvx maturin develop --release
 
