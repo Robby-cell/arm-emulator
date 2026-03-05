@@ -5,17 +5,15 @@ from capstone import (
     Cs,
     CS_ARCH_ARM,
     CS_MODE_ARM,
-    CS_MODE_LITTLE_ENDIAN,
     CS_MODE_BIG_ENDIAN,
 )
-from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QColor, QFont, QRegularExpressionValidator
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
-    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -88,10 +86,10 @@ class DisassemblyScreen(QWidget):
         self._table.setFont(QFont("monospace", 10))
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.setShowGrid(False)
-        self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setVisible(False)  # type: ignore : not None
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
 
-        header_view = self._table.horizontalHeader()
+        header_view: QHeaderView = self._table.horizontalHeader()  # type: ignore : not None
         header_view.setSectionResizeMode(
             0, QHeaderView.ResizeMode.ResizeToContents
         )  # Address
