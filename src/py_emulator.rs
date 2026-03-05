@@ -115,6 +115,26 @@ impl PyEmulator {
         Ok(())
     }
 
+    pub fn try_read_chunk(
+        &self,
+        addr: u32,
+        size: u32,
+    ) -> PyResult<Vec<Option<u8>>> {
+        let mut result = Vec::with_capacity(size as usize);
+        for i in 0..size {
+            let addr = addr.wrapping_add(i);
+            match self.emulator.read_byte(addr) {
+                Ok(byte) => result.push(Some(byte)),
+                Err(_) => result.push(None), // None indicates "?? / unmapped"
+            }
+        }
+        Ok(result)
+    }
+
+    fn try_read_byte(&self, addr: u32) -> Option<u8> {
+        self.emulator.read_byte(addr).ok()
+    }
+
     fn read_byte(&self, addr: u32) -> PyResult<u8> {
         Ok(self
             .emulator
