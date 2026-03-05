@@ -27,8 +27,10 @@ from .language import get_languages_and_codes
 from .screens.disassembly import DisassemblyScreen
 from .screens.editor import EditorScreen
 from .screens.memory_view import MemoryViewScreen
+from .screens.tutorial_dialog import TutorialDialog
 from .widgets.cpu_panel import CpuPanel
 from .widgets.title_bar import TitleBar
+from .sample.starter_code import EXAMPLE_BLINK, EXAMPLE_FIBONACCI
 
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
@@ -267,7 +269,7 @@ class MainWindow(QMainWindow):
 
         # Check if the widget has an update_view method (duck typing)
         if hasattr(current_widget, "update_view"):
-            current_widget.update_view()
+            current_widget.update_view()  # type: ignore : not None
 
     def _on_breakpoint_hit(self, address: int) -> None:
         print(f"UI notified: Breakpoint hit at {hex(address)}")
@@ -362,6 +364,50 @@ class MainWindow(QMainWindow):
         self._language_menu: QMenu = self._menu.addMenu(self.tr("&Language"))  # type: ignore : not None
         self._build_language_menu()
 
+        self._help_menu: QMenu = self._menu.addMenu(self.tr("&Help"))  # type: ignore : not None
+        self._build_help_menu()
+
+    def _show_tutorial(self) -> None:
+        """Spawns the tutorial dialog."""
+        dialog = TutorialDialog(self)
+        dialog.exec()  # Blocks interaction with main window until closed
+
+    def _load_example_code(self, code: str) -> None:
+        """Loads example code into the editor and warns about overwriting."""
+        reply = QMessageBox.question(
+            self,
+            self.tr("Load Example"),
+            self.tr("This will overwrite your current code. Continue?"),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            # Assumes your EditorScreen exposes the text edit widget
+            # If your code uses self._editor._editor.setPlainText, use that:
+            self._editor._editor.setPlainText(code)
+
+            # Switch to the Editor tab so they can see it
+            self.tabs.setCurrentIndex(0)
+
+    def _build_help_menu(self) -> None:
+        # 1. The Tutorial Guide
+        self.tutorial_action = QAction(self.tr("Quick Start Guide"), self)
+        self.tutorial_action.triggered.connect(self._show_tutorial)
+        self._help_menu.addAction(self.tutorial_action)
+
+        self._help_menu.addSeparator()
+
+        # 2. Examples Sub-menu
+        examples_menu: QMenu = self._help_menu.addMenu(self.tr("Load Example..."))  # type: ignore : not None
+
+        ex_blink = QAction(self.tr("Blinking LED"), self)
+        ex_blink.triggered.connect(lambda: self._load_example_code(EXAMPLE_BLINK))
+        examples_menu.addAction(ex_blink)
+
+        ex_fib = QAction(self.tr("Fibonacci Sequence"), self)
+        ex_fib.triggered.connect(lambda: self._load_example_code(EXAMPLE_FIBONACCI))
+        examples_menu.addAction(ex_fib)
+
     def _build_build_menu_actions(self) -> None:
         # Action for the menu
         self.build_action_menu = QAction(self.tr("Build and Load"), self)
@@ -375,7 +421,7 @@ class MainWindow(QMainWindow):
 
     def _build_options_menu(self) -> None:
         # Endianness Submenu
-        endian_menu = self._options_menu.addMenu(self.tr("Endianness"))
+        endian_menu: QMenu = self._options_menu.addMenu(self.tr("Endianness"))  # type: ignore : not None
 
         # Create an exclusive group (Radio button behavior)
         self._endian_group = QActionGroup(self)
@@ -483,6 +529,9 @@ class MainWindow(QMainWindow):
 
         self._load_file_action.setText(self.tr("Load File"))
         self.build_action_menu.setText(self.tr("Build and Load"))
+
+        self._help_menu.setTitle(self.tr("&Help"))
+        self.tutorial_action.setText(self.tr("Quick Start Guide"))
 
         # Toolbar
         self.toolbar.setWindowTitle(self.tr("Main Toolbar"))
