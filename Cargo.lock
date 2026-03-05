@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "arm_emulator"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "emulator",
  "pyo3",
