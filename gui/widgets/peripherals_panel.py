@@ -360,19 +360,19 @@ class PeripheralsPanel(QWidget):
 
         type_label = self._form_layout.labelForField(self._type_combo)
         if type_label is not None:
-            type_label.setText(self.tr("Type:"))
+            type_label.setText(self.tr("Type:"))  # type: ignore : method exists
 
         name_label = self._form_layout.labelForField(self._name_input)
         if name_label:
-            name_label.setText(self.tr("Instance Name:"))
+            name_label.setText(self.tr("Instance Name:"))  # type: ignore : method exists
 
         start_label = self._form_layout.labelForField(self._begin_addr_input)
         if start_label:
-            start_label.setText(self.tr("Begin Address:"))
+            start_label.setText(self.tr("Begin Address:"))  # type: ignore : method exists
 
         end_label = self._form_layout.labelForField(self._end_addr_input)
         if end_label:
-            end_label.setText(self.tr("End Address:"))
+            end_label.setText(self.tr("End Address:"))  # type: ignore : method exists
 
         # 2. Update Buttons
         self._add_button.setText(self.tr("Add Peripheral"))
