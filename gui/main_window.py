@@ -29,7 +29,8 @@ from .screens.editor import EditorScreen
 from .screens.memory_view import MemoryViewScreen
 from .screens.tutorial_dialog import TutorialDialog
 from .widgets.cpu_panel import CpuPanel
-from .widgets.title_bar import TitleBar
+
+# from .widgets.title_bar import TitleBar
 from .sample.starter_code import EXAMPLE_BLINK, EXAMPLE_FIBONACCI
 
 RUN_ICON = "assets/icons/play.svg"
@@ -83,9 +84,12 @@ class MainWindow(QMainWindow):
         super().__init__(parent=parent, flags=flags)
 
         # Setup title bar
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.title_bar = TitleBar("ARM Emulator", self)
+
+        self.setMinimumSize(800, 600)
+        # self.title_bar = TitleBar("ARM Emulator", self)
+        # self.title_bar.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         # self.layout.addWidget(self.title_bar)
         # self.setWindowTitle("ARM Emulator")
 
@@ -134,7 +138,7 @@ class MainWindow(QMainWindow):
         self._root_layout.setSpacing(0)
         self._root_widget.setLayout(self._root_layout)
 
-        self._root_layout.addWidget(self.title_bar, 0)
+        # self._root_layout.addWidget(self.title_bar, 0)
         self._root_layout.addWidget(self._menu, 0)
         self._root_layout.addWidget(self.toolbar, 0)
 
