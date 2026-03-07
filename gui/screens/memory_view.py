@@ -120,6 +120,7 @@ class MemoryViewScreen(QWidget):
         column_count = 1 + self.BYTES_PER_ROW + 1
         self._table.setColumnCount(column_count)
         self._table.setRowCount(self.ROWS_TO_DISPLAY)  # Set rows ONCE
+        self._table.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
 
         headers = (
             ["Address"] + [f"{i:02X}" for i in range(self.BYTES_PER_ROW)] + ["ASCII"]

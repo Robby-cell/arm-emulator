@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
     QWidget,
     QCheckBox,
 )
+from PyQt6.QtCore import Qt
 
 
 class DisassemblyScreen(QWidget):
@@ -82,6 +83,8 @@ class DisassemblyScreen(QWidget):
         self._table.setColumnCount(4)
         headers = ["Address", "Bytes", "Opcode", "Operands"]
         self._table.setHorizontalHeaderLabels(headers)
+
+        self._table.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
 
         self._table.setFont(QFont("monospace", 10))
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)

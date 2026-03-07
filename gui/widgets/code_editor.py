@@ -284,27 +284,32 @@ class LineNumberArea(QWidget):
 
         while block.isValid() and top_y <= a0.rect().bottom():
             if block.isVisible() and block_number < last_visible_line:
-                # Draw line number (right-aligned)
-                number = str(block_number + 1)
-                painter.setPen(self.text_color)
-                painter.setFont(self._font)
-                painter.drawText(
-                    0,
-                    int(top_y),
-                    self.width() - 5,
-                    self._editor.fontMetrics().height(),
-                    Qt.AlignmentFlag.AlignRight,
-                    number,
-                )
+                block_height = self._editor.blockBoundingRect(block).height()
 
-                # Draw breakpoint dot
+                # 1. Draw breakpoint dot FIRST
                 if self._editor.is_breakpoint(block_number):
-                    block_height = self._editor.blockBoundingRect(block).height()
-                    dot_y = int(top_y + (block_height / 2) - 7)
+                    # -5 for perfectly centering a 10x10 dot vertically
+                    dot_y = int(top_y + (block_height / 2) - 5)
                     dot_x = 5
                     painter.setBrush(self.breakpoint_color)
                     painter.setPen(self.breakpoint_color)
                     painter.drawEllipse(dot_x, dot_y, 10, 10)
+
+                # 2. Draw line number
+                number = str(block_number + 1)
+                painter.setPen(self.text_color)
+                painter.setFont(self._font)
+
+                # Create a strict bounding box for the text.
+                # Start at x=20 (safely past the 10px breakpoint dot).
+                # Width is total_width - 20 (left space) - 5 (right padding).
+                text_rect = QRect(20, int(top_y), self.width() - 25, int(block_height))
+
+                # Center vertically and align right
+                alignment = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+
+                # Using the QRect overload guarantees the flags are applied correctly
+                painter.drawText(text_rect, int(alignment), number)
 
             block = block.next()
             block_number += 1
@@ -347,6 +352,9 @@ class CodeEditor(QPlainTextEdit):
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
+
+        self.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+
         self._line_number_area = (
             line_number_area if line_number_area is not None else LineNumberArea(self)
         )
@@ -555,12 +563,12 @@ class CodeEditor(QPlainTextEdit):
         if line_number >= self.blockCount() - 1:
             return
 
-        doc = self.document()
+        doc: QTextDocument = self.document()  # type: ignore
         block = doc.findBlockByNumber(line_number)
         if not block.isValid():
             return
 
-        data = block.userData()
+        data: BreakpointUserData = block.userData()  # type: ignore
         if not data:
             data = BreakpointUserData()
 

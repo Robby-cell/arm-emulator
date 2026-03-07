@@ -35,9 +35,9 @@ class CpuPanel(QWidget):
     def setupUI(self) -> None:
         # 1. Registers Group
         self._register_group = QGroupBox(self.tr("Registers"))
-        reg_group = self._register_group
         reg_layout = QGridLayout()
-        reg_group.setLayout(reg_layout)
+        self._register_group.setLayout(reg_layout)
+        self._register_group.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
 
         # Monospace font for values
         mono_font = QFont("monospace", 10)
@@ -64,9 +64,9 @@ class CpuPanel(QWidget):
 
         # 2. Flags Group (CPSR)
         self._flag_group = QGroupBox(self.tr("CPSR Flags"))
-        flag_group = self._flag_group
+        self._flag_group.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         flag_layout = QHBoxLayout()
-        flag_group.setLayout(flag_layout)
+        self._flag_group.setLayout(flag_layout)
 
         for flag in ["N", "Z", "C", "V"]:
             lbl = QLabel(flag)
@@ -80,8 +80,8 @@ class CpuPanel(QWidget):
             flag_layout.addWidget(lbl)
 
         # Add groups to main layout
-        self._layout.addWidget(reg_group)
-        self._layout.addWidget(flag_group)
+        self._layout.addWidget(self._register_group)
+        self._layout.addWidget(self._flag_group)
         self._layout.addStretch()  # Push everything up
 
     def update_view(self) -> None:
