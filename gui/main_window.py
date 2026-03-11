@@ -1,5 +1,8 @@
 import os
 from typing import Optional
+import sys
+import ctypes
+from pathlib import Path
 
 from arm_emulator_rs import Emulator  # type: ignore : import exists
 from keystone.keystone import KsError
@@ -39,6 +42,19 @@ BUILD_ICON = "assets/icons/download.svg"
 STOP_ICON = "assets/icons/square.svg"
 STEP_ICON = "assets/icons/skip-forward.svg"
 RESET_ICON = "assets/icons/refresh-cw.svg"
+
+
+def get_icon_path() -> str:
+    def inner() -> Path:
+        base_path = Path("assets") / "icons"
+        if sys.platform == "win32":
+            return base_path / "favicon.ico"
+        elif sys.platform == "darwin":
+            return base_path / "favicon.icns"
+        else:
+            return base_path / "favicon.png"
+
+    return str(inner())
 
 
 def create_themed_icon(svg_path: str, color: str) -> QIcon:
@@ -82,6 +98,15 @@ class MainWindow(QMainWindow):
         flags: Qt.WindowType = Qt.WindowType.Window,
     ) -> None:
         super().__init__(parent=parent, flags=flags)
+
+        if sys.platform == "win32":
+            myappid = "ac.uk.qub.arm_emulator"  # Arbitrary string
+            try:
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            except AttributeError:
+                pass
+
+        self.setWindowIcon(QIcon(get_resource_path(get_icon_path())))
 
         # Setup title bar
         # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
