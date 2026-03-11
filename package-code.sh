@@ -34,6 +34,8 @@ function _build_translations() {
 }
 
 function main() {
+    _source_venv
+
     echo "Building standalone executable using PyInstaller."
 
     echo "Creating spec file..."
@@ -42,13 +44,40 @@ function main() {
     _build_translations
 
     echo "Building executable..."
+
+     # OS-specific variables for PyInstaller
+    if [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "cygwin"* || "$OSTYPE" == "win32"* ]]; then
+        # Windows
+        SEP=";"
+        ICON_FLAG="--icon=assets/icons/favicon.ico"
+        VERSION_FLAG="--version-file=version_info.txt"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        SEP=":"
+        ICON_FLAG="--icon=assets/icons/favicon.icns"
+        VERSION_FLAG=""
+    else
+        # Linux
+        SEP=":"
+        ICON_FLAG="--icon=assets/icons/favicon.png" # Linux prefers PNG or ICO
+        VERSION_FLAG=""
+    fi
+
+    export PYTHONOPTIMIZE=1
+
     # use pyinstaller to create a standalone binary.
     # --onefile: create a single executable file, no additional directories needed.
     # --name emulator: name the output executable "emulator"
     # --additional-hooks-dir hooks: include additional hooks from the "hooks" directory.
     # --add-data "assets:assets": include the assets directory in the executable.
-    export PYTHONOPTIMIZE=1
-    $PYINSTALLER --noconfirm --onefile --windowed --name arm_emulator --additional-hooks-dir hooks --add-data "assets:assets" -y gui_main.py --exclude-module PySide6
+    $PYINSTALLER --noconfirm --onefile --windowed      \
+        ${VERSION_FLAG}                                \
+        ${ICON_FLAG}                                   \
+        --name arm_emulator                            \
+        --additional-hooks-dir hooks                   \
+        --add-data "assets${SEP}assets" -y             \
+        --exclude-module PySide6                       \
+        gui_main.py
 }
 
 main
