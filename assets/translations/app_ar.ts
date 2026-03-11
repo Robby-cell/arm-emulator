@@ -40,216 +40,216 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/main_window.py" line="173"/>
-        <location filename="../../gui/main_window.py" line="552"/>
+        <location filename="../../gui/main_window.py" line="187"/>
+        <location filename="../../gui/main_window.py" line="566"/>
         <source>Main Toolbar</source>
         <translation>شريط الأدوات الرئيسي</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="188"/>
+        <location filename="../../gui/main_window.py" line="202"/>
         <source>Load</source>
         <translation>حمولة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="191"/>
-        <location filename="../../gui/main_window.py" line="554"/>
+        <location filename="../../gui/main_window.py" line="205"/>
+        <location filename="../../gui/main_window.py" line="568"/>
         <source>Run</source>
         <translation>يجري</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="194"/>
-        <location filename="../../gui/main_window.py" line="555"/>
+        <location filename="../../gui/main_window.py" line="208"/>
+        <location filename="../../gui/main_window.py" line="569"/>
         <source>Debug</source>
         <translation>تصحيح</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="196"/>
-        <location filename="../../gui/main_window.py" line="556"/>
+        <location filename="../../gui/main_window.py" line="210"/>
+        <location filename="../../gui/main_window.py" line="570"/>
         <source>Stop</source>
         <translation>قف</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="199"/>
-        <location filename="../../gui/main_window.py" line="557"/>
+        <location filename="../../gui/main_window.py" line="213"/>
+        <location filename="../../gui/main_window.py" line="571"/>
         <source>Step</source>
         <translation>خطوة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="202"/>
-        <location filename="../../gui/main_window.py" line="558"/>
+        <location filename="../../gui/main_window.py" line="216"/>
+        <location filename="../../gui/main_window.py" line="572"/>
         <source>Reset</source>
         <translation>إعادة ضبط</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="295"/>
+        <location filename="../../gui/main_window.py" line="309"/>
         <source>Execution Error</source>
         <translation>خطأ في التنفيذ</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="370"/>
-        <location filename="../../gui/main_window.py" line="540"/>
+        <location filename="../../gui/main_window.py" line="384"/>
+        <location filename="../../gui/main_window.py" line="554"/>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="373"/>
-        <location filename="../../gui/main_window.py" line="541"/>
+        <location filename="../../gui/main_window.py" line="387"/>
+        <location filename="../../gui/main_window.py" line="555"/>
         <source>&amp;Build</source>
         <translation>&amp;يبني</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="376"/>
-        <location filename="../../gui/main_window.py" line="542"/>
+        <location filename="../../gui/main_window.py" line="390"/>
+        <location filename="../../gui/main_window.py" line="556"/>
         <source>&amp;Options</source>
         <translation>&amp;خيارات</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="379"/>
-        <location filename="../../gui/main_window.py" line="543"/>
+        <location filename="../../gui/main_window.py" line="393"/>
+        <location filename="../../gui/main_window.py" line="557"/>
         <source>&amp;Language</source>
         <translation>&amp;لغة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="382"/>
-        <location filename="../../gui/main_window.py" line="548"/>
+        <location filename="../../gui/main_window.py" line="396"/>
+        <location filename="../../gui/main_window.py" line="562"/>
         <source>&amp;Help</source>
         <translation>&amp;يساعد</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="394"/>
+        <location filename="../../gui/main_window.py" line="408"/>
         <source>Load Example</source>
         <translation>تحميل المثال</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="395"/>
+        <location filename="../../gui/main_window.py" line="409"/>
         <source>This will overwrite your current code. Continue?</source>
         <translation>سيؤدي هذا إلى استبدال الرمز الحالي الخاص بك. يكمل؟</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="549"/>
+        <location filename="../../gui/main_window.py" line="423"/>
+        <location filename="../../gui/main_window.py" line="563"/>
         <source>Quick Start Guide</source>
         <translation>دليل البدء السريع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="416"/>
+        <location filename="../../gui/main_window.py" line="430"/>
         <source>Load Example...</source>
         <translation>تحميل المثال...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="418"/>
+        <location filename="../../gui/main_window.py" line="432"/>
         <source>Blinking LED</source>
         <translation>وامض الصمام</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="422"/>
+        <location filename="../../gui/main_window.py" line="436"/>
         <source>Fibonacci Sequence</source>
         <translation>تسلسل فيبوناتشي</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="428"/>
-        <location filename="../../gui/main_window.py" line="546"/>
+        <location filename="../../gui/main_window.py" line="442"/>
+        <location filename="../../gui/main_window.py" line="560"/>
         <source>Build and Load</source>
         <translation>بناء وتحميل</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="439"/>
+        <location filename="../../gui/main_window.py" line="453"/>
         <source>Endianness</source>
         <translation>إنديانيس</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="445"/>
+        <location filename="../../gui/main_window.py" line="459"/>
         <source>Little Endian</source>
         <translation>إنديان الصغير</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="453"/>
+        <location filename="../../gui/main_window.py" line="467"/>
         <source>Big Endian</source>
         <translation>إنديان الكبير</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="537"/>
+        <location filename="../../gui/main_window.py" line="551"/>
         <source>ARM Emulator</source>
         <translation>محاكي أرم</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="545"/>
+        <location filename="../../gui/main_window.py" line="559"/>
         <source>Load File</source>
         <translation>تحميل الملف</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="553"/>
+        <location filename="../../gui/main_window.py" line="567"/>
         <source>Build</source>
         <translation>يبني</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="560"/>
+        <location filename="../../gui/main_window.py" line="574"/>
         <source>Assemble and Load (F7)</source>
         <translation>التجميع والتحميل (F7)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="561"/>
+        <location filename="../../gui/main_window.py" line="575"/>
         <source>Run (F5)</source>
         <translation>تشغيل (F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="562"/>
+        <location filename="../../gui/main_window.py" line="576"/>
         <source>Prepare for Debugging</source>
         <translation>الاستعداد لتصحيح الأخطاء</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="563"/>
+        <location filename="../../gui/main_window.py" line="577"/>
         <source>Stop Execution (Shift+F5)</source>
         <translation>إيقاف التنفيذ (Shift+F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="564"/>
+        <location filename="../../gui/main_window.py" line="578"/>
         <source>Step Instruction (F10)</source>
         <translation>تعليمات الخطوة (F10)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="565"/>
+        <location filename="../../gui/main_window.py" line="579"/>
         <source>Reset Emulator (Ctrl+R)</source>
         <translation>إعادة ضبط المحاكي (Ctrl+R)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="568"/>
+        <location filename="../../gui/main_window.py" line="582"/>
         <source>Editor</source>
         <translation>محرر</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="569"/>
+        <location filename="../../gui/main_window.py" line="583"/>
         <source>Memory View</source>
         <translation>عرض الذاكرة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="570"/>
+        <location filename="../../gui/main_window.py" line="584"/>
         <source>Disassembly</source>
         <translation>التفكيك</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="612"/>
+        <location filename="../../gui/main_window.py" line="626"/>
         <source>Assembly Warning</source>
         <translation>تحذير التجميع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="613"/>
+        <location filename="../../gui/main_window.py" line="627"/>
         <source>Assembly produced no code.</source>
         <translation>لم تنتج الجمعية أي رمز.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="620"/>
-        <location filename="../../gui/main_window.py" line="627"/>
+        <location filename="../../gui/main_window.py" line="634"/>
+        <location filename="../../gui/main_window.py" line="641"/>
         <source>Assembler Error</source>
         <translation>خطأ المجمع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="621"/>
+        <location filename="../../gui/main_window.py" line="635"/>
         <source>Failed to assemble code:</source>
         <translation>فشل في تجميع التعليمات البرمجية:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="628"/>
+        <location filename="../../gui/main_window.py" line="642"/>
         <source>An unexpected error occurred:</source>
         <translation>حدث خطأ غير متوقع:</translation>
     </message>
