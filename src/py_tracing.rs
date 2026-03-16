@@ -5,7 +5,7 @@ use pyo3::{exceptions::PyException, prelude::*};
 use thiserror::Error;
 
 const APP_INFO: AppInfo = AppInfo {
-    name: "arm_emulator_rs",
+    name: "Arm Emulator",
     author: "Robert Williamson",
 };
 
@@ -13,13 +13,16 @@ pub(crate) fn app_dir_root() -> Result<PathBuf, AppDirsError> {
     get_app_root(AppDataType::UserConfig, &APP_INFO)
 }
 
-pub(crate) fn init_tracing() -> PyResult<()> {
-    use std::fs::OpenOptions;
+#[pyfunction(name = "init_tracing")]
+fn py_init_tracing() -> PyResult<()> {
+    use std::fs::{OpenOptions, create_dir_all};
     use tracing::Level;
     use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
 
-    let root = py_app_dir_root()?;
+    let root = py_app_dir_root_raw()?;
     let log_root = root.join("logs");
+
+    create_dir_all(log_root.clone())?;
 
     let err_file = OpenOptions::new()
         .append(true)
@@ -99,17 +102,22 @@ impl From<PyAppDirsError> for PyErr {
     }
 }
 
-#[pyfunction(name = "app_dir_root")]
-fn py_app_dir_root() -> PyResult<PathBuf> {
+fn py_app_dir_root_raw() -> PyResult<PathBuf> {
     match app_dir_root() {
         Ok(path) => Ok(path),
         Err(e) => Err(Into::<PyAppDirsError>::into(e).into()),
     }
 }
 
+#[pyfunction(name = "app_dir_root")]
+fn py_app_dir_root() -> PyResult<PathBuf> {
+    py_app_dir_root_raw()
+}
+
 #[pymodule]
 pub(crate) fn py_tracing(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_app_dir_root, m)?)?;
+    m.add_function(wrap_pyfunction!(py_init_tracing, m)?)?;
 
     Ok(())
 }

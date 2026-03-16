@@ -52,8 +52,6 @@ impl PyExecutionError {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    py_tracing::init_tracing()?;
-
     tracing::info!("Initializing arm_emulator_rs");
 
     {

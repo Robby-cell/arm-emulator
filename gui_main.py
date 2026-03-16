@@ -1,6 +1,6 @@
 from sys import argv, exit
 
-from arm_emulator_rs import Emulator  # type: ignore : import exists
+from arm_emulator_rs import init_tracing, Emulator  # type: ignore : import exists
 from PyQt6.QtWidgets import QApplication
 import qdarktheme
 
@@ -13,6 +13,7 @@ def main():
     app.setStyle("Fusion")
     qdarktheme.setup_theme("dark")
 
+    init_tracing()
     with MainWindow(
         emulator=Emulator(
             code_size=0,
