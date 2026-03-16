@@ -22,7 +22,7 @@ fn py_init_tracing() -> PyResult<()> {
     let root = py_app_dir_root_raw()?;
     let log_root = root.join("logs");
 
-    create_dir_all(log_root.clone())?;
+    create_dir_all(&log_root)?;
 
     let err_file = OpenOptions::new()
         .append(true)
