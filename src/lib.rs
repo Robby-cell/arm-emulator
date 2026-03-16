@@ -10,62 +10,7 @@ mod py_gpio_port;
 mod py_memory;
 mod py_peripheral;
 mod py_range;
-
-fn init_tracing() -> PyResult<()> {
-    use std::fs::OpenOptions;
-    use tracing::Level;
-    use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
-
-    let err_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open("log-error.log")?;
-
-    let debug_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open("log-debug.log")?;
-
-    let trace_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open("log-trace.log")?;
-
-    let subscriber = tracing_subscriber::Registry::default()
-        .with(fmt::layer().compact().with_ansi(true))
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(err_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::ERROR,
-                )),
-        )
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(debug_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::DEBUG,
-                )),
-        )
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(trace_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::TRACE,
-                )),
-        );
-
-    tracing::subscriber::set_global_default(subscriber)
-        .expect("Could not set global default subscriber");
-
-    Ok(())
-}
+mod py_tracing;
 
 #[derive(Debug, Error)]
 #[pyclass(name = "ExecutionError", extends = PyException)]
@@ -107,7 +52,7 @@ impl PyExecutionError {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    init_tracing()?;
+    py_tracing::init_tracing()?;
 
     tracing::info!("Initializing arm_emulator_rs");
 
@@ -128,6 +73,10 @@ fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
         py_range::py_range(m)?;
 
         m.add_class::<PyExecutionError>()?;
+    }
+
+    {
+        py_tracing::py_tracing(m)?;
     }
 
     tracing::info!("Initialized arm_emulator_rs");
