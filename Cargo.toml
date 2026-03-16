@@ -25,7 +25,6 @@ app_dirs2 = { version = "2.5.5" }
 emulator = { path = "emulator" }
 
 modular-bitfield = { version = "0.13.1" }
-nom = { version = "8.0.0" }
 pyo3 = { version = "0.27.2", features = ["extension-module"] }
 rand = { version = "0.10.0" }
 thiserror = { version = "2.0.18" }
