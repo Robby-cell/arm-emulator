@@ -13,6 +13,28 @@ pub(crate) fn app_dir_root() -> Result<PathBuf, AppDirsError> {
     get_app_root(AppDataType::UserConfig, &APP_INFO)
 }
 
+macro_rules! create_file {
+    ($log_root:ident, $path:expr $(,)?) => {{
+        {
+            OpenOptions::new()
+                .append(true)
+                .create(true)
+                .write(true)
+                .open(($log_root).join($path))
+        }
+    }};
+}
+
+macro_rules! subscriber_layer {
+    (json: {file: $file:ident, filter: $filter:expr $(,)?}$(,)?) => {{
+        tracing_subscriber::fmt::layer()
+            .with_ansi(false)
+            .json()
+            .with_writer($file)
+            .with_filter($filter)
+    }};
+}
+
 #[pyfunction(name = "init_tracing")]
 fn py_init_tracing() -> PyResult<()> {
     use std::fs::{OpenOptions, create_dir_all};
@@ -24,50 +46,30 @@ fn py_init_tracing() -> PyResult<()> {
 
     create_dir_all(&log_root)?;
 
-    let err_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(log_root.join("log-error.log"))?;
-
-    let debug_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(log_root.join("log-debug.log"))?;
-
-    let trace_file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open(log_root.join("log-trace.log"))?;
+    let err_file = create_file!(log_root, "log-error.log")?;
+    let debug_file = create_file!(log_root, "log-debug.log")?;
+    let trace_file = create_file!(log_root, "log-trace.log")?;
 
     let subscriber = tracing_subscriber::Registry::default()
         .with(fmt::layer().compact().with_ansi(true))
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(err_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::ERROR,
-                )),
-        )
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(debug_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::DEBUG,
-                )),
-        )
-        .with(
-            fmt::layer()
-                .with_ansi(false)
-                .json()
-                .with_writer(trace_file)
-                .with_filter(filter::LevelFilter::from_level(
-                    Level::TRACE,
-                )),
-        );
+        .with(subscriber_layer!(
+            json: {
+                file: err_file,
+                filter: filter::LevelFilter::from_level(Level::ERROR),
+            },
+        ))
+        .with(subscriber_layer!(
+            json: {
+                file: debug_file,
+                filter: filter::LevelFilter::from_level(Level::DEBUG),
+            },
+        ))
+        .with(subscriber_layer!(
+            json: {
+                file: trace_file,
+                filter: filter::LevelFilter::from_level(Level::TRACE),
+            },
+        ));
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Could not set global default subscriber");
