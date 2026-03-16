@@ -41,6 +41,24 @@ fn py_init_tracing() -> PyResult<()> {
     use tracing::Level;
     use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
 
+    {
+        static TOKEN: std::sync::atomic::AtomicBool =
+            std::sync::atomic::AtomicBool::new(false);
+
+        if TOKEN
+            .compare_exchange(
+                false,
+                true,
+                std::sync::atomic::Ordering::AcqRel,
+                std::sync::atomic::Ordering::Acquire,
+            )
+            .is_ok()
+        {
+            tracing::warn!("Tracing already initialized");
+            return Ok(());
+        }
+    }
+
     let root = py_app_dir_root_raw()?;
     let log_root = root.join("logs");
 
