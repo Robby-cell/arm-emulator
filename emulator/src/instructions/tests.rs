@@ -97,7 +97,10 @@ fn test_decode_block_data_transfer() {
         use register_mask::*;
         let expected_list = R4 | R5 | R14;
 
-        assert_eq!(inst.register_list() as u16, expected_list.into());
+        assert_eq!(
+            inst.register_list() as u16,
+            Into::<u16>::into(expected_list)
+        );
     } else {
         panic!("Incorrect instruction type decoded: {:?}", decoded);
     }
