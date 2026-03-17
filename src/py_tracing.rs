@@ -39,21 +39,22 @@ macro_rules! subscriber_layer {
 #[pyfunction(name = "init_tracing")]
 fn py_init_tracing() -> PyResult<()> {
     use std::fs::create_dir_all;
+    use std::time::{SystemTime, UNIX_EPOCH};
     use tracing::Level;
     use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
 
     {
         static TOKEN: std::sync::atomic::AtomicBool =
-            std::sync::atomic::AtomicBool::new(false);
+            std::sync::atomic::AtomicBool::new(true);
 
-        if TOKEN
+        if !TOKEN
             .compare_exchange(
-                false,
                 true,
+                false,
                 std::sync::atomic::Ordering::AcqRel,
                 std::sync::atomic::Ordering::Acquire,
             )
-            .is_ok()
+            .is_ok_and(|b| b)
         {
             tracing::warn!("Tracing already initialized");
             return Ok(());
@@ -61,7 +62,14 @@ fn py_init_tracing() -> PyResult<()> {
     }
 
     let root = py_app_dir_root_raw()?;
-    let log_root = root.join("logs");
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    let session_folder = format!("session_{}", timestamp);
+    let log_root = root.join("logs").join(session_folder);
 
     create_dir_all(&log_root)?;
 
@@ -92,6 +100,8 @@ fn py_init_tracing() -> PyResult<()> {
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("Could not set global default subscriber");
+
+    tracing::info!("Tracing initialized");
 
     Ok(())
 }
