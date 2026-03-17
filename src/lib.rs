@@ -4,8 +4,8 @@ use emulator::prelude::ExecutionError;
 use pyo3::{exceptions::PyException, prelude::*};
 use thiserror::Error;
 
-mod error;
 mod py_emulator;
+mod py_error;
 mod py_gpio_port;
 mod py_memory;
 mod py_peripheral;

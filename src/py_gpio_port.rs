@@ -5,7 +5,7 @@ use emulator::{
     peripherals::gpio::GpioPort,
 };
 
-use crate::error::{ToPyExecutionResult, ToPyResult};
+use crate::py_error::{ToPyExecutionResult, ToPyResult};
 
 #[pyclass(name = "GpioPort", subclass)]
 struct PyGpioPort {

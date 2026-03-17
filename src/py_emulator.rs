@@ -9,7 +9,7 @@ use emulator::{
 };
 
 use crate::{
-    error::{ToPyExecutionResult, ToPyResult},
+    py_error::{ToPyExecutionResult, ToPyResult},
     py_peripheral::PyPeripheral,
     py_range::PyRangeInclusiveU32,
 };
