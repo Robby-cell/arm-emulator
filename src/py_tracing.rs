@@ -16,7 +16,7 @@ pub(crate) fn app_dir_root() -> Result<PathBuf, AppDirsError> {
 macro_rules! create_file {
     ($log_root:ident, $path:expr $(,)?) => {{
         {
-            OpenOptions::new()
+            ::std::fs::OpenOptions::new()
                 .append(true)
                 .create(true)
                 .write(true)
@@ -26,9 +26,10 @@ macro_rules! create_file {
 }
 
 macro_rules! subscriber_layer {
+    (basic with ansi) => {{ ::tracing_subscriber::fmt::layer().with_ansi(false) }};
+
     (json: {file: $file:ident, filter: $filter:expr $(,)?}$(,)?) => {{
-        tracing_subscriber::fmt::layer()
-            .with_ansi(false)
+        subscriber_layer!(basic with ansi)
             .json()
             .with_writer($file)
             .with_filter($filter)
@@ -37,7 +38,7 @@ macro_rules! subscriber_layer {
 
 #[pyfunction(name = "init_tracing")]
 fn py_init_tracing() -> PyResult<()> {
-    use std::fs::{OpenOptions, create_dir_all};
+    use std::fs::create_dir_all;
     use tracing::Level;
     use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
 
