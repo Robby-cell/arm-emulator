@@ -98,13 +98,16 @@ class DebuggerController(QObject):
         self._breakpoint_addr = None
 
         # Clear Maps
-        self._source_map.clear()
-        self._reverse_map.clear()
-        self._breakpoints.clear()  # Clear breakpoints as they correspond to old addresses
+        self.clear_breakpoints()  # Clear breakpoints as they correspond to old addresses
 
         # Notify UI
         self.state_changed.emit()
         self.highlight_line.emit(-1)  # Clear highlighter
+
+    def clear_breakpoints(self) -> None:
+        self._source_map.clear()
+        self._reverse_map.clear()
+        self._breakpoints.clear()
 
     def _set_breakpoints(self) -> None:
         print("Setting breakpoints")

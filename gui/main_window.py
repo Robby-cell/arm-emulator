@@ -596,7 +596,10 @@ class MainWindow(QMainWindow):
             self._load_file(file_path)
 
     def _load_file(self, file_path: str) -> None:
-        print(f"Loading file: {file_path}")
+        with open(file_path, "r") as f:
+            code = f.read()
+            self._debugger_controller.clear_breakpoints()
+            self._editor._editor.setPlainText(code)
 
     def _assemble_and_load(self) -> bool:
         """
