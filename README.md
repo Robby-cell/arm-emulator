@@ -45,8 +45,7 @@ How to download on Windows:
 ```ps1
 $TAG="v0.2.4"
 # Important: MUST be curl.exe, not curl
-curl.exe -L -o ".\arm_emulator-windows.zip" \
-    @\"https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-windows.zip\"@
+curl.exe -L -o ".\arm_emulator-windows.zip" "https://github.com/Robby-cell/arm-emulator/releases/download/$TAG/arm_emulator-windows.zip"
 Expand-Archive ".\arm_emulator-windows.zip" -DestinationPath ".\arm_emulator-windows"
 # .\arm_emulator-windows\arm_emulator.exe
 ```
