@@ -20,17 +20,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            asset_name: arm-emulator-linux.tar.gz
+            asset_name: arm_emulator-linux.tar.gz
             binary_name: arm_emulator
             package_script: package.sh
             venv_activate: .venv/bin/activate
           - os: macos-latest
-            asset_name: arm-emulator-macos.tar.gz
+            asset_name: arm_emulator-macos.tar.gz
             binary_name: arm_emulator
             package_script: package.sh
             venv_activate: .venv/bin/activate
           - os: windows-latest
-            asset_name: arm-emulator-windows.zip
+            asset_name: arm_emulator-windows.zip
             binary_name: arm_emulator.exe
             package_script: package-windows.sh
             venv_activate: .venv/Scripts/activate
