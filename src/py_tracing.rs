@@ -107,7 +107,7 @@ fn py_init_tracing() -> PyResult<()> {
 }
 
 #[pyclass(name = "AppDirsError", extends = PyException)]
-#[derive(Debug, Error)]
+#[derive(Debug, Error, derive_more::From)]
 pub struct PyAppDirsError {
     error: AppDirsError,
 }
@@ -115,12 +115,6 @@ pub struct PyAppDirsError {
 impl fmt::Display for PyAppDirsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.error)
-    }
-}
-
-impl From<AppDirsError> for PyAppDirsError {
-    fn from(value: AppDirsError) -> Self {
-        Self { error: value }
     }
 }
 

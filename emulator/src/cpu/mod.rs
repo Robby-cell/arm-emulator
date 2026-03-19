@@ -9,17 +9,17 @@ mod display;
 mod tests;
 
 impl Cpu {
-    pub const DEFAULT_CPSR: u32 = 0x000000D3;
+    pub const DEFAULT_CPSR: CpuFlags = CpuFlags(0x000000D3);
 
-    pub const N_FLAG: u32 = 1 << 31;
-    pub const Z_FLAG: u32 = 1 << 30;
-    pub const C_FLAG: u32 = 1 << 29;
-    pub const V_FLAG: u32 = 1 << 28;
+    pub const N_FLAG: CpuFlags = CpuFlags(1 << 31);
+    pub const Z_FLAG: CpuFlags = CpuFlags(1 << 30);
+    pub const C_FLAG: CpuFlags = CpuFlags(1 << 29);
+    pub const V_FLAG: CpuFlags = CpuFlags(1 << 28);
 
-    pub const I_FLAG: u32 = 1 << 7;
-    pub const F_FLAG: u32 = 1 << 6;
-    pub const T_FLAG: u32 = 1 << 5;
-    pub const MODE_MASK: u32 = 0x1F; // Mask for the bottom 5 bits
+    pub const I_FLAG: CpuFlags = CpuFlags(1 << 7);
+    pub const F_FLAG: CpuFlags = CpuFlags(1 << 6);
+    pub const T_FLAG: CpuFlags = CpuFlags(1 << 5);
+    pub const MODE_MASK: CpuFlags = CpuFlags(0x1F); // Mask for the bottom 5 bits
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -35,8 +35,15 @@ pub enum Mode {
     System = 0b11111,
 }
 
+impl From<Mode> for CpuFlags {
+    fn from(value: Mode) -> Self {
+        Self(value as u32)
+    }
+}
+
 /// The program is ready to exit, with the given `exit_code`.
 #[derive(Debug, Clone)]
+#[repr(transparent)]
 #[must_use]
 pub struct ExitStatus {
     /// The exit code of the program.
@@ -46,6 +53,7 @@ pub struct ExitStatus {
 
 /// An interupt is currently active. The processor must handle it first.
 #[derive(Debug, Clone)]
+#[repr(transparent)]
 #[must_use]
 pub struct SupervisorCall {
     /// The code of the active supervisor call.
@@ -64,7 +72,7 @@ pub enum Exception {
 
 /// Execution state of the CPU in the current program. Keeps track of what is happening within the CPU.
 /// Has a breakpoint been hit? Is it still running? Should it be exiting? Is it handling an interupt?
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, derive_more::From)]
 #[must_use]
 pub enum ExecutionState {
     /// The program is currently executing
@@ -90,30 +98,6 @@ pub enum ExecutionState {
     SupervisorCall(SupervisorCall),
 }
 
-impl From<Breakpoint> for ExecutionState {
-    fn from(value: Breakpoint) -> Self {
-        Self::Breakpoint(value)
-    }
-}
-
-impl From<Exception> for ExecutionState {
-    fn from(value: Exception) -> Self {
-        Self::Exception(value)
-    }
-}
-
-impl From<ExitStatus> for ExecutionState {
-    fn from(value: ExitStatus) -> Self {
-        Self::FinishedExecution(value)
-    }
-}
-
-impl From<SupervisorCall> for ExecutionState {
-    fn from(value: SupervisorCall) -> Self {
-        Self::SupervisorCall(value)
-    }
-}
-
 /// Error retrieving a [Mode] from bits.
 /// This should never happen in practice, the [CPU](Cpu) struct ensures
 /// this is interacted with correctly.
@@ -123,10 +107,11 @@ pub enum ModeError {
     InvalidModeBits,
 }
 
-impl TryFrom<u32> for Mode {
+impl TryFrom<CpuFlags> for Mode {
     type Error = ModeError;
 
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
+    fn try_from(value: CpuFlags) -> Result<Self, Self::Error> {
+        let value = value.0;
         match value as u8 {
             0b10000 => Ok(Mode::User),
             0b10001 => Ok(Mode::Fiq),
@@ -152,6 +137,25 @@ pub enum CpuError {
     UnalignedAccess,
 }
 
+#[derive(
+    Default,
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    derive_more::From,
+    derive_more::Into,
+    derive_more::BitAnd,
+    derive_more::BitOr,
+    derive_more::BitAndAssign,
+    derive_more::BitOrAssign,
+    derive_more::Display,
+    derive_more::Binary,
+    derive_more::Not,
+)]
+#[repr(transparent)]
+pub struct CpuFlags(u32);
+
 /// Holds the state of the CPU, including the registers and CPSR.
 /// Does not include memory, instructions, actual execution logic, etc.
 /// This is simply a low-level representation of the ARM CPU state.
@@ -163,14 +167,14 @@ pub struct Cpu {
 
     /// Current Program Status Register, as
     /// [specified][https://documentation-service.arm.com/static/5f8db1f7f86e16515cdba175] in the ARM architecture
-    pub cpsr: u32,
+    pub cpsr: CpuFlags,
 
     // SPSR (Saved Program Status Register) for each privileged mode
-    pub spsr_svc: u32,
-    pub spsr_abt: u32,
-    pub spsr_und: u32,
-    pub spsr_irq: u32,
-    pub spsr_fiq: u32,
+    pub spsr_svc: CpuFlags,
+    pub spsr_abt: CpuFlags,
+    pub spsr_und: CpuFlags,
+    pub spsr_irq: CpuFlags,
+    pub spsr_fiq: CpuFlags,
 
     pub state: ExecutionState,
 }
@@ -302,7 +306,7 @@ impl Cpu {
         // Clear the current mode bits
         self.cpsr &= !Self::MODE_MASK;
         // Set the new mode bits
-        self.cpsr |= mode as u32;
+        self.cpsr |= Into::<CpuFlags>::into(mode);
     }
 
     /// Sets the I (IRQ Disable) flag.
@@ -341,7 +345,7 @@ impl Cpu {
     /// Returns a mutable reference to the SPSR for the current mode.
     /// Panics if the current mode is User or System, as they don't have an SPSR.
     #[must_use]
-    pub fn spsr_mut(&mut self) -> Result<&mut u32, CpuError> {
+    pub fn spsr_mut(&mut self) -> Result<&mut CpuFlags, CpuError> {
         match self.mode() {
             Mode::Supervisor => Ok(&mut self.spsr_svc),
             Mode::Abort => Ok(&mut self.spsr_abt),
@@ -359,7 +363,7 @@ impl Cpu {
 
     /// Returns a read-only reference to the SPSR for the current mode.
     #[must_use]
-    pub fn spsr(&self) -> Result<u32, CpuError> {
+    pub fn spsr(&self) -> Result<CpuFlags, CpuError> {
         match self.mode() {
             Mode::Supervisor => Ok(self.spsr_svc),
             Mode::Abort => Ok(self.spsr_abt),
@@ -393,12 +397,12 @@ impl Cpu {
     }
 
     /// Assigns a new value to the CPSR.
-    pub fn set_cpsr(&mut self, cpsr: u32) {
+    pub fn set_cpsr(&mut self, cpsr: CpuFlags) {
         self.cpsr = cpsr;
     }
 
     /// Sets a flag in the CPSR to a given value.
-    pub fn set_flag(&mut self, flag: u32, value: bool) {
+    pub fn set_flag(&mut self, flag: CpuFlags, value: bool) {
         if value {
             self.cpsr |= flag;
         } else {
@@ -408,8 +412,8 @@ impl Cpu {
 
     /// Reads a flag from the CPSR.
     #[must_use]
-    pub fn flag(&self, flag: u32) -> bool {
-        (self.cpsr & flag) != 0
+    pub fn flag(&self, flag: CpuFlags) -> bool {
+        (self.cpsr & flag) != CpuFlags(0)
     }
 
     /// Sets the N flag (Negative).

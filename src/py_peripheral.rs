@@ -4,7 +4,7 @@ use emulator::memory::{
     MemoryAccessError, MemoryAccessResult, Peripheral,
 };
 
-#[pyclass(name = "Peripheral", subclass)]
+#[pyclass(name = "Peripheral", subclass, skip_from_py_object)]
 pub struct PyPeripheral {
     obj: Py<PyAny>,
 }

@@ -1,8 +1,9 @@
+use std::sync::atomic::{AtomicU32, Ordering};
+
 use crate::memory::{
     MemoryAccessError, MemoryAccessResult, Peripheral, Word,
     u32_from_native_bytes, u32_to_native_bytes,
 };
-use std::sync::atomic::{AtomicU32, Ordering};
 
 /// The internal state of the gpio port
 #[must_use]

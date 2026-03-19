@@ -1,8 +1,4 @@
-use std::fmt;
-
-use emulator::prelude::ExecutionError;
-use pyo3::{exceptions::PyException, prelude::*};
-use thiserror::Error;
+use pyo3::prelude::*;
 
 mod py_emulator;
 mod py_error;
@@ -12,43 +8,6 @@ mod py_peripheral;
 mod py_range;
 mod py_tracing;
 
-#[derive(Debug, Error)]
-#[pyclass(name = "ExecutionError", extends = PyException)]
-struct PyExecutionError {
-    error: ExecutionError,
-}
-
-impl fmt::Display for PyExecutionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.error)
-    }
-}
-
-impl From<ExecutionError> for PyExecutionError {
-    fn from(error: ExecutionError) -> Self {
-        PyExecutionError { error }
-    }
-}
-
-#[pymethods]
-impl PyExecutionError {
-    fn is_breakpoint(&self) -> bool {
-        matches!(self.error, ExecutionError::Breakpoint(_))
-    }
-
-    fn is_memory_access(&self) -> bool {
-        matches!(self.error, ExecutionError::MemoryAccessError(_))
-    }
-
-    fn is_instruction_conversion(&self) -> bool {
-        matches!(self.error, ExecutionError::InstructionConversionError(_))
-    }
-
-    fn is_exception(&self) -> bool {
-        matches!(self.error, ExecutionError::Exception(_))
-    }
-}
-
 /// A Python module implemented in Rust.
 #[pymodule]
 fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -56,6 +15,10 @@ fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     {
         py_emulator::py_emulator(m)?;
+    }
+
+    {
+        py_error::py_error(m)?;
     }
 
     {
@@ -69,8 +32,6 @@ fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     {
         py_range::py_range(m)?;
-
-        m.add_class::<PyExecutionError>()?;
     }
 
     {

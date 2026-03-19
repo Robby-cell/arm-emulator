@@ -1,4 +1,4 @@
-use super::{Cpu, registers::*};
+use crate::cpu::{Cpu, registers::*};
 
 #[test]
 fn correct_new_construction() {

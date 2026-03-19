@@ -1,6 +1,19 @@
 use std::fmt;
 
-use super::Cpu;
+use crate::cpu::{Cpu, CpuFlags};
+
+impl fmt::Debug for CpuFlags {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut ctx = f.debug_struct("CpuFlags");
+
+        ctx.field("N", &(*self & Cpu::N_FLAG != CpuFlags(0)));
+        ctx.field("Z", &(*self & Cpu::Z_FLAG != CpuFlags(0)));
+        ctx.field("C", &(*self & Cpu::C_FLAG != CpuFlags(0)));
+        ctx.field("V", &(*self & Cpu::V_FLAG != CpuFlags(0)));
+
+        ctx.finish()
+    }
+}
 
 impl fmt::Debug for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -16,10 +29,7 @@ impl fmt::Debug for Cpu {
             ctx.field(format!("R{i}").as_str(), &r);
         }
 
-        ctx.field("N", &(self.cpsr & Cpu::N_FLAG != 0));
-        ctx.field("Z", &(self.cpsr & Cpu::Z_FLAG != 0));
-        ctx.field("C", &(self.cpsr & Cpu::C_FLAG != 0));
-        ctx.field("V", &(self.cpsr & Cpu::V_FLAG != 0));
+        ctx.field("cpsr", &self.cpsr);
 
         ctx.finish()
     }

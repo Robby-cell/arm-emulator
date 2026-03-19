@@ -316,7 +316,15 @@ assert_u32_sized!(BreakpointInstruction);
 ///     panic!("Incorrect instruction type decoded: {:?}", decoded);
 /// }
 /// ```
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    derive_more::From,
+    derive_more::Display,
+)]
 #[must_use]
 pub enum Instruction {
     DataProcessing(DataProcessingInstruction),

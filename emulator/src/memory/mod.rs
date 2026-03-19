@@ -58,7 +58,7 @@ pub enum MemoryAccessError {
 pub type MemoryAccessResult<T> = Result<T, MemoryAccessError>;
 
 /// System word size (for ARM, 32 bits/4 bytes) amount of bytes
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Copy)]
 #[repr(align(4))]
 #[must_use]
 pub struct WordBytes {

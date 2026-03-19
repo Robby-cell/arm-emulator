@@ -1,3 +1,5 @@
+use std::fmt;
+
 use pyo3::prelude::*;
 
 use emulator::{
@@ -7,14 +9,44 @@ use emulator::{
 
 #[allow(unused_imports)]
 pub use pyo3::exceptions::*;
+use thiserror::Error;
 
-use crate::PyExecutionError;
+#[derive(Debug, Error, derive_more::From)]
+#[pyclass(name = "ExecutionError", extends = PyException)]
+pub(crate) struct PyExecutionError {
+    error: ExecutionError,
+}
 
-pub trait ToPyError {
+impl fmt::Display for PyExecutionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.error)
+    }
+}
+
+#[pymethods]
+impl PyExecutionError {
+    fn is_breakpoint(&self) -> bool {
+        matches!(self.error, ExecutionError::Breakpoint(_))
+    }
+
+    fn is_memory_access(&self) -> bool {
+        matches!(self.error, ExecutionError::MemoryAccessError(_))
+    }
+
+    fn is_instruction_conversion(&self) -> bool {
+        matches!(self.error, ExecutionError::InstructionConversionError(_))
+    }
+
+    fn is_exception(&self) -> bool {
+        matches!(self.error, ExecutionError::Exception(_))
+    }
+}
+
+pub(crate) trait ToPyError {
     fn to_py_error(self) -> PyErr;
 }
 
-pub trait ToPyResult<T> {
+pub(crate) trait ToPyResult<T> {
     fn to_py_result(self) -> PyResult<T>;
 }
 
@@ -42,11 +74,11 @@ impl<T> ToPyResult<T> for Result<T, PyExecutionError> {
     }
 }
 
-pub trait ToPyExecutionError {
+pub(crate) trait ToPyExecutionError {
     fn to_py_execution_error(self) -> PyExecutionError;
 }
 
-pub trait ToPyExecutionResult<T> {
+pub(crate) trait ToPyExecutionResult<T> {
     fn to_py_execution_result(self) -> Result<T, PyExecutionError>;
 }
 
@@ -76,3 +108,10 @@ impl_to_py_exec_error!(MemoryAccessError);
 impl_to_py_exec_error!(Exception);
 impl_to_py_exec_error!(InstructionConversionError);
 impl_to_py_exec_error!(Breakpoint);
+
+#[pymodule]
+pub(crate) fn py_error(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<PyExecutionError>()?;
+
+    Ok(())
+}
