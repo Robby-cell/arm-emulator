@@ -3,6 +3,7 @@ from typing import Optional
 import sys
 import ctypes
 from pathlib import Path
+import json
 
 from arm_emulator_rs import Emulator  # type: ignore : import exists
 from keystone.keystone import KsError
@@ -445,8 +446,14 @@ class MainWindow(QMainWindow):
 
     def _build_file_menu(self) -> None:
         self._load_file_action = QAction(self)
+        self._load_file_action.setShortcut("Ctrl+O")
         self._load_file_action.triggered.connect(self._load_file_selected)
         self._file_menu.addAction(self._load_file_action)  # type: ignore : not None
+
+        self._save_file_action = QAction(self)
+        self._save_file_action.setShortcut("Ctrl+S")
+        self._save_file_action.triggered.connect(self._save_config_as)
+        self._file_menu.addAction(self._save_file_action)
 
     def _build_options_menu(self) -> None:
         # Endianness Submenu
@@ -545,61 +552,93 @@ class MainWindow(QMainWindow):
 
         self.retranslateUI()
 
-    def retranslateUI(self) -> None:
-        """Updates all user-visible text in the application."""
-        # Main Window
-        self.setWindowTitle(self.tr("ARM Emulator"))
-
-        # Menu Bar
-        self._file_menu.setTitle(self.tr("&File"))
-        self._build_menu.setTitle(self.tr("&Build"))
-        self._options_menu.setTitle(self.tr("&Options"))
-        self._language_menu.setTitle(self.tr("&Language"))
-
-        self._load_file_action.setText(self.tr("Load File"))
-        self.build_action_menu.setText(self.tr("Build and Load"))
-
-        self._help_menu.setTitle(self.tr("&Help"))
-        self.tutorial_action.setText(self.tr("Quick Start Guide"))
-
-        # Toolbar
-        self.toolbar.setWindowTitle(self.tr("Main Toolbar"))
-        self.build_action.setText(self.tr("Build"))
-        self.run_action.setText(self.tr("Run"))
-        self.debug_action.setText(self.tr("Debug"))
-        self.stop_action.setText(self.tr("Stop"))
-        self.step_action.setText(self.tr("Step"))
-        self.reset_action.setText(self.tr("Reset"))
-
-        self.build_action.setToolTip(self.tr("Assemble and Load (F7)"))
-        self.run_action.setToolTip(self.tr("Run (F5)"))
-        self.debug_action.setToolTip(self.tr("Prepare for Debugging"))
-        self.stop_action.setToolTip(self.tr("Stop Execution (Shift+F5)"))
-        self.step_action.setToolTip(self.tr("Step Instruction (F10)"))
-        self.reset_action.setToolTip(self.tr("Reset Emulator (Ctrl+R)"))
-
-        # Tabs
-        self.tabs.setTabText(0, self.tr("Editor"))
-        self.tabs.setTabText(1, self.tr("Memory View"))
-        self.tabs.setTabText(2, self.tr("Disassembly"))
-
-        self._editor.retranslateUi()
-        self._memory_view.retranslateUi()
-        self._cpu_panel.retranslateUi()
-        self._disassembly.retranslateUi()
-
     def _load_file_selected(self) -> None:
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        # Allow both our custom config and standard assembly files
+        dialog.setNameFilter(
+            self.tr(
+                "ARM Emulator Config (*.armcfg);;Assembly Files (*.s *.asm);;All Files (*)"
+            )
+        )
         if dialog.exec():
             file_path = dialog.selectedFiles()[0]
             self._load_file(file_path)
 
+    def _save_config_as(self) -> None:
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            self.tr("Save Configuration"),
+            "",
+            self.tr("ARM Emulator Config (*.armcfg);;All Files (*)"),
+        )
+
+        if not file_path:
+            return
+
+        # Ensure extension
+        if not file_path.endswith(".armcfg"):
+            file_path += ".armcfg"
+
+        # Build the configuration dictionary
+        config = {
+            "version": "1.0",
+            "code": self._editor.get_code(),
+            "breakpoints": self._editor._editor.get_breakpoints(),
+            "peripherals": self._editor._peripherals.get_config(),
+        }
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=4)
+            print(f"Configuration successfully saved to {file_path}")
+            QMessageBox.information(
+                self, self.tr("Success"), self.tr("Configuration saved successfully.")
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                self.tr("Save Error"),
+                f"{self.tr('Failed to save configuration:')}\n{e}",
+            )
+
     def _load_file(self, file_path: str) -> None:
-        with open(file_path, "r") as f:
-            code = f.read()
-            self._debugger_controller.clear_breakpoints()
-            self._editor._editor.setPlainText(code)
+        print(f"Loading file: {file_path}")
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            try:
+                # 1. Try parsing as our custom JSON Configuration
+                config = json.loads(content)
+
+                # Load Code
+                if "code" in config:
+                    self._editor._editor.setPlainText(config["code"])
+
+                # Load Peripherals
+                if "peripherals" in config:
+                    self._editor._peripherals.load_from_config(config["peripherals"])
+
+                # Load Breakpoints (Must be done AFTER code is loaded so lines exist)
+                if "breakpoints" in config:
+                    self._editor._editor.set_breakpoints(config["breakpoints"])
+
+                print("Successfully loaded .armcfg workspace.")
+
+            except json.JSONDecodeError:
+                # 2. Fallback: If it's not JSON, it's just raw assembly code
+                print("File is not a JSON config. Loading as plain assembly text.")
+                self._editor._editor.setPlainText(content)
+                # Clear peripherals and breakpoints for a clean slate
+                self._editor._editor.clear_breakpoints()
+                self._editor._peripherals.clear_peripherals()
+
+        except Exception as e:
+            QMessageBox.critical(
+                self, self.tr("Load Error"), f"{self.tr('Failed to load file:')}\n{e}"
+            )
 
     def _assemble_and_load(self) -> bool:
         """
@@ -702,3 +741,47 @@ class MainWindow(QMainWindow):
                 color: white;
             }
         """)
+
+    def retranslateUI(self) -> None:
+        """Updates all user-visible text in the application."""
+        # Main Window
+        self.setWindowTitle(self.tr("ARM Emulator"))
+
+        # Menu Bar
+        self._file_menu.setTitle(self.tr("&File"))
+        self._build_menu.setTitle(self.tr("&Build"))
+        self._options_menu.setTitle(self.tr("&Options"))
+        self._language_menu.setTitle(self.tr("&Language"))
+
+        self._load_file_action.setText(self.tr("Load File"))
+        self._save_file_action.setText(self.tr("Save Config As..."))
+        self.build_action_menu.setText(self.tr("Build and Load"))
+
+        self._help_menu.setTitle(self.tr("&Help"))
+        self.tutorial_action.setText(self.tr("Quick Start Guide"))
+
+        # Toolbar
+        self.toolbar.setWindowTitle(self.tr("Main Toolbar"))
+        self.build_action.setText(self.tr("Build"))
+        self.run_action.setText(self.tr("Run"))
+        self.debug_action.setText(self.tr("Debug"))
+        self.stop_action.setText(self.tr("Stop"))
+        self.step_action.setText(self.tr("Step"))
+        self.reset_action.setText(self.tr("Reset"))
+
+        self.build_action.setToolTip(self.tr("Assemble and Load (F7)"))
+        self.run_action.setToolTip(self.tr("Run (F5)"))
+        self.debug_action.setToolTip(self.tr("Prepare for Debugging"))
+        self.stop_action.setToolTip(self.tr("Stop Execution (Shift+F5)"))
+        self.step_action.setToolTip(self.tr("Step Instruction (F10)"))
+        self.reset_action.setToolTip(self.tr("Reset Emulator (Ctrl+R)"))
+
+        # Tabs
+        self.tabs.setTabText(0, self.tr("Editor"))
+        self.tabs.setTabText(1, self.tr("Memory View"))
+        self.tabs.setTabText(2, self.tr("Disassembly"))
+
+        self._editor.retranslateUi()
+        self._memory_view.retranslateUi()
+        self._cpu_panel.retranslateUi()
+        self._disassembly.retranslateUi()

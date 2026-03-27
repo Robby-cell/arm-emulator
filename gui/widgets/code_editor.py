@@ -598,3 +598,47 @@ class CodeEditor(QPlainTextEdit):
             if self.is_breakpoint(i):
                 breakpoints.append(i)
         return breakpoints
+
+    def clear_breakpoints(self) -> None:
+        """Removes all breakpoints from the editor."""
+        doc = self.document()
+        if doc is None:
+            return
+
+        # Iterate over a copy of the list to avoid modification during iteration
+        for line in self.get_breakpoints():
+            block = doc.findBlockByNumber(line)
+            if block.isValid():
+                data = block.userData()
+                if data and isinstance(data, BreakpointUserData):
+                    data.is_breakpoint = False
+                    block.setUserData(data)
+                    self.breakpoint_toggled.emit(line, False)
+
+        self._line_number_area.update()
+
+    def set_breakpoints(self, lines: List[int]) -> None:
+        """Sets breakpoints explicitly for the given line numbers."""
+        self.clear_breakpoints()
+
+        doc = self.document()
+        if doc is None:
+            return
+
+        for line in lines:
+            if line >= self.blockCount() - 1:
+                continue  # Skip guard line or out of bounds
+
+            block = doc.findBlockByNumber(line)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BreakpointUserData()
+
+                # Only emit if it wasn't already a breakpoint
+                if not getattr(data, "is_breakpoint", False):
+                    data.is_breakpoint = True  # type: ignore
+                    block.setUserData(data)
+                    self.breakpoint_toggled.emit(line, True)
+
+        self._line_number_area.update()

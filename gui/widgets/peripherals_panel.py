@@ -101,9 +101,9 @@ class PeripheralData:
     led_widget: "LedIndicator"
 
 
-def get_default_peripheral():
+def get_default_peripheral() -> PeripheralData:
     return PeripheralData(
-        "LED", "led0", 0x40000000, 0x4000FFFF, PyGpioPort(), LedIndicator()
+        "LED", "led0", 0x40000000, 0x40000100, PyGpioPort(), LedIndicator()
     )
 
 
@@ -352,6 +352,61 @@ class PeripheralsPanel(QWidget):
             if hasattr(p.instance, "is_led_on"):
                 is_on = p.instance.is_led_on()
                 p.led_widget.set_state(is_on)
+
+    def get_config(self) -> List[Dict[str, Any]]:
+        """Serializes the current peripherals into a list of dictionaries."""
+        config_list = []
+        for p in self._peripherals_data:
+            config_list.append(
+                {
+                    "type_name": p.type_name,
+                    "name": p.name,
+                    "start": p.start,
+                    "end": p.end,
+                }
+            )
+        return config_list
+
+    def clear_peripherals(self) -> None:
+        """Removes all peripherals from the panel and data model."""
+        self._peripheral_table.setRowCount(0)
+        self._peripherals_data.clear()
+        self._configured_ranges.clear()
+
+    def load_from_config(self, config_list: List[Dict[str, Any]]) -> None:
+        """Loads peripherals from a serialized configuration list."""
+        self.clear_peripherals()
+
+        for p_dict in config_list:
+            p_type: str = p_dict.get("type_name")  # type: ignore
+            p_name: str = p_dict.get("name")  # type: ignore
+            start_addr: int = p_dict.get("start")  # type: ignore
+            end_addr: int = p_dict.get("end")  # type: ignore
+
+            # Validate
+            if not all([p_type, p_name, start_addr is not None, end_addr is not None]):
+                print(f"Skipping invalid peripheral config: {p_dict}")
+                continue
+
+            if p_type not in PERIPHERAL_REGISTRY:
+                print(f"Unknown peripheral type in config: {p_type}")
+                continue
+
+            # Create instance and widget
+            peripheral_class = PERIPHERAL_REGISTRY[p_type]
+            instance = peripheral_class()
+            led = LedIndicator()
+
+            data = PeripheralData(
+                type_name=p_type,
+                name=p_name,
+                start=start_addr,
+                end=end_addr,
+                instance=instance,
+                led_widget=led,
+            )
+
+            self._add_peripheral_entry(data)
 
     def retranslateUi(self):
         """Refreshes all visible text."""
