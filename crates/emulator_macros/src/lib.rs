@@ -5,7 +5,7 @@ use syn::{DeriveInput, LitStr, parse_macro_input};
 /// A procedural macro that automatically implements `From<Enum> for u32` for instruction enums.
 #[proc_macro_derive(InstructionEnum)]
 pub fn derive_instruction_enum(input: TokenStream) -> TokenStream {
-    // 1. Parse the incoming Rust code into an Abstract Syntax Tree
+    // Parse the incoming Rust code into an Abstract Syntax Tree
     let input = parse_macro_input!(input as DeriveInput);
 
     // The name of the enum (e.g., "Instruction")
@@ -18,7 +18,7 @@ pub fn derive_instruction_enum(input: TokenStream) -> TokenStream {
 
     let mut to_u32_arms = Vec::new();
 
-    // 2. Iterate over the variants (e.g., DataProcessing(DataProcessingInstruction))
+    // Iterate over the variants (e.g., DataProcessing(DataProcessingInstruction))
     for variant in &data.variants {
         let variant_name = &variant.ident;
 
@@ -33,13 +33,13 @@ pub fn derive_instruction_enum(input: TokenStream) -> TokenStream {
         };
         _ = field_type;
 
-        // 3. Generate the match arm for: Instruction::DataProcessing(inner) => inner.into()
+        // Generate the match arm for: Instruction::DataProcessing(inner) => inner.into()
         to_u32_arms.push(quote! {
             #name::#variant_name(inner) => inner.into(),
         });
     }
 
-    // 5. Combine all the generated code into the final output
+    // Combine all the generated code into the final output
     let expanded = quote! {
         impl From<#name> for u32 {
             fn from(inst: #name) -> Self {
@@ -50,7 +50,7 @@ pub fn derive_instruction_enum(input: TokenStream) -> TokenStream {
         }
     };
 
-    // 6. Hand the generated code back to the Rust compiler
+    // Hand the generated code back to the Rust compiler
     TokenStream::from(expanded)
 }
 
