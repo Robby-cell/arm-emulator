@@ -4,6 +4,8 @@ version = "0.1.3"
 edition = "2024"
 
 [dependencies]
+emulator_macros = { workspace = true }
+
 derive_more = { workspace = true }
 modular-bitfield = { workspace = true }
 rand = { workspace = true }

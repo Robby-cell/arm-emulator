@@ -5,6 +5,7 @@ pub mod fields;
 #[cfg(test)]
 mod tests;
 
+use emulator_macros::{ArmDecoder, InstructionEnum};
 use fields::*;
 
 use modular_bitfield::prelude::*;
@@ -324,18 +325,52 @@ assert_u32_sized!(BreakpointInstruction);
     PartialEq,
     derive_more::From,
     derive_more::Display,
+    InstructionEnum,
+    ArmDecoder,
 )]
 #[must_use]
 pub enum Instruction {
-    DataProcessing(DataProcessingInstruction),
-    MemoryAccess(MemoryAccessInstruction),
-    BlockDataTransfer(BlockDataTransferInstruction),
-    Branch(BranchInstruction),
-    BranchExchange(BranchExchangeInstruction),
-    SupervisorCall(SupervisorCallInstruction),
-    Multiply(MultiplyInstruction),
-    MultiplyLong(MultiplyLongInstruction),
+    /// xxxx 0001 0010 xxxx xxxx xxxx 0111 xxxx
+    #[decode("cond 0001 0010 xxxx xxxx xxxx 0111 xxxx")]
     Breakpoint(BreakpointInstruction),
+
+    // NOTE: BranchExchange must be before DataProcessing, otherwise it will be decoded
+    // as DataProcessing, because the macro will check in order.
+    /// xxxx 0001 0010 1111 1111 1111 0001 xxxx
+    #[decode("cond 0001 0010 1111 1111 1111 0001 mmmm")]
+    BranchExchange(BranchExchangeInstruction),
+
+    /// xxxx 1111 xxxx xxxx xxxx xxxx xxxx xxxx
+    #[decode("cond 1111 xxxx xxxx xxxx xxxx xxxx xxxx")]
+    SupervisorCall(SupervisorCallInstruction),
+
+    /// xxxx 0000 00AS dddd nnnn ssss 1001 mmmm
+    #[decode("cond 0000 00AS dddd nnnn ssss 1001 mmmm")]
+    Multiply(MultiplyInstruction),
+
+    /// xxxx 0000 1UAS hhhh llll ssss 1001 mmmm
+    #[decode("cond 0000 1UAS hhhh llll ssss 1001 mmmm")]
+    MultiplyLong(MultiplyLongInstruction),
+
+    /// xxxx 000x xxxx xxxx xxxx xxxx xxxx xxxx (Data Processing - Reg/Imm Shift)
+    /// xxxx 001x xxxx xxxx xxxx xxxx xxxx xxxx (Data Processing - Immediate)
+    #[decode("cond 000x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    #[decode("cond 001x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    DataProcessing(DataProcessingInstruction),
+
+    /// xxxx 010x xxxx xxxx xxxx xxxx xxxx xxxx
+    /// xxxx 011x xxxx xxxx xxxx xxxx xxxx xxxx
+    #[decode("cond 010x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    #[decode("cond 011x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    MemoryAccess(MemoryAccessInstruction),
+
+    /// xxxx 100x xxxx xxxx xxxx xxxx xxxx xxxx
+    #[decode("cond 100x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    BlockDataTransfer(BlockDataTransferInstruction),
+
+    /// xxxx 101x xxxx xxxx xxxx xxxx xxxx xxxx
+    #[decode("cond 101x xxxx xxxx xxxx xxxx xxxx xxxx")]
+    Branch(BranchInstruction),
 }
 
 impl Instruction {
@@ -361,90 +396,74 @@ pub enum InstructionConversionError {
     InvalidInstructionClass,
 }
 
-impl TryFrom<u32> for Instruction {
-    type Error = InstructionConversionError;
+// impl TryFrom<u32> for Instruction {
+//     type Error = InstructionConversionError;
 
-    fn try_from(raw_instruction: u32) -> Result<Self, Self::Error> {
-        if (raw_instruction & 0x0FF000F0) == 0x01200070 {
-            return Ok(Instruction::Breakpoint(raw_instruction.into()));
-        }
+//     fn try_from(raw_instruction: u32) -> Result<Self, Self::Error> {
+//         if (raw_instruction & 0x0FF000F0) == 0x01200070 {
+//             return Ok(Instruction::Breakpoint(raw_instruction.into()));
+//         }
 
-        // Pattern: cond 0001 0010 1111 1111 1111 0001 Rm
-        // Mask:    0x0F FF FF F0
-        // Value:   0x01 2F FF 10
-        if (raw_instruction & 0x0FFFFFF0) == 0x012FFF10 {
-            return Ok(Instruction::BranchExchange(
-                raw_instruction.into(),
-            ));
-        }
+//         // Pattern: cond 0001 0010 1111 1111 1111 0001 Rm
+//         // Mask:    0x0F FF FF F0
+//         // Value:   0x01 2F FF 10
+//         if (raw_instruction & 0x0FFFFFF0) == 0x012FFF10 {
+//             return Ok(Instruction::BranchExchange(
+//                 raw_instruction.into(),
+//             ));
+//         }
 
-        // Multiply instructions are identified by bits [27:24] = 0000 and bits [7:4] = 1001
-        // We check the "9" signature at [7:4] first, then check the top bits.
-        if (raw_instruction & 0x0F0000F0) == 0x00000090 {
-            // Check Bit 23 to distinguish Short vs Long
-            // 32-bit Multiply (MUL, MLA): 0000 00AS ...
-            // 64-bit Multiply (UMULL...): 0000 1UAS ...
+//         // Multiply instructions are identified by bits [27:24] = 0000 and bits [7:4] = 1001
+//         // We check the "9" signature at [7:4] first, then check the top bits.
+//         if (raw_instruction & 0x0F0000F0) == 0x00000090 {
+//             // Check Bit 23 to distinguish Short vs Long
+//             // 32-bit Multiply (MUL, MLA): 0000 00AS ...
+//             // 64-bit Multiply (UMULL...): 0000 1UAS ...
 
-            if (raw_instruction & 0x00800000) == 0 {
-                return Ok(Instruction::Multiply(raw_instruction.into()));
-            } else {
-                return Ok(Instruction::MultiplyLong(
-                    raw_instruction.into(),
-                ));
-            }
-        }
+//             if (raw_instruction & 0x00800000) == 0 {
+//                 return Ok(Instruction::Multiply(raw_instruction.into()));
+//             } else {
+//                 return Ok(Instruction::MultiplyLong(
+//                     raw_instruction.into(),
+//                 ));
+//             }
+//         }
 
-        // Check bits [27:25] to identify the instruction class. This is how the
-        // ARM processor itself differentiates these top-level instruction types.
-        let op_class = (raw_instruction >> 25) & 0b111;
+//         // Check bits [27:25] to identify the instruction class. This is how the
+//         // ARM processor itself differentiates these top-level instruction types.
+//         let op_class = (raw_instruction >> 25) & 0b111;
 
-        match op_class {
-            // Data Processing (000 or 001)
-            0b000 | 0b001 => {
-                Ok(Instruction::DataProcessing(raw_instruction.into()))
-            }
-            // Memory Access (010 or 011)
-            0b010 | 0b011 => {
-                Ok(Instruction::MemoryAccess(raw_instruction.into()))
-            }
-            // Block Data Transfer (100)
-            0b100 => {
-                Ok(Instruction::BlockDataTransfer(raw_instruction.into()))
-            }
-            // Branch (101)
-            0b101 => Ok(Instruction::Branch(raw_instruction.into())),
+//         match op_class {
+//             // Data Processing (000 or 001)
+//             0b000 | 0b001 => {
+//                 Ok(Instruction::DataProcessing(raw_instruction.into()))
+//             }
+//             // Memory Access (010 or 011)
+//             0b010 | 0b011 => {
+//                 Ok(Instruction::MemoryAccess(raw_instruction.into()))
+//             }
+//             // Block Data Transfer (100)
+//             0b100 => {
+//                 Ok(Instruction::BlockDataTransfer(raw_instruction.into()))
+//             }
+//             // Branch (101)
+//             0b101 => Ok(Instruction::Branch(raw_instruction.into())),
 
-            // Class for miscellaneous instructions, including SVC (111)
-            0b111 => {
-                // This class is broad. We must check bits [27:24] to be specific.
-                // An SVC instruction is identified by the pattern `1111`.
-                if (raw_instruction >> 24) & 0b1111 == 0b1111 {
-                    Ok(Instruction::SupervisorCall(raw_instruction.into()))
-                } else {
-                    // This is where you would decode other instructions from this class,
-                    // like coprocessor instructions. For now, we consider them invalid.
-                    Err(Self::Error::InvalidInstructionClass)
-                }
-            }
+//             // Class for miscellaneous instructions, including SVC (111)
+//             0b111 => {
+//                 // This class is broad. We must check bits [27:24] to be specific.
+//                 // An SVC instruction is identified by the pattern `1111`.
+//                 if (raw_instruction >> 24) & 0b1111 == 0b1111 {
+//                     Ok(Instruction::SupervisorCall(raw_instruction.into()))
+//                 } else {
+//                     // This is where you would decode other instructions from this class,
+//                     // like coprocessor instructions. For now, we consider them invalid.
+//                     Err(Self::Error::InvalidInstructionClass)
+//                 }
+//             }
 
-            // All other patterns are undefined.
-            _ => Err(Self::Error::InvalidInstructionClass),
-        }
-    }
-}
-
-impl From<Instruction> for u32 {
-    fn from(value: Instruction) -> Self {
-        match value {
-            Instruction::DataProcessing(instr) => instr.into(),
-            Instruction::MemoryAccess(instr) => instr.into(),
-            Instruction::BlockDataTransfer(instr) => instr.into(),
-            Instruction::Branch(instr) => instr.into(),
-            Instruction::BranchExchange(instr) => instr.into(),
-            Instruction::SupervisorCall(instr) => instr.into(),
-            Instruction::Multiply(instr) => instr.into(),
-            Instruction::MultiplyLong(instr) => instr.into(),
-            Instruction::Breakpoint(instr) => instr.into(),
-        }
-    }
-}
+//             // All other patterns are undefined.
+//             _ => Err(Self::Error::InvalidInstructionClass),
+//         }
+//     }
+// }

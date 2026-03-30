@@ -1,5 +1,5 @@
 [workspace]
-members = ["emulator"]
+members = ["crates/emulator_macros", "emulator"]
 resolver = "3"
 
 [package]
@@ -24,6 +24,7 @@ tracing-subscriber = { workspace = true }
 
 [workspace.dependencies]
 emulator = { path = "emulator" }
+emulator_macros = { path = "crates/emulator_macros" }
 
 modular-bitfield = { version = "0.13.1" }
 pyo3 = { version = "0.28.2", features = ["extension-module"] }
