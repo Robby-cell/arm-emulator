@@ -1,4 +1,9 @@
-use super::*;
+use crate::instructions::{
+    Instruction, InstructionConversionError, ShiftedRegisterOffset,
+    fields::*,
+};
+
+use super::register_mask;
 
 #[test]
 fn test_decode_data_processing_immediate() {

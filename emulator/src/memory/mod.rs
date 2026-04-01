@@ -358,6 +358,26 @@ impl Bus {
     }
 }
 
+fn relative_memory_error_mapping_to_absolute<T>(
+    r: Result<T, MemoryAccessError>,
+    base: u32,
+) -> Result<T, MemoryAccessError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(MemoryAccessError::InvalidReadPermission { addr }) => {
+            Err(MemoryAccessError::InvalidReadPermission {
+                addr: addr + base,
+            })
+        }
+        Err(MemoryAccessError::InvalidWritePermission { addr }) => {
+            Err(MemoryAccessError::InvalidWritePermission {
+                addr: addr + base,
+            })
+        }
+        Err(e) => Err(e),
+    }
+}
+
 impl Bus {
     pub fn reset(&mut self) {
         self.code = Vec::new();
@@ -459,18 +479,24 @@ impl Bus {
                 tracing::trace!(
                     "Reading word from code memory at address {addr:#X}"
                 );
-                Self::read32_ram_with_reader::<Reader>(
-                    &self.code,
-                    addr - Self::CODE_BEGIN,
+                relative_memory_error_mapping_to_absolute(
+                    Self::read32_ram_with_reader::<Reader>(
+                        &self.code,
+                        addr - Self::CODE_BEGIN,
+                    ),
+                    Self::CODE_BEGIN,
                 )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
                 tracing::trace!(
                     "Reading word from SRAM memory at address {addr:#X}"
                 );
-                Self::read32_ram_with_reader::<Reader>(
-                    &self.sram,
-                    addr - Self::SRAM_BEGIN,
+                relative_memory_error_mapping_to_absolute(
+                    Self::read32_ram_with_reader::<Reader>(
+                        &self.sram,
+                        addr - Self::SRAM_BEGIN,
+                    ),
+                    Self::SRAM_BEGIN,
                 )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
@@ -496,15 +522,24 @@ impl Bus {
                 tracing::trace!(
                     "Reading word from external memory at address {addr:#X}"
                 );
-                Self::read32_ram_with_reader::<Reader>(
-                    &self.external,
-                    addr - Self::EXTERNAL_BEGIN,
+                relative_memory_error_mapping_to_absolute(
+                    Self::read32_ram_with_reader::<Reader>(
+                        &self.external,
+                        addr - Self::EXTERNAL_BEGIN,
+                    ),
+                    Self::EXTERNAL_BEGIN,
                 )
             }
             Self::STACK_BEGIN..=Self::STACK_END => {
                 // Calculate offset relative to start of stack region
                 let offset = addr - Self::STACK_BEGIN;
-                Self::read32_ram_with_reader::<Reader>(&self.stack, offset)
+                relative_memory_error_mapping_to_absolute(
+                    Self::read32_ram_with_reader::<Reader>(
+                        &self.stack,
+                        offset,
+                    ),
+                    Self::STACK_BEGIN,
+                )
             }
         }
     }
@@ -560,20 +595,26 @@ impl Bus {
                 tracing::trace!(
                     "Writing word {value:#X} to code at address {addr:#X}"
                 );
-                Self::write32_ram_with_writer::<Writer>(
-                    &mut self.code,
-                    addr - Self::CODE_BEGIN,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write32_ram_with_writer::<Writer>(
+                        &mut self.code,
+                        addr - Self::CODE_BEGIN,
+                        value,
+                    ),
+                    Self::CODE_BEGIN,
                 )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
                 tracing::trace!(
                     "Writing word {value:#X} to SRAM at address {addr:#X}"
                 );
-                Self::write32_ram_with_writer::<Writer>(
-                    &mut self.sram,
-                    addr - Self::SRAM_BEGIN,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write32_ram_with_writer::<Writer>(
+                        &mut self.sram,
+                        addr - Self::SRAM_BEGIN,
+                        value,
+                    ),
+                    Self::SRAM_BEGIN,
                 )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
@@ -602,18 +643,24 @@ impl Bus {
                 tracing::trace!(
                     "Writing word {value:#X} to external memory at address {addr:#X}"
                 );
-                Self::write32_ram_with_writer::<Writer>(
-                    &mut self.external,
-                    addr - Self::EXTERNAL_BEGIN,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write32_ram_with_writer::<Writer>(
+                        &mut self.external,
+                        addr - Self::EXTERNAL_BEGIN,
+                        value,
+                    ),
+                    Self::EXTERNAL_BEGIN,
                 )
             }
             Self::STACK_BEGIN..=Self::STACK_END => {
                 let offset = addr - Self::STACK_BEGIN;
-                Self::write32_ram_with_writer::<Writer>(
-                    &mut self.stack,
-                    offset,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write32_ram_with_writer::<Writer>(
+                        &mut self.stack,
+                        offset,
+                        value,
+                    ),
+                    Self::STACK_BEGIN,
                 )
             }
         }
