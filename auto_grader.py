@@ -1,125 +1,104 @@
 import sys
 import argparse
-from pathlib import Path
-
 from arm_emulator_rs import Emulator, RangeInclusiveU32  # type: ignore
-from assembler import (
-    arm_little_endian_assembler,
-    AssembledOutput,
-)
+from assembler import arm_little_endian_assembler
 
-# =============================================================================
-# PERIPHERAL DEFINITIONS
-# =============================================================================
+# 1. Global State
+system: Emulator = Emulator()
+assembler = arm_little_endian_assembler()
+asm_filename: str
 
 
-class MockHardware:
-    def __init__(self) -> None:
-        self.received_value = 0
-
-    def read32(self, addr: int) -> int:
-        return self.received_value
-
-    def write32(self, addr: int, data: int) -> None:
-        self.received_value = data
-
-    def read_byte(self, addr: int) -> int:
-        return self.received_value & 0xFF
-
-    def write_byte(self, addr: int, data: int) -> None:
-        self.received_value = (self.received_value & 0xFFFFFF00) | data
-
-    def reset(self) -> None:
-        self.received_value = 0
+# 2. Helper Functions (Exposed to the test script)
+def step(count: int = 1) -> None:
+    """Advances the system by N instructions."""
+    for _ in range(count):
+        if system.is_finished():
+            break
+        system.step()
 
 
-# =============================================================================
-# THE GRADING SCRIPT (Logic for specific assignments)
-# =============================================================================
+def is_finished() -> bool:
+    return system.is_finished()
 
 
-def run_grading_scenario(em: Emulator) -> None:
-    """
-    This is the core function where graders define their tests.
-    Modify this function to match the requirements of the specific assignment.
-    """
-
-    mock_hw = MockHardware()
-    em.add_peripheral(RangeInclusiveU32(0x40000000, 0x40000FFF), mock_hw)
-
-    print("Executing student code...")
-    cycles = 0
-    while not em.is_finished() and cycles < 100:
-        em.step()
-        cycles += 1
-
-    # 4. Assertions (The actual Grading)
-    print(f"Executed {cycles} instructions.")
-
-    # Test 1: Did they write the correct value (30) to the hardware?
-    if mock_hw.received_value == 30:
-        print("\033[92m[PASS]\033[0m Hardware Write: Student wrote 30 to IO_BASE.")
-    else:
-        print(
-            f"\033[91m[FAIL]\033[0m Hardware Write: Expected 30, got {mock_hw.received_value}",
-        )
-
-    # Test 2: Did the program exit with code 0?
-    if em.registers[0] == 0:
-        print("\033[92m[PASS]\033[0m Exit Code: Program returned 0.")
-    else:
-        print(
-            f"\033[91m[FAIL]\033[0m Exit Code: Expected R0=0, got R0={em.registers[0]}"
-        )
+def run() -> None:
+    """Runs the system until a halt or breakpoint is hit."""
+    while not system.is_finished():
+        system.step()
 
 
-# =============================================================================
-# BOILERPLATE (Setup and Execution)
-# =============================================================================
+def reg(index: int) -> int:
+    """Returns the value of register R0-R15."""
+    return system.registers[index]
 
 
-def main():
-    parser = argparse.ArgumentParser(description="ARMv7 Headless Auto-Grader")
-    parser.add_argument(
-        "-c", "--code", type=str, required=True, help="Path to .asm file"
-    )
+def mem(addr: int) -> int:
+    """Reads a byte from the bus."""
+    return system.read_byte(addr)
+
+
+def map_peripheral(start: int, end: int, obj) -> None:
+    """Maps a Python object to the memory bus."""
+    system.add_peripheral(RangeInclusiveU32(start, end), obj)
+
+
+def add_symbol(name: str, addr: int) -> None:
+    assembler.add_symbol(name, addr)
+
+
+def load_program() -> None:
+    # Load and Assemble student code
+    global asm_filename
+    with open(asm_filename, "r") as f:
+        asm_raw = f.read()
+        out = assembler.assemble(asm_raw, start_address=0)
+    system.load_program(out.text, out.sram, out.external)
+
+
+# 3. The Orchestrator
+def main() -> None:
+    global system
+    global asm_filename
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--script", required=True, help="The .py test script")
+    parser.add_argument("-a", "--asm", required=True, help="The student .asm file")
     args = parser.parse_args()
 
-    # 1. Initialize Emulator
-    # Using defaults as the Rust constructor handles allocation etc.
-    # Any allocations will also be handled when loading the code
-    em = Emulator()
+    asm_filename = args.asm
 
-    # 2. Assemble and Load code
-    asm_path = Path(args.code)
-    if not asm_path.exists():
-        print(f"Error: File {args.code} not found.")
-        sys.exit(1)
+    # Read the professor's test script
+    with open(args.script, "r") as f:
+        script_code = f.read()
 
-    with open(asm_path, "r") as f:
-        code_text = f.read()
+    # Define the environment for exec()
+    # This makes 'system', 'step', etc., available globally in the script
+    env = {
+        "system": system,
+        "is_finished": is_finished,
+        "step": step,
+        "run": run,
+        "reg": reg,
+        "mem": mem,
+        "map_peripheral": map_peripheral,
+        "hex": hex,
+        "print": print,
+        "add_symbol": add_symbol,
+        "load_program": load_program,
+        "AssertionError": AssertionError,
+    }
 
-    print(f"Assembling {asm_path.name}...")
-    assembler = arm_little_endian_assembler()
-
-    # We resolve symbols here just like the GUI does
-    # This example maps 'IO_BASE' to the peripheral address
-    assembler.add_symbol("IO_BASE", 0x40000000)
-
+    print(f"--- Executing Test Script: {args.script} ---")
     try:
-        out: AssembledOutput = assembler.assemble(code_text, start_address=0)
-        em.load_program(out.text, out.sram, out.external)
-    except Exception as e:
-        print(f"Assembly/Loading Failed: {e}")
-        sys.exit(1)
-
-    # 3. Execute the user-defined grading logic
-    try:
-        run_grading_scenario(em)
+        exec(script_code, env)
+        print("\033[92m[FINAL RESULT]: ALL TESTS PASSED\033[0m")
     except AssertionError as e:
-        print(f"\033[91m[ASSERTION FAILED]\033[0m: {e}")
+        print(f"\033[91m[ASSERTION FAILED]:\033[0m {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"\033[91m[RUNTIME ERROR]\033[0m: {e}")
+        print(f"\033[91m[RUNTIME ERROR]:\033[0m {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
