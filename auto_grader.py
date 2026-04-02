@@ -1,9 +1,8 @@
 import sys
 import argparse
 from pathlib import Path
-from typing import List
 
-from arm_emulator_rs import Emulator, Peripheral, RangeInclusiveU32
+from arm_emulator_rs import Emulator, RangeInclusiveU32  # type: ignore
 from assembler import (
     arm_little_endian_assembler,
     AssembledOutput,
@@ -14,21 +13,24 @@ from assembler import (
 # =============================================================================
 
 
-class MyPeripheral:
+class MockHardware:
+    def __init__(self) -> None:
+        self.received_value = 0
+
     def read32(self, addr: int) -> int:
-        return self.data
+        return self.received_value
 
     def write32(self, addr: int, data: int) -> None:
-        self.data = data
+        self.received_value = data
 
     def read_byte(self, addr: int) -> int:
-        return self.data & 0xFF
+        return self.received_value & 0xFF
 
     def write_byte(self, addr: int, data: int) -> None:
-        self.data = (self.data & ~0xFF) | (data & 0xFF)
+        self.received_value = (self.received_value & 0xFFFFFF00) | data
 
     def reset(self) -> None:
-        self.data = 0
+        self.received_value = 0
 
 
 # =============================================================================
@@ -41,32 +43,34 @@ def run_grading_scenario(em: Emulator) -> None:
     This is the core function where graders define their tests.
     Modify this function to match the requirements of the specific assignment.
     """
-    print("--- Starting Grading Scenario ---")
 
-    # Example: Manually write to hardware peripheral
-    em.write32(0x40000000, 0x1234)
+    mock_hw = MockHardware()
+    em.add_peripheral(RangeInclusiveU32(0x40000000, 0x40000FFF), mock_hw)
 
-    # Perform assertions on peripheral state
-    peripheral_val = em.read32(0x40000000)
-    assert peripheral_val == 0x1234, f"Expected 0x1234, got {hex(peripheral_val)}"
-    print(f"Peripheral State Verified: {hex(peripheral_val)}")
-
-    # Execute a specific number of cycles
-    print("Executing 5 steps...")
-    for _ in range(5):
-        if em.is_halted():  # Check if program reached SVC 0 or end
-            break
+    print("Executing student code...")
+    cycles = 0
+    while not em.is_finished() and cycles < 100:
         em.step()
+        cycles += 1
 
-    # Check register results
-    # Assuming the lab expects R0 to be 0 at the end
-    result = em.registers[0]
-    print(f"Final R0 value: {result}")
+    # 4. Assertions (The actual Grading)
+    print(f"Executed {cycles} instructions.")
 
-    if result == 0:
-        print("\033[92m[PASS]\033[0m: Assignment logic correct.")
+    # Test 1: Did they write the correct value (30) to the hardware?
+    if mock_hw.received_value == 30:
+        print("\033[92m[PASS]\033[0m Hardware Write: Student wrote 30 to IO_BASE.")
     else:
-        print("\033[91m[FAIL]\033[0m: R0 should be 0.")
+        print(
+            f"\033[91m[FAIL]\033[0m Hardware Write: Expected 30, got {mock_hw.received_value}",
+        )
+
+    # Test 2: Did the program exit with code 0?
+    if em.registers[0] == 0:
+        print("\033[92m[PASS]\033[0m Exit Code: Program returned 0.")
+    else:
+        print(
+            f"\033[91m[FAIL]\033[0m Exit Code: Expected R0=0, got R0={em.registers[0]}"
+        )
 
 
 # =============================================================================
@@ -109,11 +113,7 @@ def main():
         print(f"Assembly/Loading Failed: {e}")
         sys.exit(1)
 
-    # 3. Map Peripherals
-    # Standard lab setup: A GPIO-like peripheral at 0x40000000
-    em.add_peripheral(RangeInclusiveU32(0x40000000, 0x40000100), MyPeripheral())
-
-    # 4. Execute the user-defined grading logic
+    # 3. Execute the user-defined grading logic
     try:
         run_grading_scenario(em)
     except AssertionError as e:
