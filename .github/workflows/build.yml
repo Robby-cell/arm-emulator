@@ -22,16 +22,22 @@ jobs:
           - os: ubuntu-latest
             asset_name: arm_emulator-linux.tar.gz
             binary_name: arm_emulator
+            grader_asset_name: arm_grader-linux.tar.gz
+            grader_binary_name: arm_auto_grader
             package_script: package.sh
             venv_activate: .venv/bin/activate
           - os: macos-latest
             asset_name: arm_emulator-macos.tar.gz
             binary_name: arm_emulator
+            grader_asset_name: arm_grader-macos.tar.gz
+            grader_binary_name: arm_auto_grader
             package_script: package.sh
             venv_activate: .venv/bin/activate
           - os: windows-latest
             asset_name: arm_emulator-windows.zip
             binary_name: arm_emulator.exe
+            grader_asset_name: arm_grader-windows.zip
+            grader_binary_name: arm_auto_grader.exe
             package_script: package-windows.sh
             venv_activate: .venv/Scripts/activate
 
@@ -58,7 +64,7 @@ jobs:
       - name: Create Virtual Environment
         run: uv venv
 
-      - name: Build Rust bindings
+      - name: Build Rust bindings (Required for PyInstaller to see the module)
         run: uvx maturin develop --release
 
       - name: Sync dependencies
@@ -67,37 +73,52 @@ jobs:
       - name: Build Translations
         run: bash build-translations.sh
 
-      - name: Package Executable
-        # 'shell: bash' ensures Git Bash is used on Windows so 'source' and '.sh' scripts work
+      - name: Package GUI Executable
         shell: bash
         run: |
           source ${{ matrix.venv_activate }}
           bash ${{ matrix.package_script }}
 
-      - name: Archive artifact for Linux and macOS
+      # Package the Python Auto-Grader into a Binary
+      - name: Package Auto-Grader Binary
+        shell: bash
+        run: |
+          source ${{ matrix.venv_activate }}
+          uv run pyinstaller --onefile \
+            --name arm_auto_grader \
+            --additional-hooks-dir=hooks \
+            auto_grader.py
+
+      - name: Archive artifacts for Linux and macOS
         if: runner.os != 'Windows'
         run: |
+          # Archive GUI
           cd dist
           tar -czf ../${{ matrix.asset_name }} ${{ matrix.binary_name }}
+          # Archive Grader
+          tar -czf ../${{ matrix.grader_asset_name }} ${{ matrix.grader_binary_name }}
 
-      - name: Archive artifact for Windows
+      - name: Archive artifacts for Windows
         if: runner.os == 'Windows'
         shell: bash
         run: |
+          # Archive GUI
           cd dist
-          # 7z is pre-installed on GitHub Windows runners and handles zip reliably
           7z a ../${{ matrix.asset_name }} ${{ matrix.binary_name }}
+          # Archive Grader
+          7z a ../${{ matrix.grader_asset_name }} ${{ matrix.grader_binary_name }}
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-artifact
-          path: ${{ matrix.asset_name }}
+          name: ${{ matrix.os }}-artifacts
+          path: |
+            ${{ matrix.asset_name }}
+            ${{ matrix.grader_asset_name }}
 
   release:
     name: Create Release
     needs: build
-    # Only run this job if a tag was pushed (e.g., git tag v1.0.0 && git push --tags)
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
@@ -107,7 +128,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: true # Flattens the downloads into a single directory
+          merge-multiple: true
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
