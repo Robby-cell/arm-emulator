@@ -250,7 +250,7 @@ impl PyEmulator {
             peripheral: wrapper,
         });
 
-        // 3. Store the Python reference.
+        // Store the Python reference.
         // .clone().unbind() creates an independent Py<PyAny> we can store safely.
         self.py_handles.push(mapped_peripheral.clone().unbind());
 
@@ -265,7 +265,7 @@ impl PyEmulator {
         let mut list = Vec::new();
 
         for handle in &self.py_handles {
-            // 4. To get a Bound object back, use handle.bind(py)
+            // To get a Bound object back, use handle.bind(py)
             // handle is a Py<PyAny>, so .bind(py) returns Bound<'py, PyAny>
             list.push(handle.bind(py).clone());
         }
