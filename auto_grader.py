@@ -179,6 +179,7 @@ def main() -> None:
         "LR": 14,
         "PC": 15,
     }
+    load_program()
 
     print(f"--- Executing Test Script: {args.script} ---")
     try:

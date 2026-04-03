@@ -1,6 +1,5 @@
 # Assignment: 3 Blinks, then Fibonacci(R8) -> R0
 
-load_program()
 led = get_peripherals()[0]
 print(led)
 
