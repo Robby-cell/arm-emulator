@@ -82,7 +82,7 @@ def get_default_peripheral() -> PeripheralData:
         "led0",
         0x40000000,
         0x40000100,
-        PyGpioPort(name="led0", start=0x40000000, end=0x40000100),
+        PyGpioPort(name="led0", begin=0x40000000, end=0x40000100),
         LedIndicator(),
     )
 
