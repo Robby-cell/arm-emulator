@@ -1,7 +1,6 @@
 # Assignment: 3 Blinks, then Fibonacci(R8) -> R0
 
 led = get_peripherals()[0]
-print(led)
 
 # 1. Setup the test parameters
 test_n = 7
