@@ -1,4 +1,4 @@
-use pyo3::prelude::*;
+use pyo3::{exceptions::PyValueError, prelude::*};
 
 use std::{collections::HashMap, fmt, sync::Arc};
 
@@ -18,6 +18,7 @@ use crate::{
 #[pyclass(name = "Emulator", str)]
 struct PyEmulator {
     emulator: Emulator,
+    py_handles: Vec<Py<PyAny>>,
 }
 
 impl fmt::Display for PyEmulator {
@@ -37,6 +38,7 @@ impl PyEmulator {
                 sram_size,
                 external_size,
             ),
+            py_handles: Vec::new(),
         }
     }
 
@@ -50,6 +52,29 @@ impl PyEmulator {
     #[getter]
     fn registers(&self) -> Vec<u32> {
         self.emulator.cpu.registers.to_vec()
+    }
+
+    fn get_register(&self, index: u32) -> PyResult<u32> {
+        if index >= self.emulator.cpu.registers.len() as u32 {
+            Err(PyValueError::new_err(format!(
+                "Register index out of range: {}",
+                index
+            )))
+        } else {
+            Ok(self.emulator.cpu.register(index as _))
+        }
+    }
+
+    fn set_register(&mut self, index: u32, value: u32) -> PyResult<()> {
+        if index >= self.emulator.cpu.registers.len() as u32 {
+            Err(PyValueError::new_err(format!(
+                "Register index out of range: {}",
+                index
+            )))
+        } else {
+            self.emulator.cpu.set_register(index as _, value);
+            Ok(())
+        }
     }
 
     #[getter]
@@ -85,6 +110,11 @@ impl PyEmulator {
 
     fn reset(&mut self) {
         self.emulator.reset();
+    }
+
+    fn complete_reset(&mut self) {
+        self.emulator.reset();
+        self.py_handles.clear(); // Clears the Python object references
     }
 
     fn reset_cpu(&mut self) {
@@ -210,13 +240,37 @@ impl PyEmulator {
         range: &PyRangeInclusiveU32,
         mapped_peripheral: Bound<'_, PyAny>,
     ) -> PyResult<()> {
+        // Create the Rust wrapper. Pass the Bound reference directly.
+        // Make sure PyPeripheral::new accepts Bound<'_, PyAny>
+        let wrapper =
+            Arc::new(PyPeripheral::new(mapped_peripheral.clone())?);
+
         self.emulator.add_peripheral(MemoryMappedPeripheral {
             range: range.range(),
-            peripheral: Arc::new(PyPeripheral::new(
-                mapped_peripheral.into(),
-            )?),
+            peripheral: wrapper,
         });
+
+        // 3. Store the Python reference.
+        // .clone().unbind() creates an independent Py<PyAny> we can store safely.
+        self.py_handles.push(mapped_peripheral.clone().unbind());
+
         Ok(())
+    }
+
+    #[getter]
+    fn peripherals<'py>(
+        &self,
+        py: Python<'py>,
+    ) -> PyResult<Vec<Bound<'py, PyAny>>> {
+        let mut list = Vec::new();
+
+        for handle in &self.py_handles {
+            // 4. To get a Bound object back, use handle.bind(py)
+            // handle is a Py<PyAny>, so .bind(py) returns Bound<'py, PyAny>
+            list.push(handle.bind(py).clone());
+        }
+
+        Ok(list)
     }
 }
 

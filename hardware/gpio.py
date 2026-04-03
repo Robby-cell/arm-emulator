@@ -6,7 +6,7 @@ class PyGpioPort(GpioPort):
     _off_count: int = 0
 
     name: str | None
-    start: int | None
+    begin: int | None
     end: int | None
 
     @property
@@ -24,11 +24,11 @@ class PyGpioPort(GpioPort):
         return super().__new__(cls)
 
     def __init__(
-        self, name: str | None = None, start: int | None = None, end: int | None = None
+        self, name: str | None = None, begin: int | None = None, end: int | None = None
     ) -> None:
         super().__init__()
         self.name = name
-        self.start = start
+        self.begin = begin
         self.end = end
 
     def read32(self, addr: int) -> int:

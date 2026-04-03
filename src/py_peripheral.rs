@@ -145,6 +145,10 @@ impl PyPeripheral {
 
         Ok(Self { obj: obj.into() })
     }
+
+    pub fn inner(&self) -> &Py<PyAny> {
+        self.obj.as_ref()
+    }
 }
 
 #[pymodule]

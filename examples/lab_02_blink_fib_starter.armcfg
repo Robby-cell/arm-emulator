@@ -1,0 +1,13 @@
+{
+    "version": "1.0",
+    "code": ".global _start\n_start:\n    @ The examiner will place the value 'n' in R8 before running.\n    @ 1. Setup GPIO (Base 0x40000000)\n    @ 2. Blink the LED 3 times (On, Off, On, Off, On, Off)\n    @ 3. Calculate Fib(n) where n is in R8\n    @ 4. Exit with Fib(n) in R0 using R7=1 syscall\n\n    @ TODO: Write your code here\n\nloop_forever:\n    B loop_forever",
+    "breakpoints": [],
+    "peripherals": [
+        {
+            "type_name": "LED",
+            "name": "led_bank0",
+            "start": 1073741824,
+            "end": 1073741856
+        }
+    ]
+}
