@@ -21,9 +21,6 @@ while not is_finished() and steps < MAX_STEPS:
 # 3. Assertions
 print("\n--- Final Results ---")
 
-on_count = 3
-off_count = 3
-
 # Verify Blinking Logic
 assert led.on_count == 3, f"LED should turn ON exactly 3 times. Found: {led.on_count}"
 assert (
