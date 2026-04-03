@@ -1,7 +1,9 @@
 import sys
 import argparse
 from arm_emulator_rs import Emulator, RangeInclusiveU32  # type: ignore
+
 from assembler import arm_little_endian_assembler
+from hardware import PyGpioPort
 
 # 1. Global State
 system: Emulator = Emulator()
@@ -86,6 +88,7 @@ def main() -> None:
         "print": print,
         "add_symbol": add_symbol,
         "load_program": load_program,
+        "PyGpioPort": PyGpioPort,
         "AssertionError": AssertionError,
     }
 
