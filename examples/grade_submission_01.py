@@ -30,7 +30,7 @@ assert mock_hw.is_led_on() is False
 assert mock_hw.off_count == 0 and mock_hw.on_count == 0
 
 # Test 2: Did the program exit with code 0?
-if reg(0) == 0:
+if get_register(R0) == 0:
     print("\033[92m[PASS]\033[0m Exit Code: Program returned 0.")
 else:
-    print(f"\033[91m[FAIL]\033[0m Exit Code: Expected R0=0, got R0={reg(0)}")
+    print(f"\033[91m[FAIL]\033[0m Exit Code: Expected R0=0, got R0={get_register(R0)}")
