@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Type
 
-from arm_emulator_rs import GpioPort, MemoryRegion  # type: ignore : import exists
+from arm_emulator_rs import MemoryRegion  # type: ignore : import exists
 from PyQt6.QtCore import QRegularExpression, Qt
 from PyQt6.QtGui import QBrush, QColor, QPainter, QRegularExpressionValidator
 from PyQt6.QtWidgets import (
@@ -17,40 +17,15 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-
-# The Peripheral "Factory" section
-class PyGpioPort(GpioPort):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def read32(self, addr: int) -> int:
-        res: int = super().read32(addr)
-        print("PyGpioPort read32")
-        return res
-
-    def write32(self, addr: int, data: int) -> None:
-        res: None = super().write32(addr, data)
-        print("PyGpioPort write32")
-        return res
-
-    def read_byte(self, addr: int) -> int:
-        res: int = super().read_byte(addr)
-        print("PyGpioPort read_byte")
-        return res
-
-    def write_byte(self, addr: int, data: int) -> None:
-        res: None = super().write_byte(addr, data)
-        print("PyGpioPort write_byte")
-        return res
-
-    def reset(self) -> None:
-        res: None = super().reset()
-        print("PyGpioPort reset")
-        return res
+from hardware import PyGpioPort
 
 
-PERIPHERAL_REGISTRY: Dict[str, Type] = {
-    "LED": PyGpioPort,
+def create_py_gpio_port(name: str, start: int, end: int) -> PyGpioPort:
+    return PyGpioPort(name, start, end)
+
+
+PERIPHERAL_REGISTRY: Dict[str, tuple[Type, Any]] = {
+    "LED": (PyGpioPort, create_py_gpio_port),
 }
 
 
@@ -103,7 +78,12 @@ class PeripheralData:
 
 def get_default_peripheral() -> PeripheralData:
     return PeripheralData(
-        "LED", "led0", 0x40000000, 0x40000100, PyGpioPort(), LedIndicator()
+        "LED",
+        "led0",
+        0x40000000,
+        0x40000100,
+        PyGpioPort(name="led0", start=0x40000000, end=0x40000100),
+        LedIndicator(),
     )
 
 
@@ -285,8 +265,8 @@ class PeripheralsPanel(QWidget):
                 return
 
         # All checks passed, add to table AND data model
-        peripheral_class = PERIPHERAL_REGISTRY[p_type]
-        instance = peripheral_class()
+        peripheral_class = PERIPHERAL_REGISTRY[p_type][1]
+        instance = peripheral_class(p_name, start_addr, end_addr)
 
         # Create Data Object
         data = PeripheralData(
@@ -393,8 +373,8 @@ class PeripheralsPanel(QWidget):
                 continue
 
             # Create instance and widget
-            peripheral_class = PERIPHERAL_REGISTRY[p_type]
-            instance = peripheral_class()
+            peripheral_class = PERIPHERAL_REGISTRY[p_type][1]
+            instance = peripheral_class(p_name, start_addr, end_addr)
             led = LedIndicator()
 
             data = PeripheralData(
