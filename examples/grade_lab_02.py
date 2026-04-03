@@ -1,7 +1,4 @@
-# grade_lab_02.py
 # Assignment: 3 Blinks, then Fibonacci(R8) -> R0
-
-led_bank0 = PyGpioPort("led_bank0", 0x40000000, 0x40000020)
 
 load_program()
 led = get_peripherals()[0]
