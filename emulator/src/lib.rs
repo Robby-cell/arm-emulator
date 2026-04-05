@@ -96,7 +96,7 @@ impl Emulator {
             code,
             sram,
             external,
-            Bus::SRAM_SIZE,
+            memory::KIBIBYTE * 64, // 64 KiB
         );
     }
 
