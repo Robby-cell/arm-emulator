@@ -129,7 +129,7 @@ impl PyPeripheral {
         Self::RESET,
     ];
 
-    fn verify_valid_object(obj: Bound<'_, PyAny>) -> PyResult<()> {
+    fn verify_valid_object(obj: &Bound<'_, PyAny>) -> PyResult<()> {
         for &attr in Self::PERIPHERAL_METHODS {
             _ = obj.getattr(attr)?;
         }
@@ -141,7 +141,7 @@ impl PyPeripheral {
 impl PyPeripheral {
     #[new]
     pub fn new(obj: Bound<'_, PyAny>) -> PyResult<Self> {
-        PyPeripheral::verify_valid_object(obj.clone())?;
+        PyPeripheral::verify_valid_object(&obj)?;
 
         Ok(Self { obj: obj.into() })
     }

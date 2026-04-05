@@ -26,10 +26,10 @@ macro_rules! create_file {
 }
 
 macro_rules! subscriber_layer {
-    (basic with ansi) => {{ ::tracing_subscriber::fmt::layer().with_ansi(false) }};
+    (layer { with ansi : $expr:expr $(,)? }$(,)?) => {{ ::tracing_subscriber::fmt::layer().with_ansi($expr) }};
 
     (json: {file: $file:ident, filter: $filter:expr $(,)?}$(,)?) => {{
-        subscriber_layer!(basic with ansi)
+        subscriber_layer!(layer{ with ansi: false })
             .json()
             .with_writer($file)
             .with_filter($filter)
@@ -41,18 +41,19 @@ fn py_init_tracing() -> PyResult<()> {
     use std::fs::create_dir_all;
     use std::time::{SystemTime, UNIX_EPOCH};
     use tracing::Level;
-    use tracing_subscriber::{Layer, filter, fmt, layer::SubscriberExt};
+    use tracing_subscriber::{Layer, filter, layer::SubscriberExt};
 
     {
-        static TOKEN: std::sync::atomic::AtomicBool =
-            std::sync::atomic::AtomicBool::new(true);
+        use std::sync::atomic::{AtomicBool, Ordering};
+
+        static TOKEN: AtomicBool = AtomicBool::new(true);
 
         if !TOKEN
             .compare_exchange(
                 true,
                 false,
-                std::sync::atomic::Ordering::AcqRel,
-                std::sync::atomic::Ordering::Acquire,
+                Ordering::AcqRel,
+                Ordering::Acquire,
             )
             .is_ok_and(|b| b)
         {
@@ -78,7 +79,7 @@ fn py_init_tracing() -> PyResult<()> {
     let trace_file = create_file!(log_root, "log-trace.log")?;
 
     let subscriber = tracing_subscriber::Registry::default()
-        .with(fmt::layer().compact().with_ansi(true))
+        .with(subscriber_layer!(layer{ with ansi: true }).compact())
         .with(subscriber_layer!(
             json: {
                 file: err_file,
