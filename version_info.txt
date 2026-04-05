@@ -19,12 +19,12 @@ VSVersionInfo(
         '040904B0',
         [StringStruct('CompanyName', 'Queen\'s University of Belfast'),
         StringStruct('FileDescription', 'ARMv7 Assembly Emulator and Debugger'),
-        StringStruct('FileVersion', '0.3.3'),
+        StringStruct('FileVersion', '0.3.4'),
         StringStruct('InternalName', 'arm_emulator'),
         StringStruct('LegalCopyright', 'Copyright (c) 2026 Robert Williamson. All rights reserved.'),
         StringStruct('OriginalFilename', 'arm_emulator.exe'),
         StringStruct('ProductName', 'ARM Emulator'),
-        StringStruct('ProductVersion', '0.3.3')])
+        StringStruct('ProductVersion', '0.3.4')])
       ]), 
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
