@@ -272,8 +272,6 @@ pub struct Bus {
     /// External memory and devices
     /// 0x60000000 -
     external: Vec<u8>,
-
-    stack: Vec<u8>,
 }
 
 struct NonPrintableMemory;
@@ -290,7 +288,6 @@ impl fmt::Debug for Bus {
             .field("sram", &NonPrintableMemory)
             .field("peripherals", &self.peripherals)
             .field("external", &NonPrintableMemory)
-            .field("stack", &NonPrintableMemory)
             .finish()
     }
 }
@@ -313,14 +310,6 @@ impl Bus {
     pub const EXTERNAL_END: u32 = 0xFFFFEFFF;
     pub const EXTERNAL_SIZE: u32 =
         Self::EXTERNAL_END - Self::EXTERNAL_BEGIN + 1;
-
-    pub const STACK_BEGIN: u32 = 0xFFFF0000;
-    pub const STACK_END: u32 = 0xFFFFFFFF;
-    pub const STACK_SIZE: u32 = Self::STACK_END - Self::STACK_BEGIN + 1; // 64 KiB
-}
-
-macro_rules! default_stack {
-    () => {{ vec![0; Bus::STACK_SIZE as usize] }};
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -384,11 +373,12 @@ impl Bus {
         self.sram = Vec::new();
         self.peripherals = Vec::new();
         self.external = Vec::new();
-        self.stack = default_stack!();
     }
 
+    /// In an ARM system, the Stack Pointer (SP) points to the TOP of the SRAM region.
+    /// Because the stack is "Full Descending" (STMDB/PUSH), it subtracts 4 before writing.
     pub fn get_sp_default_addr(&self) -> Word {
-        0
+        Self::SRAM_BEGIN + self.sram.len() as u32
     }
 
     #[must_use]
@@ -430,7 +420,6 @@ impl Bus {
             sram: vec![0; sram_size as _],
             peripherals: Vec::new(),
             external: vec![0; external_size as _],
-            stack: default_stack!(),
         }
     }
 
@@ -530,17 +519,7 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            Self::STACK_BEGIN..=Self::STACK_END => {
-                // Calculate offset relative to start of stack region
-                let offset = addr - Self::STACK_BEGIN;
-                relative_memory_error_mapping_to_absolute(
-                    Self::read32_ram_with_reader::<Reader>(
-                        &self.stack,
-                        offset,
-                    ),
-                    Self::STACK_BEGIN,
-                )
-            }
+            _ => Err(MemoryAccessError::InvalidReadPermission { addr }),
         }
     }
 
@@ -592,9 +571,6 @@ impl Bus {
     ) -> MemoryAccessResult<()> {
         match addr {
             Self::CODE_BEGIN..=Self::CODE_END => {
-                tracing::trace!(
-                    "Writing word {value:#X} to code at address {addr:#X}"
-                );
                 relative_memory_error_mapping_to_absolute(
                     Self::write32_ram_with_writer::<Writer>(
                         &mut self.code,
@@ -629,11 +605,6 @@ impl Bus {
                     );
                     if range.contains(&addr) {
                         let offset = addr - range.start();
-
-                        tracing::trace!(
-                            "Writing word {value:#X} to peripheral mapped to {range:?} at offset: {offset:#X}",
-                        );
-
                         return peripheral.write32(offset, value);
                     }
                 }
@@ -652,17 +623,7 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            Self::STACK_BEGIN..=Self::STACK_END => {
-                let offset = addr - Self::STACK_BEGIN;
-                relative_memory_error_mapping_to_absolute(
-                    Self::write32_ram_with_writer::<Writer>(
-                        &mut self.stack,
-                        offset,
-                        value,
-                    ),
-                    Self::STACK_BEGIN,
-                )
-            }
+            _ => Err(MemoryAccessError::InvalidWritePermission { addr }),
         }
     }
 
@@ -709,13 +670,24 @@ impl Bus {
                 tracing::trace!(
                     "Reading byte from code at address {addr:#X}"
                 );
-                Self::read_byte_ram_with_reader::<Reader>(&self.code, addr)
+                relative_memory_error_mapping_to_absolute(
+                    Self::read_byte_ram_with_reader::<Reader>(
+                        &self.code, addr,
+                    ),
+                    Self::CODE_BEGIN,
+                )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
                 tracing::trace!(
                     "Reading byte from SRAM at address {addr:#X}"
                 );
-                Self::read_byte_ram_with_reader::<Reader>(&self.sram, addr)
+                relative_memory_error_mapping_to_absolute(
+                    Self::read_byte_ram_with_reader::<Reader>(
+                        &self.sram,
+                        addr - Self::SRAM_BEGIN,
+                    ),
+                    Self::SRAM_BEGIN,
+                )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
                 for MemoryMappedPeripheral { range, peripheral } in
@@ -737,21 +709,15 @@ impl Bus {
                 tracing::trace!(
                     "Reading byte from external memory at address {addr:#X}"
                 );
-                Self::read_byte_ram_with_reader::<Reader>(
-                    &self.external,
-                    addr,
+                relative_memory_error_mapping_to_absolute(
+                    Self::read_byte_ram_with_reader::<Reader>(
+                        &self.external,
+                        addr - Self::EXTERNAL_BEGIN,
+                    ),
+                    Self::EXTERNAL_BEGIN,
                 )
             }
-            Self::STACK_BEGIN..=Self::STACK_END => {
-                tracing::trace!(
-                    "Reading byte from stack at address {addr:#X}"
-                );
-                let offset = addr - Self::STACK_BEGIN;
-                Self::read_byte_ram_with_reader::<Reader>(
-                    &self.stack,
-                    offset,
-                )
-            }
+            _ => Err(MemoryAccessError::InvalidReadPermission { addr }),
         }
     }
 
@@ -794,20 +760,26 @@ impl Bus {
                 tracing::trace!(
                     "Writing byte {value:#X} from code at address {addr:#X}"
                 );
-                Self::write_byte_ram_with_writer::<Writer>(
-                    &mut self.code,
-                    addr,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write_byte_ram_with_writer::<Writer>(
+                        &mut self.code,
+                        addr,
+                        value,
+                    ),
+                    Self::CODE_BEGIN,
                 )
             }
             Self::SRAM_BEGIN..=Self::SRAM_END => {
                 tracing::trace!(
                     "Writing byte {value:#X} from SRAM at address {addr:#X}"
                 );
-                Self::write_byte_ram_with_writer::<Writer>(
-                    &mut self.sram,
-                    addr,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write_byte_ram_with_writer::<Writer>(
+                        &mut self.sram,
+                        addr - Self::SRAM_BEGIN,
+                        value,
+                    ),
+                    Self::SRAM_BEGIN,
                 )
             }
             Self::PERIPHERAL_BEGIN..=Self::PERIPHERAL_END => {
@@ -830,23 +802,16 @@ impl Bus {
                 tracing::trace!(
                     "Writing byte {value:#X} from external memory at address {addr:#X}"
                 );
-                Self::write_byte_ram_with_writer::<Writer>(
-                    &mut self.external,
-                    addr,
-                    value,
+                relative_memory_error_mapping_to_absolute(
+                    Self::write_byte_ram_with_writer::<Writer>(
+                        &mut self.external,
+                        addr - Self::EXTERNAL_BEGIN,
+                        value,
+                    ),
+                    Self::EXTERNAL_BEGIN,
                 )
             }
-            Self::STACK_BEGIN..=Self::STACK_END => {
-                tracing::trace!(
-                    "Writing byte {value:#X} from stack at address {addr:#X}"
-                );
-                let offset = addr - Self::STACK_BEGIN;
-                Self::write_byte_ram_with_writer::<Writer>(
-                    &mut self.stack,
-                    offset,
-                    value,
-                )
-            }
+            _ => Err(MemoryAccessError::InvalidWritePermission { addr }),
         }
     }
 
@@ -889,7 +854,6 @@ impl Bus {
             sram,
             peripherals,
             external,
-            stack: default_stack!(),
         }
     }
 
