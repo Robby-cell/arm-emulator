@@ -139,3 +139,12 @@ To build and package the python GUI:
 # On Windows, in Git Bash:
 # ./package-windows.sh
 ```
+
+# Running the Benchmarks
+
+The benchmarks for the emulator are in the `crates/emulator/benches` directory.
+Benchmarks can be run with `cargo bench`.
+
+```bash
+cargo bench --package emulator
+```
