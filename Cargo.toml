@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/emulator_macros", "emulator"]
+members = ["crates/emulator", "crates/emulator_macros"]
 resolver = "3"
 
 [package]
@@ -23,7 +23,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
 [workspace.dependencies]
-emulator = { path = "emulator" }
+emulator = { path = "crates/emulator" }
 emulator_macros = { path = "crates/emulator_macros" }
 
 modular-bitfield = { version = "0.13.1" }
