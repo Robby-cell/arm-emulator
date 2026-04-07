@@ -18,11 +18,9 @@ print(f"Executed {cycles} instructions.")
 
 # Test 1: Did they write the correct value (30) to the hardware?
 if mock_hw.read32(0) == 30:
-    print("\033[92m[PASS]\033[0m Hardware Write: Student wrote 30 to IO_BASE.")
+    output_success("Hardware Write: Student wrote 30 to IO_BASE.")
 else:
-    print(
-        f"\033[91m[FAIL]\033[0m Hardware Write: Expected 30, got {mock_hw.read32(0)}",
-    )
+    output_failure(f"Hardware Write: Expected 30, got {mock_hw.read32(0)}")
 
 # We can even test the LED state
 # We didn't configure moder and write to odr, so it should be off
@@ -31,6 +29,6 @@ assert mock_hw.off_count == 0 and mock_hw.on_count == 0
 
 # Test 2: Did the program exit with code 0?
 if get_register(R0) == 0:
-    print("\033[92m[PASS]\033[0m Exit Code: Program returned 0.")
+    output_success("Exit Code: Program returned 0.")
 else:
-    print(f"\033[91m[FAIL]\033[0m Exit Code: Expected R0=0, got R0={get_register(R0)}")
+    output_failure(f"Exit Code: Expected R0=0, got R0={get_register(R0)}")

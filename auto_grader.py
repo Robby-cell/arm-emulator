@@ -164,6 +164,22 @@ def load_program() -> None:
         map_peripheral(begin, end, obj)
 
 
+def success_message(info, message) -> str:
+    return f"\033[92m[{info}]\033[0m {message}"
+
+
+def failure_message(info, message) -> str:
+    return f"\033[91m[{info}]\033[0m {message}"
+
+
+def output_success(message) -> None:
+    print(success_message("PASS", message))
+
+
+def output_failure(message) -> None:
+    print(failure_message("FAIL", message))
+
+
 # 3. The Orchestrator
 def main() -> None:
     global system
@@ -213,6 +229,10 @@ def main() -> None:
             "print": print,
             "add_symbol": add_symbol,
             "load_program": load_program,
+            "success_message": success_message,
+            "failure_message": failure_message,
+            "output_success": output_success,
+            "output_failure": output_failure,
             "PyGpioPort": PyGpioPort,
             "AssertionError": AssertionError,
             "InstructionQuotaExceeded": InstructionQuotaExceeded,

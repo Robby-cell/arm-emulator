@@ -17,12 +17,12 @@ while not is_finished():
     try:
         step()
     except InstructionQuotaExceeded as e:
-        print("Exceeded instruction quota.")
+        output_failure(e)
         # We can break (and ignore it), let the exception bubble up, whatever we like to do
         break
 
 # 3. Assertions
-print("\n--- Final Results ---")
+print("\nFinal Results")
 
 # Verify Blinking Logic
 assert led.on_count == 3, f"LED should turn ON exactly 3 times. Found: {led.on_count}"
@@ -30,13 +30,13 @@ assert (
     led.off_count == 3
 ), f"LED should turn OFF exactly 3 times. Found: {led.off_count}"
 assert led.is_led_on() is False, "LED must be OFF when the program finishes."
-print("Requirement [Blink 3 Times]: PASS")
+output_success("Blink 3 times")
 
 # Verify Fibonacci Result
 result = get_register(R0)
 assert result == expected_fib, f"Fibonacci error! Expected {expected_fib}, got {result}"
-print(f"Requirement [Fibonacci({test_n})]: PASS (Result: {result})")
+output_success(f"Fibonacci({test_n}) Result = {result}")
 
 # Verify Exit Status
 assert get_register(R7) == 1, "Program did not use exit syscall (R7=1)"
-print("Requirement [Exit Syscall]: PASS")
+output_success("Exit Syscall")
