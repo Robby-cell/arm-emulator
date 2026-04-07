@@ -1,3 +1,14 @@
+"""
+Code Editor Widget for ARM Assembly.
+
+This module provides a syntax-highlighted code editor specifically designed
+for writing ARM assembly code. Features include:
+- ARM assembly syntax highlighting (instructions, registers, conditions)
+- Line numbers
+- Current line highlighting
+- Breakpoint indicators
+"""
+
 from PyQt6.QtCore import Qt, QRect, QRegularExpression, pyqtSignal
 from PyQt6.QtGui import (
     QPainter,

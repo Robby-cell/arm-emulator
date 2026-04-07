@@ -1,3 +1,15 @@
+//! Instruction execution for the ARM emulator.
+//!
+//! This module provides the core execution logic for ARM instructions,
+//! including:
+//! - The [`ExecutableInstruction`] trait for executing decoded instructions
+//! - The [`ExecutionError`] enum for reporting execution failures
+//! - Operand2 evaluation (immediate values and shifted register offsets)
+//! - Condition flag computation helpers (N, Z traits)
+//!
+//! Each instruction type (data processing, memory access, branch, etc.) has
+//! its own submodule that implements the execution logic.
+
 use thiserror::Error;
 
 use crate::{
@@ -20,17 +32,26 @@ mod supervisor_call;
 #[cfg(test)]
 mod tests;
 
+/// Errors that can occur during instruction execution.
+///
+/// These errors are raised when the emulator encounters conditions that
+/// prevent normal instruction execution, such as breakpoints, memory
+/// access violations, invalid instructions, or CPU exceptions.
 #[derive(Debug, Error, Clone)]
 pub enum ExecutionError {
+    /// A breakpoint was hit during execution
     #[error("breakpoint reached: {0}")]
     Breakpoint(#[from] Breakpoint),
 
+    /// A memory access error occurred
     #[error("memory access error: {0}")]
     MemoryAccessError(#[from] MemoryAccessError),
 
+    /// The instruction could not be decoded
     #[error("illegal instruction, could not decode instruction: {0}")]
     InstructionConversionError(#[from] InstructionConversionError),
 
+    /// An exception occurred during execution
     #[error("active exception: {0}")]
     Exception(#[from] Exception),
 }
@@ -39,7 +60,16 @@ mod private {
     pub trait Sealed {}
 }
 
+/// Trait for executing decoded instructions.
+///
+/// This trait is implemented by each instruction type (DataProcessing,
+/// MemoryAccess, Branch, etc.) and provides the logic for executing that
+/// instruction on the emulator.
 pub trait ExecutableInstruction: private::Sealed {
+    /// Execute this instruction with the given emulator state.
+    ///
+    /// Returns `Ok(())` on successful execution, or `Err(ExecutionError)` if
+    /// an error occurred during execution.
     fn execute_with(
         &self,
         emulator: &mut Emulator,

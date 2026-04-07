@@ -1,3 +1,11 @@
+"""
+Editor Screen for the ARM Emulator GUI.
+
+This module provides the main editing interface where users can write
+ARM assembly code. It combines a code editor widget with a peripherals
+panel for visualizing GPIO states.
+"""
+
 from typing import Optional
 
 from PyQt6.QtCore import Qt
@@ -9,6 +17,8 @@ from ..sample.starter_code import EXAMPLE_BLINK as DEFAULT_ASM
 
 
 class EditorScreen(QWidget):
+    """Main editing interface for writing ARM assembly code."""
+
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 

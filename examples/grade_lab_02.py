@@ -26,9 +26,9 @@ print("\nFinal Results")
 
 # Verify Blinking Logic
 assert led.on_count == 3, f"LED should turn ON exactly 3 times. Found: {led.on_count}"
-assert (
-    led.off_count == 3
-), f"LED should turn OFF exactly 3 times. Found: {led.off_count}"
+assert led.off_count == 3, (
+    f"LED should turn OFF exactly 3 times. Found: {led.off_count}"
+)
 assert led.is_led_on() is False, "LED must be OFF when the program finishes."
 output_success("Blink 3 times")
 

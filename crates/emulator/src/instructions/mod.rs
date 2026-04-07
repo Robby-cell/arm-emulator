@@ -1,3 +1,24 @@
+//! ARM instruction set decoding and representation.
+//!
+//! This module provides the core instruction types for the ARM emulator:
+//! - [`DataProcessingInstruction`]: ALU operations (ADD, SUB, MOV, etc.)
+//! - [`MemoryAccessInstruction`]: Load/Store operations (LDR, STR)
+//! - [`BranchInstruction`]: Branch and Branch with Link (B, BL)
+//! - [`BlockDataTransferInstruction`]: Load/Store Multiple (LDM, STM)
+//! - [`BranchExchangeInstruction`]: Mode switching (BX, BLX)
+//! - [`SupervisorCallInstruction`]: System calls (SVC/SWI)
+//! - [`MultiplyInstruction`]: 32-bit multiplication (MUL, MLA)
+//! - [`MultiplyLongInstruction`]: 64-bit multiplication (UMULL, SMULL, etc.)
+//! - [`BreakpointInstruction`]: Debug breakpoint (BKPT)
+//! - [`Instruction`]: Enum representing any ARM instruction
+//!
+//! Instructions are decoded from raw 32-bit values using the [`TryFrom<u32>`]
+//! implementation on [`Instruction`]. The [`ArmDecoder`] and [`InstructionEnum`]
+//! macros from [`emulator_macros`] provide the decoding logic.
+//!
+//! The [`fields`] submodule contains common instruction field types like
+//! [`Condition`], [`Opcode`], [`Register`], and shift types.
+
 #![allow(unused_parens, dead_code)]
 
 mod display;

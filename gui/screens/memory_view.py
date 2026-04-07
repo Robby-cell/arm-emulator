@@ -1,3 +1,11 @@
+"""
+Memory View Screen for the ARM Emulator GUI.
+
+This module provides a view for inspecting memory contents at runtime.
+Users can view code, SRAM, and external memory regions in a tabular format
+with addresses and values displayed in hexadecimal.
+"""
+
 from typing import Optional
 
 from arm_emulator_rs import Emulator  # type: ignore

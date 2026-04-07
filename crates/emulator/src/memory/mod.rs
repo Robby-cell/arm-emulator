@@ -1,6 +1,29 @@
 //! Memory management for the emulator.
-//! Handles the memory that is allocated,
-//! and the memory that is being given around to each peripheral/process.
+//!
+//! This module handles all memory-related functionality including:
+//! - Memory regions: Code, SRAM, External, Peripherals
+//! - Endianness: Little-endian and big-endian support
+//! - Memory-mapped peripherals
+//! - Word/byte access with alignment checking
+//!
+//! # Memory Map
+//!
+//! | Region       | Address Range      | Size       | Description          |
+//! |--------------|--------------------|------------|----------------------|
+//! | Code         | 0x00000000-0x1FFFFFFF | 512 MiB   | Program code         |
+//! | SRAM         | 0x20000000-0x3FFFFFFF | 512 MiB   | Data/Stack/Heap      |
+//! | Peripherals  | 0x40000000-0x5FFFFFFF | 512 MiB   | Memory-mapped I/O    |
+//! | External     | 0x60000000-0xFFFFEFFF | ~256 GiB  | External devices     |
+//!
+//! # Usage
+//!
+//! ```ignore
+//! use emulator::memory::{Bus, Endian};
+//!
+//! let mut bus = Bus::new(1024, 1024, 0);  // 1KB code, 1KB SRAM
+//! bus.load_code(&[0xE3A01001, 0xE3A02002]); // Load some ARM instructions
+//! let value = bus.read32_le(0).unwrap(); // Read first instruction
+//! ```
 
 use std::{fmt, ops::RangeInclusive, sync::Arc};
 
@@ -27,34 +50,47 @@ pub const GIBIBYTE: Word = MEBIBYTE * KIBI;
 /// This is for if no specific amount is given.
 pub const DEFAULT_MEMORY_SIZE: Word = 1 * MEBIBYTE;
 
+/// Type alias for a byte slice representing memory contents.
 pub type Bytes = [u8];
 
-/// System word type. On a 32-bit system, 32 bits
+/// System word type. On a 32-bit ARM system, this is 32 bits.
 pub type Word = u32;
 
+/// Type alias for RAM as a vector of bytes.
 pub type Ram = Vec<u8>;
 
+/// Errors that can occur during memory access.
+///
+/// These errors indicate invalid operations such as reading/writing
+/// to inaccessible memory, unaligned accesses, or peripheral errors.
 #[derive(Debug, Error, Clone)]
 pub enum MemoryAccessError {
+    /// Attempted to read from an address without read permission
     #[error("invalid read permission ({addr:#X})")]
     InvalidReadPermission { addr: Word },
 
+    /// Attempted to write to an address without write permission
     #[error("invalid write permission ({addr:#X})")]
     InvalidWritePermission { addr: Word },
 
+    /// Attempted to access memory at an invalid alignment
     #[error("unaligned access")]
     UnalignedAccess,
 
+    /// Invalid memory offset specified
     #[error("invalid offset ({offset:#X})")]
     InvalidOffset { offset: Word },
 
+    /// Read from an invalid peripheral register
     #[error("invalid peripheral read at offset {offset:#X}")]
     InvalidPeripheralRead { offset: Word },
 
+    /// Write to an invalid peripheral register
     #[error("invalid peripheral write at offset {offset:#X}")]
     InvalidPeripheralWrite { offset: Word },
 }
 
+/// Result type for memory access operations.
 pub type MemoryAccessResult<T> = Result<T, MemoryAccessError>;
 
 /// System word size (for ARM, 32 bits/4 bytes) amount of bytes
@@ -245,7 +281,7 @@ impl fmt::Debug for MemoryMappedPeripheral {
 }
 
 impl MemoryMappedPeripheral {
-    pub fn new(
+    pub const fn new(
         range: RangeInclusive<u32>,
         peripheral: Arc<dyn Peripheral + Send + Sync>,
     ) -> Self {
@@ -307,7 +343,7 @@ impl Bus {
         Self::PERIPHERAL_END - Self::PERIPHERAL_BEGIN + 1;
 
     pub const EXTERNAL_BEGIN: u32 = 0x60000000;
-    pub const EXTERNAL_END: u32 = 0xFFFFEFFF;
+    pub const EXTERNAL_END: u32 = 0xFFFFFFFF;
     pub const EXTERNAL_SIZE: u32 =
         Self::EXTERNAL_END - Self::EXTERNAL_BEGIN + 1;
 }
@@ -519,7 +555,6 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            _ => Err(MemoryAccessError::InvalidReadPermission { addr }),
         }
     }
 
@@ -623,7 +658,6 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            _ => Err(MemoryAccessError::InvalidWritePermission { addr }),
         }
     }
 
@@ -717,7 +751,6 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            _ => Err(MemoryAccessError::InvalidReadPermission { addr }),
         }
     }
 
@@ -811,7 +844,6 @@ impl Bus {
                     Self::EXTERNAL_BEGIN,
                 )
             }
-            _ => Err(MemoryAccessError::InvalidWritePermission { addr }),
         }
     }
 

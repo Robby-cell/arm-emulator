@@ -1,5 +1,4 @@
 import argparse
-import os
 import subprocess
 import sys
 import time
@@ -175,7 +174,11 @@ def main():
     parser.add_argument(
         "--dir", default="gui", help="Root directory to scan for python files"
     )
-    parser.add_argument("--translations_dir", default="assets/translations", help="Translations directory")
+    parser.add_argument(
+        "--translations_dir",
+        default="assets/translations",
+        help="Translations directory",
+    )
 
     args = parser.parse_args()
 
