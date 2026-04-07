@@ -16,6 +16,16 @@ asm_filename: str
 instruction_quota = 500
 
 
+class InstructionQuotaExceeded(Exception):
+    _message: str
+
+    def __init__(self, message) -> None:
+        self._message = message
+
+    def __str__(self) -> str:
+        return self._message
+
+
 # 2. Helper Functions (Exposed to the test script)
 def set_instruction_quota(quota: int) -> None:
     """Sets the maximum number of instructions to execute."""
@@ -35,7 +45,7 @@ def step(count: int = 1) -> None:
     for _ in range(count):
         if instruction_quota <= 0:
             logging.error("Exceeded instruction quota.")
-            raise RuntimeError("Exceeded instruction quota.")
+            raise InstructionQuotaExceeded("Exceeded instruction quota.")
         if system.is_finished():
             break
         system.step()
@@ -205,6 +215,7 @@ def main() -> None:
             "load_program": load_program,
             "PyGpioPort": PyGpioPort,
             "AssertionError": AssertionError,
+            "InstructionQuotaExceeded": InstructionQuotaExceeded,
         },
         **{f"R{i}": i for i in range(16)},
         "SP": 13,
