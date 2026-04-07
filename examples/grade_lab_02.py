@@ -11,12 +11,15 @@ system.set_register(R8, test_n)
 print(f"Starting test with n={test_n}")
 
 # 2. Execution loop with transition tracking
-steps = 0
 MAX_STEPS = 500
 
-while not is_finished() and steps < MAX_STEPS:
-    step()
-    steps += 1
+while not is_finished():
+    try:
+        step()
+    except InstructionQuotaExceeded as e:
+        print("Exceeded instruction quota.")
+        # We can break (and ignore it), let the exception bubble up, whatever we like to do
+        break
 
 # 3. Assertions
 print("\n--- Final Results ---")

@@ -2,6 +2,7 @@ import sys
 import argparse
 import json
 from pathlib import Path
+import logging
 
 from arm_emulator_rs import Emulator, Peripheral, RangeInclusiveU32  # type: ignore
 
@@ -12,15 +13,43 @@ from hardware import PyGpioPort
 system: Emulator = Emulator()
 assembler = arm_little_endian_assembler()
 asm_filename: str
+instruction_quota = 500
+
+
+class InstructionQuotaExceeded(Exception):
+    _message: str
+
+    def __init__(self, message) -> None:
+        self._message = message
+
+    def __str__(self) -> str:
+        return self._message
 
 
 # 2. Helper Functions (Exposed to the test script)
+def set_instruction_quota(quota: int) -> None:
+    """Sets the maximum number of instructions to execute."""
+    global instruction_quota
+    instruction_quota = quota
+
+
+def get_instruction_quota() -> int:
+    """Returns the maximum number of instructions to execute."""
+    global instruction_quota
+    return instruction_quota
+
+
 def step(count: int = 1) -> None:
     """Advances the system by N instructions."""
+    global instruction_quota
     for _ in range(count):
+        if instruction_quota <= 0:
+            logging.error("Exceeded instruction quota.")
+            raise InstructionQuotaExceeded("Exceeded instruction quota.")
         if system.is_finished():
             break
         system.step()
+        instruction_quota -= 1
 
 
 def is_finished() -> bool:
@@ -112,12 +141,12 @@ def load_program() -> None:
 
                     peripherals.append((start, end, obj))
                     add_symbol(name, start)
-                    print(f"Auto-configured peripheral: {name} at {hex(start)}")
+                    logging.info(f"Auto-configured peripheral: {name} at {hex(start)}")
 
-            print(f"Successfully loaded workspace: {path.name}")
+            logging.info(f"Successfully loaded workspace: {path.name}")
 
         except json.JSONDecodeError:
-            print(f"Error: {path.name} has .armcfg extension but is not valid JSON.")
+            logging.error(f"{path.name} has .armcfg extension but is not valid JSON.")
             sys.exit(1)
     else:
         # 3. Fallback to treating the file as raw assembly text
@@ -127,8 +156,8 @@ def load_program() -> None:
     out = assembler.assemble(code_to_assemble, start_address=0)
 
     if out.text is None:
-        print("Assembly failed. Check student code.")
-        sys.exit(1)
+        logging.error("Error: Failed to assemble code...")
+        exit(1)
 
     system.load_program(out.text, out.sram, out.external)
     for begin, end, obj in peripherals:
@@ -140,9 +169,20 @@ def main() -> None:
     global system
     global asm_filename
 
+    logging.basicConfig(level=logging.DEBUG)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--script", required=True, help="The .py test script")
     parser.add_argument("-a", "--asm", required=True, help="The student .asm file")
+    parser.add_argument(
+        "--no-pre-load",
+        action="store_true",
+        help=(
+            "Do not pre-load the student program. "
+            "If specified, the program will no load the students code before running the grading script. "
+            "Must be loaded within the script"
+        ),
+    )
     args = parser.parse_args()
 
     asm_filename = args.asm
@@ -157,6 +197,8 @@ def main() -> None:
         **{
             "system": system,
             "is_finished": is_finished,
+            "set_instruction_quota": set_instruction_quota,
+            "get_instruction_quota": get_instruction_quota,
             "step": step,
             "run": run,
             "get_register": get_register,
@@ -173,15 +215,18 @@ def main() -> None:
             "load_program": load_program,
             "PyGpioPort": PyGpioPort,
             "AssertionError": AssertionError,
+            "InstructionQuotaExceeded": InstructionQuotaExceeded,
         },
         **{f"R{i}": i for i in range(16)},
         "SP": 13,
         "LR": 14,
         "PC": 15,
     }
-    load_program()
+    pre_load = not args.no_pre_load
+    if pre_load:
+        load_program()
 
-    print(f"--- Executing Test Script: {args.script} ---")
+    logging.info(f"--- Executing Test Script: {args.script} ---")
     try:
         exec(script_code, env)
         print("\033[92m[FINAL RESULT]: ALL TESTS PASSED\033[0m")
