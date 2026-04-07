@@ -1,3 +1,15 @@
+"""
+Debugger Controller for the ARM Emulator.
+
+This module manages the state and execution of the Rust emulator,
+providing an interface between the emulator core and the PyQt6 UI.
+It handles:
+- Program loading and unloading
+- Execution control (run, step, stop)
+- Breakpoint management
+- State synchronization between emulator and UI
+"""
+
 from typing import Dict, Optional, Set
 
 from arm_emulator_rs import (
@@ -13,7 +25,22 @@ from assembler import AssembledOutput
 class DebuggerController(QObject):
     """
     Manages the state and execution of the Rust emulator.
-    Communicates with the UI via signals.
+
+    This class acts as the bridge between the Rust emulator core and the
+    PyQt6-based GUI. It provides:
+    - Program loading and memory management
+    - Execution control (run, step, stop)
+    - Breakpoint handling
+    - UI state synchronization via signals
+
+    # Signals
+
+    - `execution_started`: Emitted when continuous execution begins
+    - `execution_stopped`: Emitted when execution halts
+    - `state_changed`: Emitted when CPU/memory state updates
+    - `breakpoint_hit(int)`: Emitted with address when a breakpoint is reached
+    - `error_occurred(str)`: Emitted on execution errors
+    - `highlight_line(int)`: Emitted with line number to highlight in editor
     """
 
     execution_started = pyqtSignal()
@@ -21,8 +48,8 @@ class DebuggerController(QObject):
     state_changed = pyqtSignal()
     breakpoint_hit = pyqtSignal(int)  # Emits the address of the breakpoint
     error_occurred = pyqtSignal(str)  # Emits the error message
-    _peripherals = []
     highlight_line = pyqtSignal(int)
+    _peripherals = []
     _breakpoints: Set[int] = set()
 
     def __init__(self, emulator: Emulator, parent: Optional[QObject] = None) -> None:

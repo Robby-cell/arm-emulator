@@ -43,10 +43,9 @@ impl PyEmulator {
     }
 
     fn get_exit_code(&self) -> Option<i32> {
-        match self.emulator.get_exit_status() {
-            Some(ExitStatus { exit_code }) => Some(exit_code),
-            None => None,
-        }
+        self.emulator
+            .get_exit_status()
+            .map(|ExitStatus { exit_code }| exit_code)
     }
 
     #[getter]
@@ -130,11 +129,10 @@ impl PyEmulator {
     }
 
     fn read32(&self, addr: u32) -> PyResult<u32> {
-        Ok(self
-            .emulator
+        self.emulator
             .read32(addr)
             .to_py_execution_result()
-            .to_py_result()?)
+            .to_py_result()
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
@@ -166,11 +164,10 @@ impl PyEmulator {
     }
 
     fn read_byte(&self, addr: u32) -> PyResult<u8> {
-        Ok(self
-            .emulator
+        self.emulator
             .read_byte(addr)
             .to_py_execution_result()
-            .to_py_result()?)
+            .to_py_result()
     }
 
     fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {

@@ -1,5 +1,11 @@
+"""
+ARM Emulator GUI Main Window.
+
+This module provides the main application window for the ARM emulator,
+including the toolbar, menu bar, and tabbed interface for various screens.
+"""
+
 import os
-from typing import Optional
 import sys
 import ctypes
 from pathlib import Path
@@ -95,7 +101,7 @@ class MainWindow(QMainWindow):
         self,
         emulator: Emulator,
         assembler: Assembler,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
         flags: Qt.WindowType = Qt.WindowType.Window,
     ) -> None:
         super().__init__(parent=parent, flags=flags)

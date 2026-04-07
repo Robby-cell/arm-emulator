@@ -1,4 +1,37 @@
+//! ARM Emulator - An educational ARM emulator with GUI
+//!
+//! This crate provides a complete ARM emulation core with support for:
+//! - ARM instruction set (Data Processing, Memory Access, Branch, Multiply, etc.)
+//! - Memory management with bus system
+//! - CPU state management with execution states
+//! - Debugging support (breakpoints, stepping)
+//! - Memory-mapped peripherals (GPIO)
+//!
+//! # Architecture
+//!
+//! The emulator consists of several core components:
+//! - [`Emulator`] - Main entry point coordinating CPU and memory
+//! - [`Cpu`] - CPU modeling with registers and execution states
+//! - [`Bus`] - Memory bus with code, SRAM, and peripheral regions
+//!
+//! # Usage
+//!
+//! ```ignore
+//! use arm_emulator::Emulator;
+//! use arm_emulator::cpu::Cpu;
+//! use arm_emulator::memory::Bus;
+//!
+//! let cpu = Cpu::new();
+//! let bus = Bus::new();
+//! let mut emulator = Emulator::new(cpu, bus, Endian::Little);
+//!
+//! // Load program and step
+//! emulator.load_program(&code, None, None);
+//! emulator.step()?;
+//! ```
+
 #![warn(clippy::pedantic)]
+#![warn(clippy::missing_const_for_fn)]
 
 use std::collections::HashMap;
 
@@ -35,10 +68,16 @@ mod tests;
 
 const BREAKPOINT_BE_BYTES: [u8; 4] = [0xE1, 0x20, 0x00, 0x70];
 
+/// Represents a breakpoint in the emulator.
+///
+/// When a breakpoint is hit, the emulator halts execution and provides
+/// information about the original instruction that was replaced.
 #[derive(Debug, Error, Clone)]
 #[must_use]
 pub struct Breakpoint {
+    /// The memory address where the breakpoint is set.
     pub addr: Word,
+    /// The original instruction that was at this address before patching.
     pub instruction: Instruction,
 }
 
@@ -48,18 +87,41 @@ impl std::fmt::Display for Breakpoint {
     }
 }
 
+/// Type alias for breakpoint address to original instruction mappings.
+/// Used internally to track and restore original instructions when breakpoints are removed.
 pub type BreakpointMappings = HashMap<Word, u32>;
 
+/// Main emulator struct that coordinates the CPU, memory bus, and execution.
+///
+/// The emulator provides the primary interface for loading programs,
+/// stepping through instructions, and managing breakpoints.
 #[derive(Debug)]
 #[must_use]
 pub struct Emulator {
+    /// The emulated CPU instance.
     pub cpu: Cpu,
+    /// The memory bus handling reads and writes.
     pub memory_bus: Bus,
+    /// Current endianness (little or big).
     pub endian: Endian,
+    /// Internal mapping of breakpoint addresses to original instructions.
+    /// This is used to restore instructions when breakpoints are removed.
     pub breakpoint_destructive: BreakpointMappings,
 }
 
+// Program loading.
 impl Emulator {
+    /// Loads a program with a specified SRAM size.
+    ///
+    /// This method resets the emulator, loads the code into memory,
+    /// optionally loads SRAM and external memory, and sets up the stack pointer.
+    ///
+    /// # Arguments
+    ///
+    /// * `code` - The ARM bytecode to load
+    /// * `sram` - Optional static RAM data to load
+    /// * `external` - Optional external memory data to load
+    /// * `sram_size` - The size of SRAM to reserve in bytes
     pub fn load_program_with_sram_size(
         &mut self,
         code: &[u8],
@@ -86,6 +148,9 @@ impl Emulator {
         );
     }
 
+    /// Loads a program with default 64 KiB SRAM size.
+    ///
+    /// Convenience method that calls `load_program_with_sram_size` with 64 KiB.
     pub fn load_program(
         &mut self,
         code: &[u8],
@@ -100,14 +165,17 @@ impl Emulator {
         );
     }
 
+    /// Loads ARM bytecode into the code memory region.
     pub fn load_code(&mut self, code: &[u8]) {
         self.memory_bus.load_code(code);
     }
 
+    /// Loads data into the SRAM region.
     pub fn load_sram(&mut self, sram: &[u8]) {
         self.memory_bus.load_sram(sram);
     }
 
+    /// Loads data into the external memory region.
     pub fn load_external(&mut self, external: &[u8]) {
         self.memory_bus.load_external(external);
     }
@@ -280,16 +348,19 @@ impl Emulator {
 
 // Getters
 impl Emulator {
+    /// Returns a read-only view of the memory.
     #[must_use]
     pub fn get_read_only_memory_view(&self) -> &Bytes {
         self.memory_bus.get_read_only_memory_view()
     }
 
+    /// Returns the list of memory-mapped peripherals.
     #[must_use]
     pub fn get_mapped_peripherals(&self) -> &[MemoryMappedPeripheral] {
         self.memory_bus.get_mapped_peripherals()
     }
 
+    /// Adds a memory-mapped peripheral to the emulator.
     pub fn add_peripheral(
         &mut self,
         mapped_peripheral: MemoryMappedPeripheral,

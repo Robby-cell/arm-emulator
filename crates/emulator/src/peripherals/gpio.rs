@@ -1,3 +1,13 @@
+//! GPIO (General Purpose Input/Output) peripheral implementation.
+//!
+//! This module provides a simulated GPIO peripheral similar to STM32 microcontrollers.
+//! It models:
+//! - MODER register: GPIO port mode configuration (input/output/alternate function)
+//! - ODR register: Output data register for controlling pins
+//!
+//! The implementation uses atomic operations for thread-safety and supports
+//! LED visualization (specifically PA5) for the educational demo.
+
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::memory::{
@@ -12,6 +22,19 @@ struct GpioState {
     odr: AtomicU32,
 }
 
+impl GpioState {
+    pub const fn new(moder: u32, odr: u32) -> Self {
+        Self {
+            moder: AtomicU32::new(moder),
+            odr: AtomicU32::new(odr),
+        }
+    }
+
+    pub const fn zero() -> Self {
+        Self::new(0, 0)
+    }
+}
+
 /// The public-facing struct representing a gpio port
 #[must_use]
 pub struct GpioPort {
@@ -19,12 +42,9 @@ pub struct GpioPort {
 }
 
 impl GpioPort {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            state: GpioState {
-                moder: 0.into(),
-                odr: 0.into(),
-            },
+            state: GpioState::zero(),
         }
     }
 

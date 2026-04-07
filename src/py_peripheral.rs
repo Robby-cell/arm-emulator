@@ -35,7 +35,7 @@ impl Clone for PyPeripheral {
 
 impl Peripheral for PyPeripheral {
     fn read32(&self, offset: u32) -> MemoryAccessResult<u32> {
-        let result = Python::attach(|py| {
+        Python::attach(|py| {
             let result =
                 self.obj.call_method1(py, Self::READ32, (offset,));
             match result {
@@ -55,8 +55,7 @@ impl Peripheral for PyPeripheral {
                     })
                 }
             }
-        });
-        result
+        })
     }
 
     fn write32(&self, offset: u32, value: u32) -> MemoryAccessResult<()> {
@@ -70,7 +69,7 @@ impl Peripheral for PyPeripheral {
     }
 
     fn read_byte(&self, offset: u32) -> MemoryAccessResult<u8> {
-        let result = Python::attach(|py| {
+        Python::attach(|py| {
             let result =
                 self.obj.call_method1(py, Self::READ_BYTE, (offset,));
             match result {
@@ -90,8 +89,7 @@ impl Peripheral for PyPeripheral {
                     })
                 }
             }
-        });
-        result
+        })
     }
 
     fn write_byte(
