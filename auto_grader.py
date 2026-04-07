@@ -226,7 +226,7 @@ def main() -> None:
     if pre_load:
         load_program()
 
-    logging.info(f"--- Executing Test Script: {args.script} ---")
+    logging.info(f"Executing Test Script: {args.script}")
     try:
         exec(script_code, env)
         print("\033[92m[FINAL RESULT]: ALL TESTS PASSED\033[0m")
