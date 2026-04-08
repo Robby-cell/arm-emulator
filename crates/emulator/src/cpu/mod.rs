@@ -145,10 +145,13 @@ pub enum Exception {
 #[derive(Debug, Default, Clone, derive_more::From)]
 #[must_use]
 pub enum ExecutionState {
-    /// The program is currently executing
+    /// The program is currently halted. Ready to be resumed.
+    /// Default state. CPU is stopped.
+    /// Not like `hlt`, rather a suspended state.
     #[default]
     Halted,
 
+    /// The program is currently executing
     Running,
 
     /// This is an active [`Breakpoint`].
