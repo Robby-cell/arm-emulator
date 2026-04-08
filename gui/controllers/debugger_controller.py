@@ -88,7 +88,9 @@ class DebuggerController(QObject):
         self._reverse_map = program.reverse_map
 
         try:
-            self._emulator.load_program(program.text, program.sram, program.external)
+            self._emulator.load_program(
+                program.text, sram=program.sram, external=program.external
+            )
             self.configure_peripherals(self._peripherals)
             self._set_breakpoints()
 
@@ -115,7 +117,7 @@ class DebuggerController(QObject):
         # Clear Emulator Memory
         # We load an empty byte array.
         try:
-            self._emulator.load_program(b"")
+            self._emulator.reset()
         except Exception:
             pass  # Ignore errors during unload
 

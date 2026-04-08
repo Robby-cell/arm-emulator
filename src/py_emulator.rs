@@ -30,7 +30,7 @@ impl fmt::Display for PyEmulator {
 #[pymethods]
 impl PyEmulator {
     #[new]
-    #[pyo3(signature = (code_size = 0, sram_size = 0, external_size = 0))]
+    #[pyo3(signature = (*, code_size = 0, sram_size = 0, external_size = 0))]
     fn new(code_size: u32, sram_size: u32, external_size: u32) -> Self {
         Self {
             emulator: emulator_with_ram_size(
@@ -86,12 +86,16 @@ impl PyEmulator {
         flags
     }
 
+    #[pyo3(signature = (code, /, *, sram = None, external = None))]
     fn load_program(
         &mut self,
         code: &[u8],
         sram: Option<&[u8]>,
         external: Option<&[u8]>,
     ) {
+        // Signature allows:
+        // load_program(code), load_program(code, sram=sram, external=external)
+        // Only code is positional, the rest are keyword-only, with defaults to `None`
         self.emulator.load_program(code, sram, external);
     }
 

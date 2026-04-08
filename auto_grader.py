@@ -15,11 +15,26 @@ assembler = arm_little_endian_assembler()
 asm_filename: str
 instruction_quota = 500
 
+ASSERTION_FAILED: int = 1
+BUBBLED_EXCEPTION: int = 2
+
 
 class InstructionQuotaExceeded(Exception):
     _message: str
 
-    def __init__(self, message) -> None:
+    def __init__(self, message, *args) -> None:
+        super().__init__(*args)
+        self._message = message
+
+    def __str__(self) -> str:
+        return self._message
+
+
+class LoadProgramError(Exception):
+    _message: str
+
+    def __init__(self, message: str, *args) -> None:
+        super().__init__(*args)
         self._message = message
 
     def __str__(self) -> str:
@@ -146,8 +161,9 @@ def load_program() -> None:
             logging.info(f"Successfully loaded workspace: {path.name}")
 
         except json.JSONDecodeError:
-            logging.error(f"{path.name} has .armcfg extension but is not valid JSON.")
-            sys.exit(1)
+            message = f"{path.name} has .armcfg extension but is not valid JSON"
+            logging.error(message)
+            raise LoadProgramError(message)
     else:
         # 3. Fallback to treating the file as raw assembly text
         code_to_assemble = content
@@ -156,10 +172,11 @@ def load_program() -> None:
     out = assembler.assemble(code_to_assemble, start_address=0)
 
     if out.text is None:
-        logging.error("Error: Failed to assemble code...")
-        exit(1)
+        message = "Failed to assemble code. No code was generated."
+        logging.error(message)
+        raise LoadProgramError(message)
 
-    system.load_program(out.text, out.sram, out.external)
+    system.load_program(out.text, sram=out.sram, external=out.external)
     for begin, end, obj in peripherals:
         map_peripheral(begin, end, obj)
 
@@ -252,10 +269,10 @@ def main() -> None:
         print("\033[92m[FINAL RESULT]: ALL TESTS PASSED\033[0m")
     except AssertionError as e:
         print(f"\033[91m[ASSERTION FAILED]:\033[0m {e}")
-        sys.exit(1)
+        sys.exit(ASSERTION_FAILED)
     except Exception as e:
         print(f"\033[91m[RUNTIME ERROR]:\033[0m {e}")
-        sys.exit(1)
+        sys.exit(BUBBLED_EXCEPTION)
 
 
 if __name__ == "__main__":
