@@ -253,6 +253,7 @@ def main() -> None:
             "PyGpioPort": PyGpioPort,
             "AssertionError": AssertionError,
             "InstructionQuotaExceeded": InstructionQuotaExceeded,
+            "LoadProgramError": LoadProgramError,
         },
         **{f"R{i}": i for i in range(16)},
         "SP": 13,
