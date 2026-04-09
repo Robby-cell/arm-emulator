@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 
+mod py_app_dir;
 mod py_emulator;
 mod py_error;
 mod py_gpio_port;
@@ -12,6 +13,10 @@ mod py_tracing;
 #[pymodule]
 fn arm_emulator_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
     tracing::info!("Initializing arm_emulator_rs");
+
+    {
+        py_app_dir::py_app_dir(m)?;
+    }
 
     {
         py_emulator::py_emulator(m)?;
