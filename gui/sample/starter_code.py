@@ -75,3 +75,24 @@ turn_off:
     BX LR
 
 """
+
+FIBONACCI_CONFIG = {
+    "version": "1.0",
+    "code": EXAMPLE_FIBONACCI,
+    "breakpoints": [],
+    "peripherals": [],  # No hardware needed for pure math
+}
+
+BLINK_CONFIG = {
+    "version": "1.0",
+    "code": EXAMPLE_BLINK,
+    "breakpoints": [],
+    "peripherals": [
+        {
+            "type_name": "LED",  # Must match the key in PERIPHERAL_REGISTRY
+            "name": "led0",  # Matches the LDR R0, =led0
+            "start": 0x40000000,
+            "end": 0x40000100,
+        }
+    ],
+}

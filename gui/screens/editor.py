@@ -13,7 +13,6 @@ from PyQt6.QtWidgets import QHBoxLayout, QSplitter, QWidget
 
 from ..widgets.code_editor import CodeEditor
 from ..widgets.peripherals_panel import PeripheralsPanel
-from ..sample.starter_code import EXAMPLE_BLINK as DEFAULT_ASM
 
 
 class EditorScreen(QWidget):
@@ -42,8 +41,6 @@ class EditorScreen(QWidget):
 
         # Add the fully configured splitter to the main layout
         self._layout.addWidget(self._splitter)
-
-        self._editor.setPlainText(DEFAULT_ASM)
 
     def get_code(self) -> str:
         """A method to allow the MainWindow to retrieve the code."""

@@ -621,8 +621,8 @@ class CodeEditor(QPlainTextEdit):
             block = doc.findBlockByNumber(line)
             if block.isValid():
                 data = block.userData()
-                if data and isinstance(data, BreakpointUserData):
-                    data.is_breakpoint = False
+                if data and getattr(data, "is_breakpoint", False):
+                    data.is_breakpoint = False  # type: ignore
                     block.setUserData(data)
                     self.breakpoint_toggled.emit(line, False)
 

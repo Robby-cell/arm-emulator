@@ -14,17 +14,17 @@ def main():
     qdarktheme.setup_theme("dark")
 
     init_tracing()
-    with MainWindow(
+    window = MainWindow(
         emulator=Emulator(
             code_size=0,
             sram_size=0,
             external_size=0,
         ),
         assembler=arm_little_endian_assembler(),
-    ) as window:
-        window.showMaximized()
-        exit_code: int = app.exec()
-        exit(exit_code)
+    )
+    window.showMaximized()
+    exit_code: int = app.exec()
+    exit(exit_code)
 
 
 if __name__ == "__main__":

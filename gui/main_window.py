@@ -11,7 +11,7 @@ import ctypes
 from pathlib import Path
 import json
 
-from arm_emulator_rs import Emulator  # type: ignore : import exists
+from arm_emulator_rs import Emulator, app_dir_root  # type: ignore : import exists
 from keystone.keystone import KsError
 from PyQt6.QtCore import QByteArray, QCoreApplication, QLocale, QSize, Qt, QTranslator
 from PyQt6.QtGui import QAction, QActionGroup, QIcon, QPixmap
@@ -41,7 +41,7 @@ from .screens.tutorial_dialog import TutorialDialog
 from .widgets.cpu_panel import CpuPanel
 
 # from .widgets.title_bar import TitleBar
-from .sample.starter_code import EXAMPLE_BLINK, EXAMPLE_FIBONACCI
+from .sample.starter_code import BLINK_CONFIG, FIBONACCI_CONFIG
 
 RUN_ICON = "assets/icons/play.svg"
 DEBUG_ICON = "assets/icons/bug.svg"
@@ -85,18 +85,6 @@ def create_themed_icon(svg_path: str, color: str) -> QIcon:
 
 
 class MainWindow(QMainWindow):
-    # Context manager for guaranteed exit with state saving and cleanup:
-    def __enter__(self) -> "MainWindow":
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self._leave()
-
-    def _leave(self) -> None:
-        self._save_config()
-
-    def _save_config(self) -> None: ...
-
     def __init__(
         self,
         emulator: Emulator,
@@ -144,6 +132,53 @@ class MainWindow(QMainWindow):
         self._on_execution_stopped()  # Set initial button states
 
         self.retranslateUI()
+
+        self._load_autosave()
+
+    def closeEvent(self, a0) -> None:
+        """Qt automatically calls this when the window is closed."""
+        self._save_config()
+        super().closeEvent(a0)
+
+    def _get_autosave_path(self) -> str:
+        """Determines the cross-platform path for the autosave file."""
+        path = app_dir_root()
+        if not path:
+            return "autosave.armcfg"  # Fallback to local directory
+
+        data_dir = Path(path) / "session"
+        os.makedirs(data_dir, exist_ok=True)
+        return os.path.join(data_dir, "autosave.armcfg")
+
+    def _get_current_config_dict(self) -> dict:
+        """Bundles the entire application state into a dictionary."""
+        return {
+            "version": "1.0",
+            "code": self._editor.get_code(),
+            "breakpoints": self._editor._editor.get_breakpoints(),
+            "peripherals": self._editor._peripherals.get_config(),
+        }
+
+    def _save_config(self) -> None:
+        """Saves the application state silently to the autosave file."""
+        path = self._get_autosave_path()
+        config = self._get_current_config_dict()
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(config, f, indent=4)
+            print(f"Autosaved state to {path}")
+        except Exception as e:
+            print(f"Failed to autosave: {e}")
+
+    def _load_autosave(self) -> None:
+        """Loads the autosave file if it exists."""
+        path = self._get_autosave_path()
+        if os.path.exists(path):
+            print("Found previous session, loading autosave...")
+            self._load_config_file(path)
+        else:
+            print("No autosave found, starting with defaults.")
+            self._load_config_json(BLINK_CONFIG)
 
     def _init_widgets(self) -> None:
         # Create the QTabWidget
@@ -437,11 +472,11 @@ class MainWindow(QMainWindow):
         examples_menu: QMenu = self._help_menu.addMenu(self.tr("Load Example..."))  # type: ignore : not None
 
         ex_blink = QAction(self.tr("Blinking LED"), self)
-        ex_blink.triggered.connect(lambda: self._load_example_code(EXAMPLE_BLINK))
+        ex_blink.triggered.connect(lambda: self._load_config_json(BLINK_CONFIG))
         examples_menu.addAction(ex_blink)
 
         ex_fib = QAction(self.tr("Fibonacci Sequence"), self)
-        ex_fib.triggered.connect(lambda: self._load_example_code(EXAMPLE_FIBONACCI))
+        ex_fib.triggered.connect(lambda: self._load_config_json(FIBONACCI_CONFIG))
         examples_menu.addAction(ex_fib)
 
     def _build_build_menu_actions(self) -> None:
@@ -569,7 +604,7 @@ class MainWindow(QMainWindow):
         )
         if dialog.exec():
             file_path = dialog.selectedFiles()[0]
-            self._load_file(file_path)
+            self._load_config_file(file_path)
 
     def _save_config_as(self) -> None:
         file_path, _ = QFileDialog.getSaveFileName(
@@ -608,28 +643,31 @@ class MainWindow(QMainWindow):
                 f"{self.tr('Failed to save configuration:')}\n{e}",
             )
 
-    def _load_file(self, file_path: str) -> None:
-        print(f"Loading file: {file_path}")
+    def _load_config_file(self, file_path: str) -> None:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self._load_from_config_text(content)
 
+    def _load_config_json(self, config: dict) -> None:
+        # Load Code
+        if "code" in config:
+            self._editor._editor.setPlainText(config["code"])
+
+        # Load Peripherals
+        if "peripherals" in config:
+            self._editor._peripherals.load_from_config(config["peripherals"])
+
+        # Load Breakpoints (Must be done AFTER code is loaded so lines exist)
+        if "breakpoints" in config:
+            self._editor._editor.set_breakpoints(config["breakpoints"])
+
+    def _load_from_config_text(self, content: str) -> None:
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
-
             try:
                 # 1. Try parsing as our custom JSON Configuration
                 config = json.loads(content)
 
-                # Load Code
-                if "code" in config:
-                    self._editor._editor.setPlainText(config["code"])
-
-                # Load Peripherals
-                if "peripherals" in config:
-                    self._editor._peripherals.load_from_config(config["peripherals"])
-
-                # Load Breakpoints (Must be done AFTER code is loaded so lines exist)
-                if "breakpoints" in config:
-                    self._editor._editor.set_breakpoints(config["breakpoints"])
+                self._load_config_json(config)
 
                 print("Successfully loaded .armcfg workspace.")
 

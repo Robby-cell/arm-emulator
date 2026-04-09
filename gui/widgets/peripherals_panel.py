@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Optional
 
 from arm_emulator_rs import MemoryRegion  # type: ignore : import exists
 from PyQt6.QtCore import QRegularExpression, Qt
@@ -24,7 +24,7 @@ def create_py_gpio_port(name: str, start: int, end: int) -> PyGpioPort:
     return PyGpioPort(name, start, end)
 
 
-PERIPHERAL_REGISTRY: Dict[str, tuple[Type, Any]] = {
+PERIPHERAL_REGISTRY: dict[str, tuple[type, Any]] = {
     "LED": (PyGpioPort, create_py_gpio_port),
 }
 
@@ -76,17 +76,6 @@ class PeripheralData:
     led_widget: "LedIndicator"
 
 
-def get_default_peripheral() -> PeripheralData:
-    return PeripheralData(
-        "LED",
-        "led0",
-        0x40000000,
-        0x40000100,
-        PyGpioPort(name="led0", begin=0x40000000, end=0x40000100),
-        LedIndicator(),
-    )
-
-
 class PeripheralsPanel(QWidget):
     """
     A widget panel for creating and configuring simulated peripherals
@@ -96,10 +85,10 @@ class PeripheralsPanel(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
-        self._peripherals_data: List[PeripheralData] = []
+        self._peripherals_data: list[PeripheralData] = []
 
         # Data model to track configured memory ranges
-        self._configured_ranges: List[Tuple[int, int]] = []
+        self._configured_ranges: list[tuple[int, int]] = []
 
         # Widget initialization
         self._layout = QVBoxLayout(self)
@@ -122,8 +111,6 @@ class PeripheralsPanel(QWidget):
         self._peripheral_table.itemSelectionChanged.connect(
             self._update_delete_button_state
         )
-
-        self._add_peripheral_entry(get_default_peripheral())
 
         self.retranslateUi()
 
@@ -298,7 +285,7 @@ class PeripheralsPanel(QWidget):
     def _update_delete_button_state(self) -> None:
         self._delete_button.setEnabled(len(self._peripheral_table.selectedItems()) > 0)
 
-    def get_defined_symbols(self) -> Dict[str, int]:
+    def get_defined_symbols(self) -> dict[str, int]:
         """
         Returns a dictionary of symbol names to start addresses
         for all configured peripherals.
@@ -308,7 +295,7 @@ class PeripheralsPanel(QWidget):
             symbols[p.name] = p.start
         return symbols
 
-    def get_peripherals(self) -> List[Tuple[int, int, Any]]:
+    def get_peripherals(self) -> list[tuple[int, int, Any]]:
         """
         Returns a list of (start_address, size_bytes, instance_object)
         compatible with the Rust emulator's add_python_peripheral.
@@ -333,7 +320,7 @@ class PeripheralsPanel(QWidget):
                 is_on = p.instance.is_led_on()
                 p.led_widget.set_state(is_on)
 
-    def get_config(self) -> List[Dict[str, Any]]:
+    def get_config(self) -> list[dict[str, Any]]:
         """Serializes the current peripherals into a list of dictionaries."""
         config_list = []
         for p in self._peripherals_data:
@@ -353,7 +340,7 @@ class PeripheralsPanel(QWidget):
         self._peripherals_data.clear()
         self._configured_ranges.clear()
 
-    def load_from_config(self, config_list: List[Dict[str, Any]]) -> None:
+    def load_from_config(self, config_list: list[dict[str, Any]]) -> None:
         """Loads peripherals from a serialized configuration list."""
         self.clear_peripherals()
 
@@ -364,8 +351,19 @@ class PeripheralsPanel(QWidget):
             end_addr: int = p_dict.get("end")  # type: ignore
 
             # Validate
-            if not all([p_type, p_name, start_addr is not None, end_addr is not None]):
+            if not all((p_type, p_name, start_addr is not None, end_addr is not None)):
                 print(f"Skipping invalid peripheral config: {p_dict}")
+                continue
+
+            if not all(
+                (
+                    start_addr <= end_addr,
+                    VALID_MEMORY_BEGIN <= start_addr,
+                    start_addr <= VALID_MEMORY_END,
+                    VALID_MEMORY_BEGIN <= end_addr,
+                )
+            ):
+                print(f"Skipping invalid memory range: {start_addr} - {end_addr}")
                 continue
 
             if p_type not in PERIPHERAL_REGISTRY:
