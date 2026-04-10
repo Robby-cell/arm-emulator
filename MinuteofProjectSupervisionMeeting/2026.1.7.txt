@@ -22,18 +22,21 @@ Date of Meeting:
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 Preliminary Assembler logic.
-
 Interim demo.
 Coverage of requirements, and updates required to be made to document.
 Discuss additional features to be implemented.
 A handbook/documentation should be the focus moving forward.
+Added memory view allowing editing and viewing of memory.
+Fixed title bar and layout for RTL languages.
+Added disassembly view feature.
+Updated translations and documentation.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 14th January, 2026
 
 

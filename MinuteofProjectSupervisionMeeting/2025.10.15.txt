@@ -22,13 +22,18 @@ Date of Meeting:
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 Setup Github repository. Preliminary planning for the project.
+Implemented branch instructions and MOV instruction.
+Added memory read/write functionality.
+Added peripheral interface with byte access.
+Set up PyInstaller for executable packaging.
+Refactored execution state and emulator structure.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 22nd October, 2025
 
 

@@ -13,20 +13,20 @@ Project Supervisor:
 Moira Watson
 
 Meeting Number:
-6
+9
 
 Date of Meeting:
-19th November, 2025
+21st January, 2026
 
 
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
-Acceptance Criteria and Requirements.
-Added assembler that prints to console when hitting run.
-Added peripheral memory validation.
-Refactored initialization and exposed additional functionality from Rust.
-Added auto indent and context manager for main window.
-Added peripheral adding section.
+Preliminary Assembler logic.
+
+Interim demo.
+Coverage of requirements, and updates required to be made to document.
+Discuss additional features to be implemented.
+A handbook/documentation should be the focus moving forward.
 
 Action Points:
 =============
@@ -34,7 +34,7 @@ Action Points:
 
 Date of next meeting:
 ====================
-3rd December, 2025
+28th January, 2026
 
 
 

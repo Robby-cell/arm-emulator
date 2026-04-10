@@ -21,14 +21,18 @@ Date of Meeting:
 
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
+Project initialization. Added README.
+Set up Python bindings with proper endianness handling.
+Implemented peripheral read/write interface with 32-bit operations.
+Added initial project structure and submodule system.
 
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 15th October, 2025
 
 

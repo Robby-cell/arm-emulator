@@ -1,7 +1,7 @@
 QUEEN'S UNIVERSITY OF BELFAST COMPUTER SCIENCE
 
 Minute of Project Supervision Meeting
-======================================
+=====================================
 
 Student Name:
 Robert Williamson
@@ -13,20 +13,19 @@ Project Supervisor:
 Moira Watson
 
 Meeting Number:
-6
+13
 
 Date of Meeting:
-19th November, 2025
+11th March, 2026
 
 
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
-Acceptance Criteria and Requirements.
-Added assembler that prints to console when hitting run.
-Added peripheral memory validation.
-Refactored initialization and exposed additional functionality from Rust.
-Added auto indent and context manager for main window.
-Added peripheral adding section.
+Added version info and icon for Windows.
+Windows app ID configuration.
+Benchmark documentation added.
+Localization updates and translation improvements.
+License addition to project.
 
 Action Points:
 =============
@@ -34,8 +33,6 @@ Action Points:
 
 Date of next meeting:
 ====================
-3rd December, 2025
-
 
 
 Agreed minute should be initialled by the supervisor.
@@ -43,6 +40,5 @@ Agreed minute should be initialled by the supervisor.
 Supervisor's Initials:	_____________________________________________	Date: _________________
 
 
-
 Supervisor's Comments:
-=======================
+=====================

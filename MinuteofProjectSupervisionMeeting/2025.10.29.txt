@@ -22,13 +22,17 @@ Date of Meeting:
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 Implemented execution of instructions. Completed most of the implementation for the logic of the system.
+Implemented data processing instructions with comprehensive tests.
+Added xbin crate for easy command execution.
+Memory access instructions implemented.
+Basic execution testing successful.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 5th November, 2025
 
 

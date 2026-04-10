@@ -22,15 +22,22 @@ Date of Meeting:
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 Preliminary Assembler logic.
-
-5 minute meeting. Meeting will happen next week instead
+5 minute meeting. Meeting will happen next week instead.
+Setup work for breakpoints.
+Breakpoint saving functionality added.
+Added register and flag display panel with real-time updates.
+Added default code to demonstrate LED functionality.
+Added custom title bar implementation.
+Implemented SVC instructions with exit functionality.
+Added and fixed translations.
+Breakpoints now working correctly.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 10th December, 2025
 
 

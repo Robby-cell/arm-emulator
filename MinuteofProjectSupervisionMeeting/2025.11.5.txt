@@ -22,13 +22,18 @@ Date of Meeting:
 Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 User stories, personas. Some basic boilerplate for GUI also created. A basic design on figma created.
+Added Qt GUI boilerplate code.
+Created package script for building executable.
+Windows compatibility achieved.
+Added editor with breakpoint support.
+Translation system set up.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 13th November, 2025
 
 

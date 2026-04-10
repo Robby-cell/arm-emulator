@@ -23,13 +23,20 @@ Progress since last meeting, and decisions arrived at during meeting:
 ======================================
 GUI text editor with syntax highlighting.
 Next week: Requirements, Acceptance Criteria.
+Added syntax highlighting and tooltips.
+Added proper GPIO port with range validation.
+Exposed memory with memory sections.
+Refactored emulator initialization.
+Added PySide6 GUI integration.
+Added assets and streamlined design.
+Package script with assets included.
 
 Action Points:
-==============
+=============
 
 
 Date of next meeting:
-====================+
+====================
 19th November, 2025
 
 
