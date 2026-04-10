@@ -351,19 +351,16 @@ assert_u32_sized!(BreakpointInstruction);
 )]
 #[must_use]
 pub enum Instruction {
-    /// xxxx 0001 0010 xxxx xxxx xxxx 0111 xxxx
-    #[decode("cond 0001 0010 xxxx xxxx xxxx 0111 xxxx")]
-    Breakpoint(BreakpointInstruction),
-
     // NOTE: BranchExchange must be before DataProcessing, otherwise it will be decoded
     // as DataProcessing, because the macro will check in order.
+    // This holds true for all instructions. More restrictive patterns need to be at the top.
     /// xxxx 0001 0010 1111 1111 1111 0001 xxxx
     #[decode("cond 0001 0010 1111 1111 1111 0001 mmmm")]
     BranchExchange(BranchExchangeInstruction),
 
-    /// xxxx 1111 xxxx xxxx xxxx xxxx xxxx xxxx
-    #[decode("cond 1111 xxxx xxxx xxxx xxxx xxxx xxxx")]
-    SupervisorCall(SupervisorCallInstruction),
+    /// xxxx 0001 0010 xxxx xxxx xxxx 0111 xxxx
+    #[decode("cond 0001 0010 xxxx xxxx xxxx 0111 xxxx")]
+    Breakpoint(BreakpointInstruction),
 
     /// xxxx 0000 00AS dddd nnnn ssss 1001 mmmm
     #[decode("cond 0000 00AS dddd nnnn ssss 1001 mmmm")]
@@ -372,6 +369,10 @@ pub enum Instruction {
     /// xxxx 0000 1UAS hhhh llll ssss 1001 mmmm
     #[decode("cond 0000 1UAS hhhh llll ssss 1001 mmmm")]
     MultiplyLong(MultiplyLongInstruction),
+
+    /// xxxx 1111 xxxx xxxx xxxx xxxx xxxx xxxx
+    #[decode("cond 1111 xxxx xxxx xxxx xxxx xxxx xxxx")]
+    SupervisorCall(SupervisorCallInstruction),
 
     /// xxxx 000x xxxx xxxx xxxx xxxx xxxx xxxx (Data Processing - Reg/Imm Shift)
     /// xxxx 001x xxxx xxxx xxxx xxxx xxxx xxxx (Data Processing - Immediate)
