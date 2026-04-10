@@ -21,7 +21,7 @@ However, on MacOS, quarantine flags need to be stripped first,
 as it will be built without paying Apple for an Apple Developer Certificate:
 
 ```bash
-xattr -cr ./arm_emulator-macos/arm_emulator
+xattr -cr /path/to/arm_emulator
 ```
 
 Download a specific release from the tag:
@@ -35,7 +35,7 @@ How to download on Linux:
 TAG="vx.y.z" # x.y.z is the version, e.g. 0.3.9
 wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-linux.tar.gz"
 tar -xzf "./arm_emulator-linux.tar.gz"
-# ./arm_emulator-linux/arm_emulator
+# ./arm_emulator
 ```
 
 ## Windows
@@ -58,8 +58,8 @@ How to download on MacOS:
 TAG="vx.y.z" # x.y.z is the version, e.g. 0.3.9
 curl -L -o "./arm_emulator-macos.tar.gz" "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-macos.tar.gz"
 tar -xzf "./arm_emulator-macos.tar.gz"
-xattr -cr "./arm_emulator-macos/arm_emulator"
-# ./arm_emulator-macos/arm_emulator
+xattr -cr "./arm_emulator"
+# ./arm_emulator
 ```
 
 # Building and Using
