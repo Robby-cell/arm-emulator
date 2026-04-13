@@ -73,7 +73,7 @@ impl_to_py_execution_error!(Breakpoint);
 /// Useful for converting errors to be less verbose.
 #[macro_export]
 macro_rules! mpe {
-    ($expr:expr) => {{ ($expr).map_err(crate::py_error::PyExecutionError::from)? }};
+    ($expr:expr) => {{ ($expr).map_err(crate::py_error::PyExecutionError::from) }};
 }
 
 #[pymodule]

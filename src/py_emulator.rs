@@ -131,11 +131,11 @@ impl PyEmulator {
     }
 
     fn read32(&self, addr: u32) -> PyResult<u32> {
-        Ok(mpe!(self.emulator.read32(addr)))
+        Ok(mpe!(self.emulator.read32(addr))?)
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
-        mpe!(self.emulator.write32(addr, value));
+        mpe!(self.emulator.write32(addr, value))?;
         Ok(())
     }
 
@@ -160,11 +160,11 @@ impl PyEmulator {
     }
 
     fn read_byte(&self, addr: u32) -> PyResult<u8> {
-        Ok(mpe!(self.emulator.read_byte(addr)))
+        Ok(mpe!(self.emulator.read_byte(addr))?)
     }
 
     fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
-        mpe!(self.emulator.write_byte(addr, value));
+        mpe!(self.emulator.write_byte(addr, value))?;
         Ok(())
     }
 
@@ -181,27 +181,27 @@ impl PyEmulator {
     }
 
     fn step_over_breakpoint(&mut self) -> PyResult<()> {
-        mpe!(self.emulator.step_over_breakpoint());
+        mpe!(self.emulator.step_over_breakpoint())?;
         Ok(())
     }
 
     fn execute(&mut self) -> PyResult<()> {
-        mpe!(self.emulator.execute());
+        mpe!(self.emulator.execute())?;
         Ok(())
     }
 
     fn step(&mut self) -> PyResult<()> {
-        mpe!(self.emulator.step());
+        mpe!(self.emulator.step())?;
         Ok(())
     }
 
     pub fn add_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
-        mpe!(self.emulator.add_breakpoint_at(address));
+        mpe!(self.emulator.add_breakpoint_at(address))?;
         Ok(())
     }
 
     pub fn remove_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
-        mpe!(self.emulator.remove_breakpoint_at(address));
+        mpe!(self.emulator.remove_breakpoint_at(address))?;
         Ok(())
     }
 
@@ -209,7 +209,7 @@ impl PyEmulator {
         &mut self,
         address: u32,
     ) -> PyResult<()> {
-        mpe!(self.emulator.restore_instruction_at(address));
+        mpe!(self.emulator.restore_instruction_at(address))?;
         Ok(())
     }
 

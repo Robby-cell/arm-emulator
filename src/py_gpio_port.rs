@@ -27,23 +27,23 @@ impl PyGpioPort {
 
     #[pyo3(name = "read32")]
     fn py_read32(&self, offset: u32) -> PyResult<u32> {
-        Ok(mpe!(self.read32(offset)))
+        Ok(mpe!(self.read32(offset))?)
     }
 
     #[pyo3(name = "write32")]
     fn py_write32(&self, offset: u32, value: u32) -> PyResult<()> {
-        mpe!(self.write32(offset, value));
+        mpe!(self.write32(offset, value))?;
         Ok(())
     }
 
     #[pyo3(name = "read_byte")]
     fn py_read_byte(&self, offset: u32) -> PyResult<u8> {
-        Ok(mpe!(self.read_byte(offset)))
+        Ok(mpe!(self.read_byte(offset))?)
     }
 
     #[pyo3(name = "write_byte")]
     fn py_write_byte(&self, offset: u32, value: u8) -> PyResult<()> {
-        mpe!(self.write_byte(offset, value));
+        mpe!(self.write_byte(offset, value))?;
         Ok(())
     }
 
