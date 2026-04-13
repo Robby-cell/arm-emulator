@@ -42,20 +42,6 @@ impl PyExecutionError {
     }
 }
 
-pub(crate) trait ToPyError {
-    fn to_py_error(self) -> PyErr;
-}
-
-pub(crate) trait ToPyResult<T> {
-    fn to_py_result(self) -> PyResult<T>;
-}
-
-impl ToPyError for PyExecutionError {
-    fn to_py_error(self) -> PyErr {
-        self.into()
-    }
-}
-
 impl From<PyExecutionError> for PyErr {
     fn from(value: PyExecutionError) -> Self {
         Python::attach(|py| match Bound::new(py, value) {
@@ -65,49 +51,30 @@ impl From<PyExecutionError> for PyErr {
     }
 }
 
-impl<T> ToPyResult<T> for Result<T, PyExecutionError> {
-    fn to_py_result(self) -> PyResult<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(e) => Err(e.to_py_error()),
-        }
-    }
-}
-
-pub(crate) trait ToPyExecutionError {
-    fn to_py_execution_error(self) -> PyExecutionError;
-}
-
-pub(crate) trait ToPyExecutionResult<T> {
-    fn to_py_execution_result(self) -> Result<T, PyExecutionError>;
-}
-
-macro_rules! impl_to_py_exec_error {
-    ($type:ty) => {
-        impl ToPyExecutionError for $type {
-            fn to_py_execution_error(self) -> PyExecutionError {
-                <Self as Into<ExecutionError>>::into(self).into()
-            }
-        }
-
-        impl<T> ToPyExecutionResult<T> for Result<T, $type> {
-            fn to_py_execution_result(
-                self,
-            ) -> Result<T, PyExecutionError> {
-                match self {
-                    Ok(value) => Ok(value),
-                    Err(e) => Err(e.to_py_execution_error()),
+macro_rules! impl_to_py_execution_error {
+    ($ty:ty) => {
+        impl From<$ty> for PyExecutionError {
+            fn from(value: $ty) -> Self {
+                Self {
+                    error: value.into(),
                 }
             }
         }
     };
 }
 
-impl_to_py_exec_error!(ExecutionError);
-impl_to_py_exec_error!(MemoryAccessError);
-impl_to_py_exec_error!(Exception);
-impl_to_py_exec_error!(InstructionConversionError);
-impl_to_py_exec_error!(Breakpoint);
+impl_to_py_execution_error!(MemoryAccessError);
+impl_to_py_execution_error!(Exception);
+impl_to_py_execution_error!(InstructionConversionError);
+impl_to_py_execution_error!(Breakpoint);
+
+/// Map `PyExecutionError`
+/// Map a `Result<T, Into<PyExecutionError>>` to a `Result<T, PyExecutionError>`.
+/// Useful for converting errors to be less verbose.
+#[macro_export]
+macro_rules! mpe {
+    ($expr:expr) => {{ ($expr).map_err(crate::py_error::PyExecutionError::from)? }};
+}
 
 #[pymodule]
 pub(crate) fn py_error(m: &Bound<'_, PyModule>) -> PyResult<()> {

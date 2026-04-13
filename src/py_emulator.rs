@@ -9,9 +9,7 @@ use emulator::{
 };
 
 use crate::{
-    py_error::{ToPyExecutionResult, ToPyResult},
-    py_peripheral::PyPeripheral,
-    py_range::PyRangeInclusiveU32,
+    mpe, py_peripheral::PyPeripheral, py_range::PyRangeInclusiveU32,
 };
 
 /// A python wrapper around the `Emulator`
@@ -133,17 +131,11 @@ impl PyEmulator {
     }
 
     fn read32(&self, addr: u32) -> PyResult<u32> {
-        self.emulator
-            .read32(addr)
-            .to_py_execution_result()
-            .to_py_result()
+        Ok(mpe!(self.emulator.read32(addr)))
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
-        self.emulator
-            .write32(addr, value)
-            .to_py_execution_result()
-            .to_py_result()?;
+        mpe!(self.emulator.write32(addr, value));
         Ok(())
     }
 
@@ -168,17 +160,11 @@ impl PyEmulator {
     }
 
     fn read_byte(&self, addr: u32) -> PyResult<u8> {
-        self.emulator
-            .read_byte(addr)
-            .to_py_execution_result()
-            .to_py_result()
+        Ok(mpe!(self.emulator.read_byte(addr)))
     }
 
     fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
-        self.emulator
-            .write_byte(addr, value)
-            .to_py_execution_result()
-            .to_py_result()?;
+        mpe!(self.emulator.write_byte(addr, value));
         Ok(())
     }
 
@@ -195,45 +181,36 @@ impl PyEmulator {
     }
 
     fn step_over_breakpoint(&mut self) -> PyResult<()> {
-        self.emulator
-            .step_over_breakpoint()
-            .to_py_execution_result()
-            .to_py_result()
+        mpe!(self.emulator.step_over_breakpoint());
+        Ok(())
     }
 
     fn execute(&mut self) -> PyResult<()> {
-        self.emulator
-            .execute()
-            .to_py_execution_result()
-            .to_py_result()
+        mpe!(self.emulator.execute());
+        Ok(())
     }
 
     fn step(&mut self) -> PyResult<()> {
-        self.emulator.step().to_py_execution_result().to_py_result()
+        mpe!(self.emulator.step());
+        Ok(())
     }
 
     pub fn add_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
-        self.emulator
-            .add_breakpoint_at(address)
-            .to_py_execution_result()
-            .to_py_result()
+        mpe!(self.emulator.add_breakpoint_at(address));
+        Ok(())
     }
 
     pub fn remove_breakpoint_at(&mut self, address: u32) -> PyResult<()> {
-        self.emulator
-            .remove_breakpoint_at(address)
-            .to_py_execution_result()
-            .to_py_result()
+        mpe!(self.emulator.remove_breakpoint_at(address));
+        Ok(())
     }
 
     pub fn restore_instruction_at(
         &mut self,
         address: u32,
     ) -> PyResult<()> {
-        self.emulator
-            .restore_instruction_at(address)
-            .to_py_execution_result()
-            .to_py_result()
+        mpe!(self.emulator.restore_instruction_at(address));
+        Ok(())
     }
 
     fn add_peripheral(
