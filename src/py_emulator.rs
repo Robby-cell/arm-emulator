@@ -84,6 +84,21 @@ impl PyEmulator {
         flags
     }
 
+    fn set_flag(&mut self, flag: &str, value: bool) -> PyResult<()> {
+        match flag.to_lowercase().as_str() {
+            "n" => self.emulator.cpu.set_n(value),
+            "z" => self.emulator.cpu.set_z(value),
+            "c" => self.emulator.cpu.set_c(value),
+            "v" => self.emulator.cpu.set_v(value),
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "invalid flag `{flag}`"
+                )));
+            }
+        }
+        Ok(())
+    }
+
     #[pyo3(signature = (code, /, *, sram = None, external = None))]
     fn load_program(
         &mut self,
