@@ -51,6 +51,21 @@ impl PyEmulator {
         self.emulator.cpu.registers.to_vec()
     }
 
+    #[getter]
+    fn pc(&self) -> u32 {
+        self.emulator.cpu.pc()
+    }
+
+    #[getter]
+    fn sp(&self) -> u32 {
+        self.emulator.cpu.sp()
+    }
+
+    #[getter]
+    fn lr(&self) -> u32 {
+        self.emulator.cpu.lr()
+    }
+
     fn get_register(&self, index: u32) -> PyResult<u32> {
         if index >= self.emulator.cpu.registers.len() as u32 {
             Err(PyValueError::new_err(format!(

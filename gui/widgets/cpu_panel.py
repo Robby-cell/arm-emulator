@@ -129,6 +129,7 @@ class CpuPanel(QWidget):
                 # User typed the same number, or just reformatted it (e.g. typed '10' over '0x0000000A')
                 # Silently snap it back to standard formatting without triggering a state change
                 line_edit.setText(f"0x{value:08X}")
+            line_edit.clearFocus()
 
             # Notify MainWindow to update Disassembly and Memory View
             self.user_state_changed.emit()
