@@ -197,6 +197,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self._disassembly, None)
 
         self._cpu_panel = CpuPanel(emulator=self._emulator)
+        self._cpu_panel.user_state_changed.connect(self._on_state_changed)
 
     def _init_layout(self) -> None:
         self._root_widget = QWidget(self)
