@@ -12,7 +12,7 @@ pub use pyo3::exceptions::*;
 use thiserror::Error;
 
 #[derive(Debug, Error, derive_more::From)]
-#[pyclass(name = "ExecutionError", extends = PyException)]
+#[pyclass(name = "ExecutionError", extends = PyException, subclass)]
 pub(crate) struct PyExecutionError {
     error: ExecutionError,
 }
