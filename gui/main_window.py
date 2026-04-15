@@ -14,7 +14,7 @@ import json
 from arm_emulator_rs import Emulator, app_dir_root  # type: ignore : import exists
 from keystone.keystone import KsError
 from PyQt6.QtCore import QByteArray, QCoreApplication, QLocale, QSize, Qt, QTranslator
-from PyQt6.QtGui import QAction, QActionGroup, QIcon, QPixmap
+from PyQt6.QtGui import QAction, QActionGroup, QIcon, QPixmap, QTextDocument
 from PyQt6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -364,21 +364,31 @@ class MainWindow(QMainWindow):
         1. If paused (loaded & not halted): Resume execution.
         2. If finished or not loaded: Assemble, Load, and Restart execution.
         """
-        # If the program is loaded, we check the state of the CPU
-        if self._debugger_controller.is_program_loaded:
-            # If the CPU is NOT halted (meaning we are just paused/stepped),
-            # we simply resume the timer.
-            if not self._emulator.is_halted():
-                print("Resuming execution...")
+        document: QTextDocument = self._editor._editor.document()  # type: ignore
+        # Check if the user typed anything new in the editor since the last load
+        if document.isModified():
+            print("Code modified. Rebuilding and starting fresh...")
+            self._debugger_controller.stop()
+            if self._assemble_and_load():
+                document.setModified(False)  # Clear modified flag
+                self.step_action.setEnabled(True)
                 self._debugger_controller.run()
-                return
+            return
 
-            # If self._emulator.is_halted() is True (e.g. SVC 0 exit),
-            # we fall through to the logic below to Re-Assemble and Restart.
+        # If code is unchanged, check if we can RESUME
+        if (
+            self._debugger_controller.is_program_loaded
+            and not self._emulator.is_finished()
+        ):
+            print("Resuming execution...")
+            self._debugger_controller.run()
+            return
 
-        # Standard Build & Run flow (Initial run, or Restart after finish)
+        # Otherwise, we are starting fresh (or restarting after a finish)
+        self._debugger_controller.stop()
         if self._assemble_and_load():
             print("Starting execution...")
+            self._editor._editor.document().setModified(False)  # type: ignore
             self.step_action.setEnabled(True)
             self._debugger_controller.run()
 
@@ -737,6 +747,7 @@ class MainWindow(QMainWindow):
         self._debugger_controller.set_peripherals(peripherals)
 
         self._debugger_controller.load_program(assembled)
+        self._editor._editor.document().setModified(False)  # type: ignore
 
         return True
 

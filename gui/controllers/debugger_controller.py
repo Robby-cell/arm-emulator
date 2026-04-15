@@ -99,8 +99,13 @@ class DebuggerController(QObject):
 
             self._is_program_loaded = True
         except Exception as e:
-            self.error_occurred.emit(f"Failed to write program to emulator memory: {e}")
-            self._is_program_loaded = False
+            # This can be essentially ignored, since we are just adding a dud breakpoint.
+            # If for example line 10 has no asm, we can safely ignore that error.
+            # Just continue, without adding the breakpoint.
+            print(f"Failed to write program to emulator memory: {e}")
+
+            # self.error_occurred.emit(f"Failed to write program to emulator memory: {e}")
+            # self._is_program_loaded = False
             return
 
         # Notify the UI that the memory state has changed and should be updated.
@@ -141,8 +146,9 @@ class DebuggerController(QObject):
     def _set_breakpoints(self) -> None:
         print("Setting breakpoints")
         for line in self._breakpoints:
-            print(f"adding breakpoint at {self._source_map[line]}")
-            self._emulator.add_breakpoint_at(self._source_map[line])
+            if line in self._source_map:
+                print(f"adding breakpoint at {self._source_map[line]}")
+                self._emulator.add_breakpoint_at(self._source_map[line])
 
     def set_running_but_halt_for_debugging(self) -> None:
         if self.is_running or not self.is_program_loaded:
@@ -199,7 +205,7 @@ class DebuggerController(QObject):
             # Check if the error is a breakpoint signal from Rust
             if e.is_breakpoint():
                 # Extract address from error if possible
-                # self._breakpoint_addr = self._emulator.cpu.pc()
+                self._breakpoint_addr = self._emulator.pc
                 self._is_at_breakpoint = True
                 self.breakpoint_hit.emit(self._breakpoint_addr)
             else:
@@ -214,7 +220,7 @@ class DebuggerController(QObject):
         # Get current PC from Rust emulator
         # You need to expose pc via a getter or access registers[15]
         # Assuming registers getter returns list: [R0...R15]
-        pc = self._emulator.registers[15]
+        pc = self._emulator.pc
 
         if pc in self._reverse_map:
             line_num = self._reverse_map[pc]
@@ -224,12 +230,10 @@ class DebuggerController(QObject):
             self.highlight_line.emit(-1)
 
     def _reset_basic(self) -> None:
-        """Resets the emulator to its initial state."""
-        if not self._is_running:
-            return
-
+        """Resets the interal controller state."""
+        self.stop()
         self._is_at_breakpoint = False
-        self._run_timer.stop()
+        self._breakpoint_addr = None
 
     def add_breakpoint_at_line(self, line: int) -> None:
         if self.is_program_loaded:
@@ -238,7 +242,7 @@ class DebuggerController(QObject):
 
         self._breakpoints.add(line)
 
-    def remove_breakpoint_at(self, line: int) -> None:
+    def remove_breakpoint_at_line(self, line: int) -> None:
         if self.is_program_loaded:
             if line in self._source_map:
                 self._emulator.remove_breakpoint_at(self._source_map[line])
