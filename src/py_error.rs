@@ -25,6 +25,13 @@ impl fmt::Display for PyExecutionError {
 
 #[pymethods]
 impl PyExecutionError {
+    #[new]
+    fn __new__() -> PyResult<Self> {
+        Err(PyErr::new::<PyRuntimeError, _>(
+            "PyExecutionError.__new__ should not be used",
+        ))
+    }
+
     fn is_breakpoint(&self) -> bool {
         matches!(self.error, ExecutionError::Breakpoint(_))
     }
@@ -44,9 +51,13 @@ impl PyExecutionError {
 
 impl From<PyExecutionError> for PyErr {
     fn from(value: PyExecutionError) -> Self {
-        Python::attach(|py| match Bound::new(py, value) {
-            Ok(bound) => PyErr::from_value(bound.into_any()),
-            Err(e) => e,
+        Python::attach(|py| {
+            PyErr::from_value(
+                Py::new(py, value)
+                    .expect("Failed to create PyExecutionError")
+                    .into_bound(py)
+                    .into_any(),
+            )
         })
     }
 }
