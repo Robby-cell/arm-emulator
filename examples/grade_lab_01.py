@@ -9,8 +9,9 @@ map_peripheral(begin_addr, end_addr, mock_hw)
 
 print("Executing student code...")
 
+set_instruction_quota(100)
 cycles = 0
-while not is_finished() and cycles < 100:
+while not is_finished():
     step()
     cycles += 1
 # 4. Assertions (The actual Grading)
