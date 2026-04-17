@@ -35,19 +35,27 @@ class MemoryTableWidget(QTableWidget):
     def __init__(self, memory_screen: "MemoryViewScreen", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.memory_screen = memory_screen
+        self._wheel_accumulator = 0
 
     def wheelEvent(self, a0) -> None:
         if a0 is None:
             return
 
         delta = a0.angleDelta().y()
-        if delta != 0:
-            # Standard mouse wheel tick is 120.
-            # delta > 0 is scroll up, delta < 0 is scroll down.
-            steps = -(delta // 120) * 3
-            if steps == 0:
-                steps = -1 if delta > 0 else 1
-            self.memory_screen.scroll_rows(steps)
+        # accumulate smooth scrolling
+        self._wheel_accumulator += delta
+
+        step_size = 120  # one notch
+        rows_per_step = 3
+
+        while abs(self._wheel_accumulator) >= step_size:
+            if self._wheel_accumulator > 0:
+                self.memory_screen.scroll_rows(-rows_per_step)
+                self._wheel_accumulator -= step_size
+            else:
+                self.memory_screen.scroll_rows(rows_per_step)
+                self._wheel_accumulator += step_size
+
         a0.accept()
 
     def keyPressEvent(self, e) -> None:
@@ -94,6 +102,7 @@ class MemoryViewScreen(QWidget):
 
         self.emulator = emulator
         self._current_address = 0
+        self._max_rows = (1 << 32) // self.BYTES_PER_ROW
         self._is_updating = False
 
         self._layout = QVBoxLayout(self)
@@ -160,7 +169,7 @@ class MemoryViewScreen(QWidget):
         )
 
         # Configure custom scrollbar
-        self._scrollbar.setRange(0, 0xFFFFFFFF // self.BYTES_PER_ROW)
+        self._scrollbar.setRange(0, self._max_rows - 1)
         self._scrollbar.setPageStep(self.ROWS_TO_DISPLAY)
 
         # Put table and scrollbar side-by-side
@@ -181,9 +190,9 @@ class MemoryViewScreen(QWidget):
 
     def scroll_rows(self, rows: int) -> None:
         """Called by the Table widget to virtual scroll up/down."""
-        offset = rows * self.BYTES_PER_ROW
-        self._current_address = (self._current_address + offset) & 0xFFFFFFFF
-        self.update_view()
+        current = self._scrollbar.value()
+        new_value = (current + rows) % self._max_rows
+        self._scrollbar.setValue(new_value)
 
     def _on_scrollbar_moved(self, value: int) -> None:
         """Called when the user drags the custom scrollbar."""
@@ -209,8 +218,8 @@ class MemoryViewScreen(QWidget):
             )
             return
 
-        self._current_address = address - (address % self.BYTES_PER_ROW)
-        self.update_view()
+        aligned = address - (address % self.BYTES_PER_ROW)
+        self._scrollbar.setValue(aligned // self.BYTES_PER_ROW)
 
     def _on_cell_changed(self, row: int, column: int) -> None:
         """Handles user modifying memory inside the table."""
@@ -251,9 +260,11 @@ class MemoryViewScreen(QWidget):
         """Populates the table efficiently using a single bulk read."""
         self._is_updating = True
 
-        self._scrollbar.blockSignals(True)
-        self._scrollbar.setValue(self._current_address // self.BYTES_PER_ROW)
-        self._scrollbar.blockSignals(False)
+        value = self._current_address // self.BYTES_PER_ROW
+        if self._scrollbar.value() != value:
+            self._scrollbar.blockSignals(True)
+            self._scrollbar.setValue(value)
+            self._scrollbar.blockSignals(False)
 
         self._table.viewport().setUpdatesEnabled(False)  # type: ignore : not None
 
