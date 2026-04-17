@@ -219,7 +219,7 @@ class MemoryViewScreen(QWidget):
             return
 
         aligned = address - (address % self.BYTES_PER_ROW)
-        self._scrollbar.setValue(aligned // self.BYTES_PER_ROW)
+        self._scrollbar.setValue((aligned // self.BYTES_PER_ROW) % self._max_rows)
 
     def _on_cell_changed(self, row: int, column: int) -> None:
         """Handles user modifying memory inside the table."""
