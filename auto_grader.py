@@ -3,11 +3,12 @@ import argparse
 import json
 from pathlib import Path
 import logging
+from typing import Any
 
 from arm_emulator_rs import Emulator, Peripheral, RangeInclusiveU32  # type: ignore
 
 from assembler import arm_little_endian_assembler
-from hardware import PyGpioPort
+from hardware import PyGpioPort, create_registry
 
 # 1. Global State
 system: Emulator = Emulator()
@@ -17,6 +18,8 @@ instruction_quota = 500
 
 ASSERTION_FAILED: int = 1
 BUBBLED_EXCEPTION: int = 2
+
+HARDWARE_REGISTRY: dict[str, Any] = create_registry()
 
 
 class InstructionQuotaExceeded(Exception):
@@ -146,13 +149,16 @@ def load_program() -> None:
                 for p in config["peripherals"]:
                     # Use the helper functions already defined in your script
                     # to keep the global state synchronized
+                    type_name = p["type_name"]
+                    name = p["name"]
                     start = p["start"]
                     end = p["end"]
-                    name = p["name"]
 
                     # Instantiate the appropriate Python hardware type
                     # (Assuming PyGpioPort is the standard for the LED type)
-                    obj = PyGpioPort()
+                    traits = HARDWARE_REGISTRY[type_name]
+
+                    obj = traits.create(name, start, end)
 
                     peripherals.append((start, end, obj))
                     add_symbol(name, start)

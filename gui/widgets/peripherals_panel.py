@@ -17,22 +17,33 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from hardware import PyGpioPort
+from hardware import PyGpioPort, create_registry
 
 
-def create_py_gpio_port(name: str, start: int, end: int) -> PyGpioPort:
-    return PyGpioPort(name, start, end)
+class PyGpioPortBundle:
+    def create(self, name: str, start: int, end: int) -> Any:
+        return PyGpioPort(name, start, end)
+
+    def widget(self, instance: Any) -> Any:
+        return LedIndicator(instance)
 
 
-PERIPHERAL_REGISTRY: dict[str, tuple[type, Any]] = {
-    "LED": (PyGpioPort, create_py_gpio_port),
+PY_GPIO_PORT_TRAITS = PyGpioPortBundle()
+
+
+PERIPHERAL_TRAITS: dict[str, Any] = {
+    "LED": PY_GPIO_PORT_TRAITS,
 }
+
+
+PERIPHERAL_REGISTRY: dict[str, Any] = create_registry(PERIPHERAL_TRAITS)
 
 
 # Custom LED Widget
 class LedIndicator(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, instance: PyGpioPort, parent=None):
         super().__init__(parent)
+        self._instance = instance
         self._on = False
         self.setFixedSize(20, 20)
 
@@ -73,7 +84,7 @@ class PeripheralData:
     start: int
     end: int
     instance: Any
-    led_widget: "LedIndicator"
+    widget: Any
 
 
 class PeripheralsPanel(QWidget):
@@ -161,7 +172,7 @@ class PeripheralsPanel(QWidget):
             if hasattr(p.instance, "reset"):
                 p.instance.reset()
 
-            p.led_widget.set_state(False)
+            p.widget.set_state(False)
 
         print("Peripherals reset.")
 
@@ -188,7 +199,7 @@ class PeripheralsPanel(QWidget):
         layout = QVBoxLayout(container)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(data.led_widget)
+        layout.addWidget(data.widget)
         self._peripheral_table.setCellWidget(row_count, 3, container)
 
         self._peripherals_data.append(data)
@@ -252,8 +263,8 @@ class PeripheralsPanel(QWidget):
                 return
 
         # All checks passed, add to table AND data model
-        peripheral_class = PERIPHERAL_REGISTRY[p_type][1]
-        instance = peripheral_class(p_name, start_addr, end_addr)
+        peripheral_traits = PERIPHERAL_REGISTRY[p_type]
+        instance = peripheral_traits.create(p_name, start_addr, end_addr)
 
         # Create Data Object
         data = PeripheralData(
@@ -262,7 +273,7 @@ class PeripheralsPanel(QWidget):
             start=start_addr,
             end=end_addr,
             instance=instance,
-            led_widget=LedIndicator(),
+            widget=peripheral_traits.widget(instance),
         )
 
         # Use the helper to add it
@@ -318,7 +329,7 @@ class PeripheralsPanel(QWidget):
             #     led_widget.set_state(is_on)
             if hasattr(p.instance, "is_led_on"):
                 is_on = p.instance.is_led_on()
-                p.led_widget.set_state(is_on)
+                p.widget.set_state(is_on)
 
     def get_config(self) -> list[dict[str, Any]]:
         """Serializes the current peripherals into a list of dictionaries."""
@@ -371,9 +382,9 @@ class PeripheralsPanel(QWidget):
                 continue
 
             # Create instance and widget
-            peripheral_class = PERIPHERAL_REGISTRY[p_type][1]
-            instance = peripheral_class(p_name, start_addr, end_addr)
-            led = LedIndicator()
+            peripheral_traits = PERIPHERAL_REGISTRY[p_type]
+            instance = peripheral_traits.create(p_name, start_addr, end_addr)
+            widget = peripheral_traits.widget(instance)
 
             data = PeripheralData(
                 type_name=p_type,
@@ -381,7 +392,7 @@ class PeripheralsPanel(QWidget):
                 start=start_addr,
                 end=end_addr,
                 instance=instance,
-                led_widget=led,
+                widget=widget,
             )
 
             self._add_peripheral_entry(data)
