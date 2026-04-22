@@ -13,13 +13,12 @@ use thiserror::Error;
 
 #[derive(Debug, Error, derive_more::From)]
 #[pyclass(name = "ExecutionError", extends = PyException, subclass)]
-pub(crate) struct PyExecutionError {
-    error: ExecutionError,
-}
+#[repr(transparent)]
+pub(crate) struct PyExecutionError(ExecutionError);
 
 impl fmt::Display for PyExecutionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.error)
+        write!(f, "{}", self.0)
     }
 }
 
@@ -33,19 +32,19 @@ impl PyExecutionError {
     }
 
     fn is_breakpoint(&self) -> bool {
-        matches!(self.error, ExecutionError::Breakpoint(_))
+        matches!(self.0, ExecutionError::Breakpoint(_))
     }
 
     fn is_memory_access(&self) -> bool {
-        matches!(self.error, ExecutionError::MemoryAccessError(_))
+        matches!(self.0, ExecutionError::MemoryAccessError(_))
     }
 
     fn is_instruction_conversion(&self) -> bool {
-        matches!(self.error, ExecutionError::InstructionConversionError(_))
+        matches!(self.0, ExecutionError::InstructionConversionError(_))
     }
 
     fn is_exception(&self) -> bool {
-        matches!(self.error, ExecutionError::Exception(_))
+        matches!(self.0, ExecutionError::Exception(_))
     }
 }
 
@@ -66,9 +65,7 @@ macro_rules! impl_to_py_execution_error {
     ($ty:ty) => {
         impl From<$ty> for PyExecutionError {
             fn from(value: $ty) -> Self {
-                Self {
-                    error: value.into(),
-                }
+                Self(value.into())
             }
         }
     };
