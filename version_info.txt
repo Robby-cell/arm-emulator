@@ -25,7 +25,7 @@ VSVersionInfo(
         StringStruct('OriginalFilename', 'arm_emulator.exe'),
         StringStruct('ProductName', 'ARM Emulator'),
         StringStruct('ProductVersion', '0.4.2')])
-      ]), 
+      ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
 )
