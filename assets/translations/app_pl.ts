@@ -5,13 +5,13 @@
     <name>CpuPanel</name>
     <message>
         <location filename="../../gui/widgets/cpu_panel.py" line="39"/>
-        <location filename="../../gui/widgets/cpu_panel.py" line="201"/>
+        <location filename="../../gui/widgets/cpu_panel.py" line="202"/>
         <source>Registers</source>
         <translation>Rejestry</translation>
     </message>
     <message>
         <location filename="../../gui/widgets/cpu_panel.py" line="87"/>
-        <location filename="../../gui/widgets/cpu_panel.py" line="202"/>
+        <location filename="../../gui/widgets/cpu_panel.py" line="203"/>
         <source>CPSR Flags</source>
         <translation>Flagi CPSR</translation>
     </message>
@@ -41,7 +41,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../../gui/main_window.py" line="230"/>
-        <location filename="../../gui/main_window.py" line="809"/>
+        <location filename="../../gui/main_window.py" line="832"/>
         <source>Main Toolbar</source>
         <translation>Główny pasek narzędzi</translation>
     </message>
@@ -52,31 +52,31 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="248"/>
-        <location filename="../../gui/main_window.py" line="811"/>
+        <location filename="../../gui/main_window.py" line="834"/>
         <source>Run</source>
         <translation>Uruchomić</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="251"/>
-        <location filename="../../gui/main_window.py" line="812"/>
+        <location filename="../../gui/main_window.py" line="835"/>
         <source>Debug</source>
         <translation>Odpluskwić</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="253"/>
-        <location filename="../../gui/main_window.py" line="813"/>
+        <location filename="../../gui/main_window.py" line="836"/>
         <source>Stop</source>
         <translation>Zatrzymywać się</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="256"/>
-        <location filename="../../gui/main_window.py" line="814"/>
+        <location filename="../../gui/main_window.py" line="837"/>
         <source>Step</source>
         <translation>Krok</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="259"/>
-        <location filename="../../gui/main_window.py" line="815"/>
+        <location filename="../../gui/main_window.py" line="838"/>
         <source>Reset</source>
         <translation>Nastawić</translation>
     </message>
@@ -86,210 +86,216 @@
         <translation>Błąd wykonania</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="427"/>
-        <location filename="../../gui/main_window.py" line="796"/>
+        <location filename="../../gui/main_window.py" line="437"/>
+        <location filename="../../gui/main_window.py" line="811"/>
         <source>&amp;File</source>
         <translation>&amp;Plik</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="430"/>
-        <location filename="../../gui/main_window.py" line="797"/>
+        <location filename="../../gui/main_window.py" line="440"/>
+        <location filename="../../gui/main_window.py" line="812"/>
         <source>&amp;Build</source>
         <translation>&amp;Zbudować</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="433"/>
-        <location filename="../../gui/main_window.py" line="798"/>
+        <location filename="../../gui/main_window.py" line="443"/>
+        <location filename="../../gui/main_window.py" line="813"/>
         <source>&amp;Options</source>
         <translation>&amp;Opcje</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="436"/>
-        <location filename="../../gui/main_window.py" line="799"/>
+        <location filename="../../gui/main_window.py" line="446"/>
+        <location filename="../../gui/main_window.py" line="814"/>
         <source>&amp;Language</source>
         <translation>&amp;Język</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="439"/>
-        <location filename="../../gui/main_window.py" line="805"/>
+        <location filename="../../gui/main_window.py" line="449"/>
+        <location filename="../../gui/main_window.py" line="828"/>
         <source>&amp;Help</source>
         <translation>&amp;Pomoc</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="451"/>
+        <location filename="../../gui/main_window.py" line="461"/>
         <source>Load Example</source>
         <translation>Załaduj przykład</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="452"/>
+        <location filename="../../gui/main_window.py" line="462"/>
         <source>This will overwrite your current code. Continue?</source>
         <translation>Spowoduje to zastąpienie bieżącego kodu. Kontynuować?</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="466"/>
-        <location filename="../../gui/main_window.py" line="806"/>
+        <location filename="../../gui/main_window.py" line="476"/>
+        <location filename="../../gui/main_window.py" line="829"/>
         <source>Quick Start Guide</source>
         <translation>Szybki przewodnik</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="473"/>
+        <location filename="../../gui/main_window.py" line="483"/>
+        <location filename="../../gui/main_window.py" line="824"/>
         <source>Load Example...</source>
         <translation>Załaduj przykład...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="475"/>
+        <location filename="../../gui/main_window.py" line="486"/>
+        <location filename="../../gui/main_window.py" line="826"/>
         <source>Blinking LED</source>
         <translation>Migająca dioda LED</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="479"/>
+        <location filename="../../gui/main_window.py" line="491"/>
+        <location filename="../../gui/main_window.py" line="825"/>
         <source>Fibonacci Sequence</source>
         <translation>Ciąg Fibonacciego</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="485"/>
-        <location filename="../../gui/main_window.py" line="803"/>
+        <location filename="../../gui/main_window.py" line="498"/>
+        <location filename="../../gui/main_window.py" line="818"/>
         <source>Build and Load</source>
         <translation>Buduj i ładuj</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="502"/>
+        <location filename="../../gui/main_window.py" line="515"/>
+        <location filename="../../gui/main_window.py" line="820"/>
         <source>Endianness</source>
         <translation>Endianowość</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="508"/>
+        <location filename="../../gui/main_window.py" line="522"/>
+        <location filename="../../gui/main_window.py" line="821"/>
         <source>Little Endian</source>
         <translation>Mały Endian</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="516"/>
+        <location filename="../../gui/main_window.py" line="530"/>
+        <location filename="../../gui/main_window.py" line="822"/>
         <source>Big Endian</source>
         <translation>Wielki Endian</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="603"/>
+        <location filename="../../gui/main_window.py" line="617"/>
         <source>ARM Emulator Config (*.armcfg);;Assembly Files (*.s *.asm);;All Files (*)</source>
         <translation>Konfiguracja emulatora ARM (*.armcfg);;Pliki złożenia (*.s *.asm);;Wszystkie pliki (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="613"/>
+        <location filename="../../gui/main_window.py" line="627"/>
         <source>Save Configuration</source>
         <translation>Zapisz konfigurację</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="615"/>
+        <location filename="../../gui/main_window.py" line="629"/>
         <source>ARM Emulator Config (*.armcfg);;All Files (*)</source>
         <translation>Konfiguracja emulatora ARM (*.armcfg);;Wszystkie pliki (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="638"/>
+        <location filename="../../gui/main_window.py" line="652"/>
         <source>Success</source>
         <translation>Sukces</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="638"/>
+        <location filename="../../gui/main_window.py" line="652"/>
         <source>Configuration saved successfully.</source>
         <translation>Konfiguracja została zapisana pomyślnie.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="643"/>
+        <location filename="../../gui/main_window.py" line="657"/>
         <source>Save Error</source>
         <translation>Zapisz błąd</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="685"/>
+        <location filename="../../gui/main_window.py" line="699"/>
         <source>Load Error</source>
         <translation>Błąd ładowania</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="793"/>
+        <location filename="../../gui/main_window.py" line="808"/>
         <source>ARM Emulator</source>
         <translation>Emulator ARM</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="801"/>
+        <location filename="../../gui/main_window.py" line="816"/>
         <source>Load File</source>
         <translation>Załaduj plik</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="802"/>
+        <location filename="../../gui/main_window.py" line="817"/>
         <source>Save Config As...</source>
         <translation>Zapisz konfigurację jako...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="810"/>
+        <location filename="../../gui/main_window.py" line="833"/>
         <source>Build</source>
         <translation>Zbudować</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="817"/>
+        <location filename="../../gui/main_window.py" line="840"/>
         <source>Assemble and Load (F7)</source>
         <translation>Złóż i załaduj (F7)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="818"/>
+        <location filename="../../gui/main_window.py" line="841"/>
         <source>Run (F5)</source>
         <translation>Uruchom (F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="819"/>
+        <location filename="../../gui/main_window.py" line="842"/>
         <source>Prepare for Debugging</source>
         <translation>Przygotuj się do debugowania</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="820"/>
+        <location filename="../../gui/main_window.py" line="843"/>
         <source>Stop Execution (Shift+F5)</source>
         <translation>Zatrzymaj wykonywanie (Shift+F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="821"/>
+        <location filename="../../gui/main_window.py" line="844"/>
         <source>Step Instruction (F10)</source>
         <translation>Instrukcja kroku (F10)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="822"/>
+        <location filename="../../gui/main_window.py" line="845"/>
         <source>Reset Emulator (Ctrl+R)</source>
         <translation>Zresetuj emulator (Ctrl+R)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="825"/>
+        <location filename="../../gui/main_window.py" line="848"/>
         <source>Editor</source>
         <translation>Redaktor</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="826"/>
+        <location filename="../../gui/main_window.py" line="849"/>
         <source>Memory View</source>
         <translation>Widok pamięci</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="827"/>
+        <location filename="../../gui/main_window.py" line="850"/>
         <source>Disassembly</source>
         <translation>Demontaż</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="713"/>
+        <location filename="../../gui/main_window.py" line="727"/>
         <source>Assembly Warning</source>
         <translation>Ostrzeżenie dotyczące montażu</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="714"/>
+        <location filename="../../gui/main_window.py" line="728"/>
         <source>Assembly produced no code.</source>
         <translation>Zespół nie wygenerował żadnego kodu.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="721"/>
-        <location filename="../../gui/main_window.py" line="728"/>
+        <location filename="../../gui/main_window.py" line="735"/>
+        <location filename="../../gui/main_window.py" line="742"/>
         <source>Assembler Error</source>
         <translation>Błąd asemblera</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="722"/>
+        <location filename="../../gui/main_window.py" line="736"/>
         <source>Failed to assemble code:</source>
         <translation>Nie udało się złożyć kodu:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="729"/>
+        <location filename="../../gui/main_window.py" line="743"/>
         <source>An unexpected error occurred:</source>
         <translation>Wystąpił nieoczekiwany błąd:</translation>
     </message>
@@ -297,24 +303,24 @@
 <context>
     <name>MemoryViewScreen</name>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="103"/>
-        <location filename="../../gui/screens/memory_view.py" line="363"/>
+        <location filename="../../gui/screens/memory_view.py" line="112"/>
+        <location filename="../../gui/screens/memory_view.py" line="374"/>
         <source>Go</source>
         <translation>Iść</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="118"/>
-        <location filename="../../gui/screens/memory_view.py" line="362"/>
+        <location filename="../../gui/screens/memory_view.py" line="127"/>
+        <location filename="../../gui/screens/memory_view.py" line="373"/>
         <source>Go to Address:</source>
         <translation>Przejdź do adresu:</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="207"/>
+        <location filename="../../gui/screens/memory_view.py" line="216"/>
         <source>Invalid Address</source>
         <translation>Nieprawidłowy adres</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="208"/>
+        <location filename="../../gui/screens/memory_view.py" line="217"/>
         <source>Please enter a valid address.</source>
         <translation>Proszę wprowadzić prawidłowy adres.</translation>
     </message>
@@ -323,7 +329,7 @@
         <translation type="vanished">Wprowadź prawidłowy adres dziesiętny lub szesnastkowy.</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="246"/>
+        <location filename="../../gui/screens/memory_view.py" line="255"/>
         <source>Write Error</source>
         <translation>Napisz błąd</translation>
     </message>
@@ -331,106 +337,106 @@
 <context>
     <name>PeripheralsPanel</name>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="208"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="217"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="225"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="219"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="228"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="236"/>
         <source>Input Error</source>
         <translation>Błąd wprowadzania</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="209"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="220"/>
         <source>All fields must be filled with valid values.</source>
         <translation>Wszystkie pola muszą być wypełnione prawidłowymi wartościami.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="218"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="229"/>
         <source>Peripheral name &apos;{}&apos; already exists.</source>
         <translation>Nazwa urządzenia peryferyjnego „{}” już istnieje.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="226"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="237"/>
         <source>Start address must not be greater than end address.</source>
         <translation>Adres początkowy nie może być większy niż adres końcowy.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="236"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="247"/>
         <source>Memory addresses must be within the valid range:
 {} - {}</source>
         <translation>Adresy pamięci muszą mieścić się w prawidłowym zakresie:
 {} - {}</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="238"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="249"/>
         <source>Address Out of Range</source>
         <translation>Adres poza zakresem</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="245"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="256"/>
         <source>The proposed memory range ({} - {}) overlaps with an existing peripheral&apos;s range ({} - {}).</source>
         <translation>Proponowany zakres pamięci ({} - {}) pokrywa się z zakresem istniejącego urządzenia peryferyjnego ({} - {}).</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="251"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="262"/>
         <source>Memory Overlap</source>
         <translation>Nakładanie się pamięci</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="396"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="407"/>
         <source>Type:</source>
         <translation>Typ:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="400"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="411"/>
         <source>Instance Name:</source>
         <translation>Nazwa instancji:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="404"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="415"/>
         <source>Begin Address:</source>
         <translation>Adres początkowy:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="408"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="419"/>
         <source>End Address:</source>
         <translation>Adres końcowy:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="411"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="422"/>
         <source>Add Peripheral</source>
         <translation>Dodaj urządzenie peryferyjne</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="412"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="423"/>
         <source>Delete Selected</source>
         <translation>Usuń wybrane</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="417"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="428"/>
         <source>Type</source>
         <translation>Typ</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="418"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="429"/>
         <source>Name</source>
         <translation>Nazwa</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="419"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="430"/>
         <source>Memory Range</source>
         <translation>Zakres pamięci</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="420"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="431"/>
         <source>State</source>
         <translation>Państwo</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="425"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="436"/>
         <source>Valid address between {} ({}) and {} ({})</source>
         <translation>Prawidłowy adres pomiędzy {} ({}) a {} ({})</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="435"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="446"/>
         <source>Hex or Decimal</source>
         <translation>Szesnastkowy lub dziesiętny</translation>
     </message>

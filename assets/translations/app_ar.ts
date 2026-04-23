@@ -5,13 +5,13 @@
     <name>CpuPanel</name>
     <message>
         <location filename="../../gui/widgets/cpu_panel.py" line="39"/>
-        <location filename="../../gui/widgets/cpu_panel.py" line="201"/>
+        <location filename="../../gui/widgets/cpu_panel.py" line="202"/>
         <source>Registers</source>
         <translation>السجلات</translation>
     </message>
     <message>
         <location filename="../../gui/widgets/cpu_panel.py" line="87"/>
-        <location filename="../../gui/widgets/cpu_panel.py" line="202"/>
+        <location filename="../../gui/widgets/cpu_panel.py" line="203"/>
         <source>CPSR Flags</source>
         <translation>أعلام CPSR</translation>
     </message>
@@ -41,7 +41,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../../gui/main_window.py" line="230"/>
-        <location filename="../../gui/main_window.py" line="809"/>
+        <location filename="../../gui/main_window.py" line="832"/>
         <source>Main Toolbar</source>
         <translation>شريط الأدوات الرئيسي</translation>
     </message>
@@ -52,31 +52,31 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="248"/>
-        <location filename="../../gui/main_window.py" line="811"/>
+        <location filename="../../gui/main_window.py" line="834"/>
         <source>Run</source>
         <translation>يجري</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="251"/>
-        <location filename="../../gui/main_window.py" line="812"/>
+        <location filename="../../gui/main_window.py" line="835"/>
         <source>Debug</source>
         <translation>تصحيح</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="253"/>
-        <location filename="../../gui/main_window.py" line="813"/>
+        <location filename="../../gui/main_window.py" line="836"/>
         <source>Stop</source>
         <translation>قف</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="256"/>
-        <location filename="../../gui/main_window.py" line="814"/>
+        <location filename="../../gui/main_window.py" line="837"/>
         <source>Step</source>
         <translation>خطوة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="259"/>
-        <location filename="../../gui/main_window.py" line="815"/>
+        <location filename="../../gui/main_window.py" line="838"/>
         <source>Reset</source>
         <translation>إعادة ضبط</translation>
     </message>
@@ -86,210 +86,216 @@
         <translation>خطأ في التنفيذ</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="427"/>
-        <location filename="../../gui/main_window.py" line="796"/>
+        <location filename="../../gui/main_window.py" line="437"/>
+        <location filename="../../gui/main_window.py" line="811"/>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="430"/>
-        <location filename="../../gui/main_window.py" line="797"/>
+        <location filename="../../gui/main_window.py" line="440"/>
+        <location filename="../../gui/main_window.py" line="812"/>
         <source>&amp;Build</source>
         <translation>&amp;يبني</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="433"/>
-        <location filename="../../gui/main_window.py" line="798"/>
+        <location filename="../../gui/main_window.py" line="443"/>
+        <location filename="../../gui/main_window.py" line="813"/>
         <source>&amp;Options</source>
         <translation>&amp;خيارات</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="436"/>
-        <location filename="../../gui/main_window.py" line="799"/>
+        <location filename="../../gui/main_window.py" line="446"/>
+        <location filename="../../gui/main_window.py" line="814"/>
         <source>&amp;Language</source>
         <translation>&amp;لغة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="439"/>
-        <location filename="../../gui/main_window.py" line="805"/>
+        <location filename="../../gui/main_window.py" line="449"/>
+        <location filename="../../gui/main_window.py" line="828"/>
         <source>&amp;Help</source>
         <translation>&amp;يساعد</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="451"/>
+        <location filename="../../gui/main_window.py" line="461"/>
         <source>Load Example</source>
         <translation>تحميل المثال</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="452"/>
+        <location filename="../../gui/main_window.py" line="462"/>
         <source>This will overwrite your current code. Continue?</source>
         <translation>سيؤدي هذا إلى استبدال الرمز الحالي الخاص بك. يكمل؟</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="466"/>
-        <location filename="../../gui/main_window.py" line="806"/>
+        <location filename="../../gui/main_window.py" line="476"/>
+        <location filename="../../gui/main_window.py" line="829"/>
         <source>Quick Start Guide</source>
         <translation>دليل البدء السريع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="473"/>
+        <location filename="../../gui/main_window.py" line="483"/>
+        <location filename="../../gui/main_window.py" line="824"/>
         <source>Load Example...</source>
         <translation>تحميل المثال...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="475"/>
+        <location filename="../../gui/main_window.py" line="486"/>
+        <location filename="../../gui/main_window.py" line="826"/>
         <source>Blinking LED</source>
         <translation>وامض الصمام</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="479"/>
+        <location filename="../../gui/main_window.py" line="491"/>
+        <location filename="../../gui/main_window.py" line="825"/>
         <source>Fibonacci Sequence</source>
         <translation>تسلسل فيبوناتشي</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="485"/>
-        <location filename="../../gui/main_window.py" line="803"/>
+        <location filename="../../gui/main_window.py" line="498"/>
+        <location filename="../../gui/main_window.py" line="818"/>
         <source>Build and Load</source>
         <translation>بناء وتحميل</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="502"/>
+        <location filename="../../gui/main_window.py" line="515"/>
+        <location filename="../../gui/main_window.py" line="820"/>
         <source>Endianness</source>
         <translation>إنديانيس</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="508"/>
+        <location filename="../../gui/main_window.py" line="522"/>
+        <location filename="../../gui/main_window.py" line="821"/>
         <source>Little Endian</source>
         <translation>إنديان الصغير</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="516"/>
+        <location filename="../../gui/main_window.py" line="530"/>
+        <location filename="../../gui/main_window.py" line="822"/>
         <source>Big Endian</source>
         <translation>إنديان الكبير</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="603"/>
+        <location filename="../../gui/main_window.py" line="617"/>
         <source>ARM Emulator Config (*.armcfg);;Assembly Files (*.s *.asm);;All Files (*)</source>
         <translation>تكوين محاكي ARM (*.armcfg)؛؛ملفات التجميع (*.s *.asm)؛؛كافة الملفات (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="613"/>
+        <location filename="../../gui/main_window.py" line="627"/>
         <source>Save Configuration</source>
         <translation>حفظ التكوين</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="615"/>
+        <location filename="../../gui/main_window.py" line="629"/>
         <source>ARM Emulator Config (*.armcfg);;All Files (*)</source>
         <translation>تكوين محاكي ARM (*.armcfg)؛؛كافة الملفات (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="638"/>
+        <location filename="../../gui/main_window.py" line="652"/>
         <source>Success</source>
         <translation>نجاح</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="638"/>
+        <location filename="../../gui/main_window.py" line="652"/>
         <source>Configuration saved successfully.</source>
         <translation>تم حفظ التكوين بنجاح.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="643"/>
+        <location filename="../../gui/main_window.py" line="657"/>
         <source>Save Error</source>
         <translation>خطأ في الحفظ</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="685"/>
+        <location filename="../../gui/main_window.py" line="699"/>
         <source>Load Error</source>
         <translation>خطأ في التحميل</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="793"/>
+        <location filename="../../gui/main_window.py" line="808"/>
         <source>ARM Emulator</source>
         <translation>محاكي أرم</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="801"/>
+        <location filename="../../gui/main_window.py" line="816"/>
         <source>Load File</source>
         <translation>تحميل الملف</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="802"/>
+        <location filename="../../gui/main_window.py" line="817"/>
         <source>Save Config As...</source>
         <translation>حفظ التكوين باسم...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="810"/>
+        <location filename="../../gui/main_window.py" line="833"/>
         <source>Build</source>
         <translation>يبني</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="817"/>
+        <location filename="../../gui/main_window.py" line="840"/>
         <source>Assemble and Load (F7)</source>
         <translation>التجميع والتحميل (F7)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="818"/>
+        <location filename="../../gui/main_window.py" line="841"/>
         <source>Run (F5)</source>
         <translation>تشغيل (F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="819"/>
+        <location filename="../../gui/main_window.py" line="842"/>
         <source>Prepare for Debugging</source>
         <translation>الاستعداد لتصحيح الأخطاء</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="820"/>
+        <location filename="../../gui/main_window.py" line="843"/>
         <source>Stop Execution (Shift+F5)</source>
         <translation>إيقاف التنفيذ (Shift+F5)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="821"/>
+        <location filename="../../gui/main_window.py" line="844"/>
         <source>Step Instruction (F10)</source>
         <translation>تعليمات الخطوة (F10)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="822"/>
+        <location filename="../../gui/main_window.py" line="845"/>
         <source>Reset Emulator (Ctrl+R)</source>
         <translation>إعادة ضبط المحاكي (Ctrl+R)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="825"/>
+        <location filename="../../gui/main_window.py" line="848"/>
         <source>Editor</source>
         <translation>محرر</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="826"/>
+        <location filename="../../gui/main_window.py" line="849"/>
         <source>Memory View</source>
         <translation>عرض الذاكرة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="827"/>
+        <location filename="../../gui/main_window.py" line="850"/>
         <source>Disassembly</source>
         <translation>التفكيك</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="713"/>
+        <location filename="../../gui/main_window.py" line="727"/>
         <source>Assembly Warning</source>
         <translation>تحذير التجميع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="714"/>
+        <location filename="../../gui/main_window.py" line="728"/>
         <source>Assembly produced no code.</source>
         <translation>لم تنتج الجمعية أي رمز.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="721"/>
-        <location filename="../../gui/main_window.py" line="728"/>
+        <location filename="../../gui/main_window.py" line="735"/>
+        <location filename="../../gui/main_window.py" line="742"/>
         <source>Assembler Error</source>
         <translation>خطأ المجمع</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="722"/>
+        <location filename="../../gui/main_window.py" line="736"/>
         <source>Failed to assemble code:</source>
         <translation>فشل في تجميع التعليمات البرمجية:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="729"/>
+        <location filename="../../gui/main_window.py" line="743"/>
         <source>An unexpected error occurred:</source>
         <translation>حدث خطأ غير متوقع:</translation>
     </message>
@@ -297,24 +303,24 @@
 <context>
     <name>MemoryViewScreen</name>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="103"/>
-        <location filename="../../gui/screens/memory_view.py" line="363"/>
+        <location filename="../../gui/screens/memory_view.py" line="112"/>
+        <location filename="../../gui/screens/memory_view.py" line="374"/>
         <source>Go</source>
         <translation>يذهب</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="118"/>
-        <location filename="../../gui/screens/memory_view.py" line="362"/>
+        <location filename="../../gui/screens/memory_view.py" line="127"/>
+        <location filename="../../gui/screens/memory_view.py" line="373"/>
         <source>Go to Address:</source>
         <translation>اذهب إلى العنوان:</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="207"/>
+        <location filename="../../gui/screens/memory_view.py" line="216"/>
         <source>Invalid Address</source>
         <translation>عنوان غير صالح</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="208"/>
+        <location filename="../../gui/screens/memory_view.py" line="217"/>
         <source>Please enter a valid address.</source>
         <translation>الرجاء إدخال عنوان صالح.</translation>
     </message>
@@ -323,7 +329,7 @@
         <translation type="vanished">الرجاء إدخال عنوان عشري أو سداسي عشري صالح.</translation>
     </message>
     <message>
-        <location filename="../../gui/screens/memory_view.py" line="246"/>
+        <location filename="../../gui/screens/memory_view.py" line="255"/>
         <source>Write Error</source>
         <translation>خطأ في الكتابة</translation>
     </message>
@@ -331,106 +337,106 @@
 <context>
     <name>PeripheralsPanel</name>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="208"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="217"/>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="225"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="219"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="228"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="236"/>
         <source>Input Error</source>
         <translation>خطأ في الإدخال</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="209"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="220"/>
         <source>All fields must be filled with valid values.</source>
         <translation>يجب ملء كافة الحقول بقيم صالحة.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="218"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="229"/>
         <source>Peripheral name &apos;{}&apos; already exists.</source>
         <translation>اسم الجهاز الطرفي &apos;{}&apos; موجود بالفعل.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="226"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="237"/>
         <source>Start address must not be greater than end address.</source>
         <translation>يجب ألا يكون عنوان البداية أكبر من عنوان النهاية.</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="236"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="247"/>
         <source>Memory addresses must be within the valid range:
 {} - {}</source>
         <translation>يجب أن تكون عناوين الذاكرة ضمن النطاق الصالح:
 {} - {}</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="238"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="249"/>
         <source>Address Out of Range</source>
         <translation>العنوان خارج النطاق</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="245"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="256"/>
         <source>The proposed memory range ({} - {}) overlaps with an existing peripheral&apos;s range ({} - {}).</source>
         <translation>يتداخل نطاق الذاكرة المقترح ({} - {}) مع نطاق الأجهزة الطرفية الموجودة ({} - {}).</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="251"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="262"/>
         <source>Memory Overlap</source>
         <translation>تداخل الذاكرة</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="396"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="407"/>
         <source>Type:</source>
         <translation>يكتب:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="400"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="411"/>
         <source>Instance Name:</source>
         <translation>اسم المثيل:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="404"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="415"/>
         <source>Begin Address:</source>
         <translation>عنوان البدء:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="408"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="419"/>
         <source>End Address:</source>
         <translation>عنوان النهاية:</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="411"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="422"/>
         <source>Add Peripheral</source>
         <translation>أضف الأجهزة الطرفية</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="412"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="423"/>
         <source>Delete Selected</source>
         <translation>حذف المحدد</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="417"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="428"/>
         <source>Type</source>
         <translation>يكتب</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="418"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="429"/>
         <source>Name</source>
         <translation>اسم</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="419"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="430"/>
         <source>Memory Range</source>
         <translation>نطاق الذاكرة</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="420"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="431"/>
         <source>State</source>
         <translation>ولاية</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="425"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="436"/>
         <source>Valid address between {} ({}) and {} ({})</source>
         <translation>عنوان صالح بين {} ({}) و{} ({})</translation>
     </message>
     <message>
-        <location filename="../../gui/widgets/peripherals_panel.py" line="435"/>
+        <location filename="../../gui/widgets/peripherals_panel.py" line="446"/>
         <source>Hex or Decimal</source>
         <translation>سداسي عشري أو عشري</translation>
     </message>

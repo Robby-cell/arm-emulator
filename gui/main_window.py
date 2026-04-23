@@ -480,15 +480,18 @@ class MainWindow(QMainWindow):
         self._help_menu.addSeparator()
 
         # 2. Examples Sub-menu
-        examples_menu: QMenu = self._help_menu.addMenu(self.tr("Load Example..."))  # type: ignore : not None
+        example_menu: QMenu = self._help_menu.addMenu(self.tr("Load Example..."))  # type: ignore : not None
+        self._example_menu = example_menu
 
         ex_blink = QAction(self.tr("Blinking LED"), self)
         ex_blink.triggered.connect(lambda: self._load_config_json(BLINK_CONFIG))
-        examples_menu.addAction(ex_blink)
+        example_menu.addAction(ex_blink)
+        self._example_blink = ex_blink
 
         ex_fib = QAction(self.tr("Fibonacci Sequence"), self)
         ex_fib.triggered.connect(lambda: self._load_config_json(FIBONACCI_CONFIG))
-        examples_menu.addAction(ex_fib)
+        example_menu.addAction(ex_fib)
+        self._example_fib = ex_fib
 
     def _build_build_menu_actions(self) -> None:
         # Action for the menu
@@ -510,6 +513,7 @@ class MainWindow(QMainWindow):
     def _build_options_menu(self) -> None:
         # Endianness Submenu
         endian_menu: QMenu = self._options_menu.addMenu(self.tr("Endianness"))  # type: ignore : not None
+        self._endian_menu = endian_menu
 
         # Create an exclusive group (Radio button behavior)
         self._endian_group = QActionGroup(self)
@@ -812,6 +816,14 @@ class MainWindow(QMainWindow):
         self._load_file_action.setText(self.tr("Load File"))
         self._save_file_action.setText(self.tr("Save Config As..."))
         self.build_action_menu.setText(self.tr("Build and Load"))
+
+        self._endian_menu.setTitle(self.tr("Endianness"))
+        self._action_le.setText(self.tr("Little Endian"))
+        self._action_be.setText(self.tr("Big Endian"))
+
+        self._example_menu.setTitle(self.tr("Load Example..."))
+        self._example_fib.setText(self.tr("Fibonacci Sequence"))
+        self._example_blink.setText(self.tr("Blinking LED"))
 
         self._help_menu.setTitle(self.tr("&Help"))
         self.tutorial_action.setText(self.tr("Quick Start Guide"))
