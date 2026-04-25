@@ -29,7 +29,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from assembler import Assembler, arm_big_endian_assembler, arm_little_endian_assembler
+from assembler import Assembler
 from gui.resource import get_resource_path
 
 from .controllers.debugger_controller import DebuggerController
@@ -545,12 +545,21 @@ class MainWindow(QMainWindow):
         self._debugger_controller.unload_program()
 
         # Update Assembler
-        old_symbols = self._assembler.symbols
-        if little:
-            self._assembler = arm_little_endian_assembler()
-        else:
-            self._assembler = arm_big_endian_assembler()
-        self._assembler.symbols = old_symbols
+        """
+            NOTE:
+            The emulator loads the bytes in the order they are provided.
+            However, if we have a little endian assembler, and a little endian emulator,
+            essentially no change will be visible, as we will load them in the same order as big endian.
+            The bytes will be loaded reversed, but the emulator will also reverse them, leaving them effectively unchanged.
+            So we must have either the emulator, or the assembler, in a fixed mode.
+        """
+
+        # old_symbols = self._assembler.symbols
+        # if little:
+        #     self._assembler = arm_little_endian_assembler()
+        # else:
+        #     self._assembler = arm_big_endian_assembler()
+        # self._assembler.symbols = old_symbols
 
         # Update Emulator
         if little:
