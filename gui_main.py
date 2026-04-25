@@ -4,7 +4,7 @@ from arm_emulator_rs import init_tracing, Emulator  # type: ignore : import exis
 from PyQt6.QtWidgets import QApplication
 import qdarktheme
 
-from assembler.assembler import arm_big_endian_assembler
+from assembler.assembler import arm_little_endian_assembler
 from gui.main_window import MainWindow
 
 
@@ -20,7 +20,7 @@ def main():
             sram_size=0,
             external_size=0,
         ),
-        assembler=arm_big_endian_assembler(),
+        assembler=arm_little_endian_assembler(),
     )
     window.showMaximized()
     exit_code: int = app.exec()
