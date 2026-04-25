@@ -54,7 +54,7 @@ Expand-Archive ".\arm_emulator-windows.zip" -DestinationPath ".\arm_emulator-win
 # .\arm_emulator-windows\arm_emulator.exe
 
 # For headless grader:
-# wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-windows.zip"
+# curl.exe -L -o ".\arm_grader-windows.zip" "https://github.com/Robby-cell/arm-emulator/releases/download/$TAG/arm_grader-windows.zip"
 # Expand-Archive ".\arm_grader-windows.zip" -DestinationPath ".\arm_grader-windows"
 ```
 
