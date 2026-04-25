@@ -166,6 +166,10 @@ impl PyEmulator {
     // essentially no change will be visible, as we will load them in the same order as big endian.
     // The bytes will be loaded reversed, but the emulator will also reverse them, leaving them effectively unchanged.
     // So we must have either the emulator, or the assembler, in a fixed mode.
+    //
+    // We will have these "raw" functions, which will care about endianness.
+    // The non-raw functions will read in a fixed mode (big endian).
+
     fn read32_raw(&self, addr: u32) -> PyResult<u32> {
         Ok(mpe!(self.emulator.read32(addr))?)
     }
