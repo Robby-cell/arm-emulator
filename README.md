@@ -32,10 +32,14 @@ https://github.com/Robby-cell/arm-emulator/releases/latest/
 How to download on Linux:
 
 ```bash
-TAG="v0.4.4"
+TAG="v0.4.5"
 wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-linux.tar.gz"
 tar -xzf "./arm_emulator-linux.tar.gz"
 # ./arm_emulator
+
+# For headless grader:
+# wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-linux.tar.gz"
+# tar -xzf "./arm_grader-linux.tar.gz"
 ```
 
 ## Windows
@@ -43,11 +47,15 @@ tar -xzf "./arm_emulator-linux.tar.gz"
 How to download on Windows:
 
 ```ps1
-$TAG="v0.4.4"
+$TAG="v0.4.5"
 # Important: MUST be curl.exe, not curl
 curl.exe -L -o ".\arm_emulator-windows.zip" "https://github.com/Robby-cell/arm-emulator/releases/download/$TAG/arm_emulator-windows.zip"
 Expand-Archive ".\arm_emulator-windows.zip" -DestinationPath ".\arm_emulator-windows"
 # .\arm_emulator-windows\arm_emulator.exe
+
+# For headless grader:
+# wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-windows.zip"
+# Expand-Archive ".\arm_grader-windows.zip" -DestinationPath ".\arm_grader-windows"
 ```
 
 ## MacOS
@@ -55,11 +63,15 @@ Expand-Archive ".\arm_emulator-windows.zip" -DestinationPath ".\arm_emulator-win
 How to download on MacOS:
 
 ```bash
-TAG="v0.4.4"
+TAG="v0.4.5"
 curl -L -o "./arm_emulator-macos.tar.gz" "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-macos.tar.gz"
 tar -xzf "./arm_emulator-macos.tar.gz"
 xattr -cr "./arm_emulator"
 # ./arm_emulator
+
+# For headless grader:
+# curl -L -o "./arm_grader-macos.tar.gz" "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-macos.tar.gz"
+# tar -xzf "./arm_grader-macos.tar.gz"
 ```
 
 # Building and Using
