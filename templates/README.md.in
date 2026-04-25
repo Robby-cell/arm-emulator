@@ -36,6 +36,10 @@ TAG="{{VERSION}}"
 wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_emulator-linux.tar.gz"
 tar -xzf "./arm_emulator-linux.tar.gz"
 # ./arm_emulator
+
+# For headless grader:
+# wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-linux.tar.gz"
+# tar -xzf "./arm_grader-linux.tar.gz"
 ```
 
 ## Windows
@@ -48,6 +52,10 @@ $TAG="{{VERSION}}"
 curl.exe -L -o ".\arm_emulator-windows.zip" "https://github.com/Robby-cell/arm-emulator/releases/download/$TAG/arm_emulator-windows.zip"
 Expand-Archive ".\arm_emulator-windows.zip" -DestinationPath ".\arm_emulator-windows"
 # .\arm_emulator-windows\arm_emulator.exe
+
+# For headless grader:
+# wget "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-windows.zip"
+# Expand-Archive ".\arm_grader-windows.zip" -DestinationPath ".\arm_grader-windows"
 ```
 
 ## MacOS
@@ -60,6 +68,10 @@ curl -L -o "./arm_emulator-macos.tar.gz" "https://github.com/Robby-cell/arm-emul
 tar -xzf "./arm_emulator-macos.tar.gz"
 xattr -cr "./arm_emulator"
 # ./arm_emulator
+
+# For headless grader:
+# curl -L -o "./arm_grader-macos.tar.gz" "https://github.com/Robby-cell/arm-emulator/releases/download/${TAG}/arm_grader-macos.tar.gz"
+# tar -xzf "./arm_grader-macos.tar.gz"
 ```
 
 # Building and Using
