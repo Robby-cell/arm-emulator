@@ -1,0 +1,25 @@
+# UTF-8
+#
+# For more details about fixed file info 'ffi' see:
+# http://msdn.microsoft.com/en-us/library/ms646997.aspx
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=({{VERSION_TUPLE}}),
+    prodvers=({{VERSION_TUPLE}}),
+    mask=0x3f, flags=0x0, OS=0x40004, fileType=0x1, subtype=0x0, date=(0, 0)
+    ),
+  kids=[
+    StringFileInfo([
+      StringTable(
+        '040904B0',[StringStruct('CompanyName', 'Queen\'s University of Belfast'),
+        StringStruct('FileDescription', 'ARMv7 Assembly Emulator and Debugger'),
+        StringStruct('FileVersion', '{{VERSION}}'),
+        StringStruct('InternalName', 'arm_emulator'),
+        StringStruct('LegalCopyright', 'Copyright (c) 2026 Robert Williamson. All rights reserved.'),
+        StringStruct('OriginalFilename', 'arm_emulator.exe'),
+        StringStruct('ProductName', 'ARM Emulator'),
+        StringStruct('ProductVersion', '{{VERSION}}')])
+      ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)
