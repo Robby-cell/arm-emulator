@@ -395,11 +395,37 @@ impl Emulator {
     }
 
     #[must_use]
+    pub fn read32_be(&self, addr: Word) -> MemoryAccessResult<u32> {
+        self.memory_bus.read32_be(addr)
+    }
+
+    #[must_use]
+    pub fn read32_le(&self, addr: Word) -> MemoryAccessResult<u32> {
+        self.memory_bus.read32_le(addr)
+    }
+
+    #[must_use]
     pub fn read32(&self, addr: Word) -> MemoryAccessResult<u32> {
         match self.endian {
-            Endian::Big => self.memory_bus.read32_be(addr),
-            Endian::Little => self.memory_bus.read32_le(addr),
+            Endian::Big => self.read32_be(addr),
+            Endian::Little => self.read32_le(addr),
         }
+    }
+
+    pub fn write32_be(
+        &mut self,
+        addr: Word,
+        value: u32,
+    ) -> MemoryAccessResult<()> {
+        self.memory_bus.write32_be(addr, value)
+    }
+
+    pub fn write32_le(
+        &mut self,
+        addr: Word,
+        value: u32,
+    ) -> MemoryAccessResult<()> {
+        self.memory_bus.write32_le(addr, value)
     }
 
     pub fn write32(
@@ -408,17 +434,43 @@ impl Emulator {
         value: u32,
     ) -> MemoryAccessResult<()> {
         match self.endian {
-            Endian::Big => self.memory_bus.write32_be(addr, value),
-            Endian::Little => self.memory_bus.write32_le(addr, value),
+            Endian::Big => self.write32_be(addr, value),
+            Endian::Little => self.write32_le(addr, value),
         }
+    }
+
+    #[must_use]
+    pub fn read_byte_be(&self, addr: Word) -> MemoryAccessResult<u8> {
+        self.memory_bus.read_byte_be(addr)
+    }
+
+    #[must_use]
+    pub fn read_byte_le(&self, addr: Word) -> MemoryAccessResult<u8> {
+        self.memory_bus.read_byte_le(addr)
     }
 
     #[must_use]
     pub fn read_byte(&self, addr: Word) -> MemoryAccessResult<u8> {
         match self.endian {
-            Endian::Big => self.memory_bus.read_byte_be(addr),
-            Endian::Little => self.memory_bus.read_byte_le(addr),
+            Endian::Big => self.read_byte_be(addr),
+            Endian::Little => self.read_byte_le(addr),
         }
+    }
+
+    pub fn write_byte_be(
+        &mut self,
+        addr: Word,
+        value: u8,
+    ) -> MemoryAccessResult<()> {
+        self.memory_bus.write_byte_be(addr, value)
+    }
+
+    pub fn write_byte_le(
+        &mut self,
+        addr: Word,
+        value: u8,
+    ) -> MemoryAccessResult<()> {
+        self.memory_bus.write_byte_le(addr, value)
     }
 
     pub fn write_byte(
@@ -427,8 +479,8 @@ impl Emulator {
         value: u8,
     ) -> MemoryAccessResult<()> {
         match self.endian {
-            Endian::Big => self.memory_bus.write_byte_be(addr, value),
-            Endian::Little => self.memory_bus.write_byte_le(addr, value),
+            Endian::Big => self.write_byte_be(addr, value),
+            Endian::Little => self.write_byte_le(addr, value),
         }
     }
 

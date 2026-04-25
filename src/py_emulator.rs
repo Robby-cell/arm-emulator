@@ -160,16 +160,22 @@ impl PyEmulator {
         self.emulator.is_finished()
     }
 
-    fn read32(&self, addr: u32) -> PyResult<u32> {
+    // NOTE:
+    // The emulator loads the bytes in the order they are provided.
+    // However, if we have a little endian assembler, and a little endian emulator,
+    // essentially no change will be visible, as we will load them in the same order as big endian.
+    // The bytes will be loaded reversed, but the emulator will also reverse them, leaving them effectively unchanged.
+    // So we must have either the emulator, or the assembler, in a fixed mode.
+    fn read32_raw(&self, addr: u32) -> PyResult<u32> {
         Ok(mpe!(self.emulator.read32(addr))?)
     }
 
-    fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
+    fn write32_raw(&mut self, addr: u32, value: u32) -> PyResult<()> {
         mpe!(self.emulator.write32(addr, value))?;
         Ok(())
     }
 
-    pub fn try_read_chunk(
+    pub fn try_read_chunk_raw(
         &self,
         addr: u32,
         size: u32,
@@ -185,16 +191,57 @@ impl PyEmulator {
         Ok(result)
     }
 
-    fn try_read_byte(&self, addr: u32) -> Option<u8> {
+    fn try_read_byte_raw(&self, addr: u32) -> Option<u8> {
         self.emulator.read_byte(addr).ok()
     }
 
-    fn read_byte(&self, addr: u32) -> PyResult<u8> {
+    fn read_byte_raw(&self, addr: u32) -> PyResult<u8> {
         Ok(mpe!(self.emulator.read_byte(addr))?)
     }
 
-    fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
+    fn write_byte_raw(&mut self, addr: u32, value: u8) -> PyResult<()> {
         mpe!(self.emulator.write_byte(addr, value))?;
+        Ok(())
+    }
+
+    // This will be the default, for the emulator.
+    // What the consumer SHOULD use, otherwise, there will be no difference, as the reversed bytes
+    // of little endian will be reversed again by the emulator.
+    fn read32(&self, addr: u32) -> PyResult<u32> {
+        Ok(mpe!(self.emulator.read32_be(addr))?)
+    }
+
+    fn write32(&mut self, addr: u32, value: u32) -> PyResult<()> {
+        mpe!(self.emulator.write32_be(addr, value))?;
+        Ok(())
+    }
+
+    pub fn try_read_chunk(
+        &self,
+        addr: u32,
+        size: u32,
+    ) -> PyResult<Vec<Option<u8>>> {
+        let mut result = Vec::with_capacity(size as usize);
+        for i in 0..size {
+            let addr = addr.wrapping_add(i);
+            match self.emulator.read_byte_be(addr) {
+                Ok(byte) => result.push(Some(byte)),
+                Err(_) => result.push(None), // None indicates "?? / unmapped"
+            }
+        }
+        Ok(result)
+    }
+
+    fn try_read_byte(&self, addr: u32) -> Option<u8> {
+        self.emulator.read_byte_be(addr).ok()
+    }
+
+    fn read_byte(&self, addr: u32) -> PyResult<u8> {
+        Ok(mpe!(self.emulator.read_byte_be(addr))?)
+    }
+
+    fn write_byte(&mut self, addr: u32, value: u8) -> PyResult<()> {
+        mpe!(self.emulator.write_byte_be(addr, value))?;
         Ok(())
     }
 
