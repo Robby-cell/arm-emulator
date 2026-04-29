@@ -6,6 +6,7 @@ from capstone import (
     CS_ARCH_ARM,
     CS_MODE_ARM,
     CS_MODE_BIG_ENDIAN,
+    CS_MODE_LITTLE_ENDIAN,
 )
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QColor, QFont, QRegularExpressionValidator
@@ -30,6 +31,7 @@ class DisassemblyScreen(QWidget):
     def __init__(
         self,
         emulator: Emulator,
+        is_little_endian: bool = True,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
@@ -43,7 +45,12 @@ class DisassemblyScreen(QWidget):
 
         # Initialize Capstone Disassembler
         try:
-            self.md = Cs(CS_ARCH_ARM, CS_MODE_ARM + CS_MODE_BIG_ENDIAN)
+            self.md = Cs(
+                CS_ARCH_ARM,
+                CS_MODE_ARM + CS_MODE_LITTLE_ENDIAN
+                if is_little_endian
+                else CS_MODE_BIG_ENDIAN,
+            )
         except Exception as e:
             print(f"Failed to initialize Capstone: {e}")
             self.md = None
@@ -232,7 +239,7 @@ class DisassemblyScreen(QWidget):
 
         # Because we fetch the number and rust automatically converts it to integer for us.
         # We need to use big endian, unless fetching bytes individually, which won't happen
-        mode = CS_MODE_BIG_ENDIAN
+        mode = CS_MODE_LITTLE_ENDIAN if is_little_endian else CS_MODE_BIG_ENDIAN
         try:
             self.md = Cs(CS_ARCH_ARM, CS_MODE_ARM + mode)
             # Refresh the view immediately if visible
